@@ -1,144 +1,171 @@
 "use client"
 
-import { useState, useEffect, Suspense } from 'react'
-import { motion } from 'framer-motion'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Input } from '@/components/ui/input'
-import { apiFetch } from '@/lib/api'
-import { Search as SearchIcon, FileText, Filter } from 'lucide-react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { useState, useEffect } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
+import { Input } from '@/components/ui/input'
+import { Card } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { apiFetch } from '@/lib/api'
+import { Search as SearchIcon, BookOpen, Loader2, ArrowRight } from 'lucide-react'
 
-type Material = {
-    id: string;
-    title: string;
-    subject_code: string;
-    description: string;
-    material_type: string;
-    rank?: number;
+// Custom debounce hook natively built
+function useDebounce<T>(value: T, delay: number): T {
+    const [debouncedValue, setDebouncedValue] = useState<T>(value);
+    useEffect(() => {
+        const handler = setTimeout(() => {
+            setDebouncedValue(value);
+        }, delay);
+        return () => clearTimeout(handler);
+    }, [value, delay]);
+    return debouncedValue;
 }
 
-function SearchInterface() {
+interface Material {
+    id: string
+    title: string
+    description: string
+    subjectCode: string
+    year: number
+    rank?: number // ts_rank output
+}
+
+const listVariant = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.05 } }
+}
+
+const itemVariant = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+}
+
+export default function SearchPage() {
     const router = useRouter()
     const searchParams = useSearchParams()
-    const query = searchParams.get('q') || ''
+    const initialQuery = searchParams.get('q') || ''
 
-    const [searchInput, setSearchInput] = useState(query)
+    const [query, setQuery] = useState(initialQuery)
+    const debouncedQuery = useDebounce(query, 400) // 400ms delay on keystrokes
+
     const [results, setResults] = useState<Material[]>([])
     const [loading, setLoading] = useState(false)
-    const [searched, setSearched] = useState(false)
+    const [hasSearched, setHasSearched] = useState(false)
 
     useEffect(() => {
-        async function performSearch() {
-            if (!query.trim()) {
+        const performSearch = async () => {
+            if (!debouncedQuery.trim()) {
                 setResults([])
+                setHasSearched(false)
                 return
             }
+
             setLoading(true)
             try {
-                const data = await apiFetch<Material[]>(`/search?q=${encodeURIComponent(query)}`)
+                const data = await apiFetch<Material[]>(`/materials/search?q=${encodeURIComponent(debouncedQuery)}`)
                 setResults(data || [])
-                setSearched(true)
-            } catch (err) {
+                setHasSearched(true)
+
+                // Update URL safely without triggering reload via Next.js 14 shallow route
+                const params = new URLSearchParams(searchParams.toString())
+                params.set('q', debouncedQuery)
+                window.history.replaceState(null, '', `?${params.toString()}`)
+            } catch (error) {
+                console.error('Search failed:', error)
                 setResults([])
             } finally {
                 setLoading(false)
             }
         }
-        performSearch()
-    }, [query])
 
-    const handleSearch = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (searchInput.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchInput)}`)
-        }
-    }
+        performSearch()
+    }, [debouncedQuery, searchParams])
 
     return (
-        <div className="min-h-screen bg-background pt-24 pb-12">
-            <div className="container mx-auto px-6 max-w-4xl">
+        <div className="min-h-screen bg-background pb-20 pt-8 page-container max-w-4xl mx-auto">
 
-                {/* Search Header */}
-                <form onSubmit={handleSearch} className="relative mb-12">
-                    <SearchIcon className="absolute left-6 top-1/2 -translate-y-1/2 w-8 h-8 text-primary/60" />
+            {/* Massive Search Input Structure */}
+            <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-12 group">
+                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-indigo-400 rounded-[28px] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                <div className="relative flex items-center bg-surface rounded-[24px] border border-border p-2 soft-shadow">
+                    <div className="pl-4 pr-2 text-muted-foreground group-focus-within:text-primary transition-colors">
+                        <SearchIcon className="w-6 h-6" />
+                    </div>
                     <Input
                         autoFocus
-                        value={searchInput}
-                        onChange={(e) => setSearchInput(e.target.value)}
-                        placeholder="Search structural subjects, assignments, PYQs..."
-                        className="w-full pl-20 pr-8 h-20 text-2xl md:text-3xl rounded-3xl soft-shadow border-none bg-card focus-visible:ring-primary/20 transition-all font-heading tracking-tight"
+                        value={query}
+                        onChange={(e) => setQuery(e.target.value)}
+                        placeholder="Search strict ts_vector indexes..."
+                        className="text-lg bg-transparent border-none shadow-none h-14 focus-visible:ring-0 placeholder:text-muted-foreground/60 w-full font-medium"
                     />
-                </form>
-
-                {/* Results Area */}
-                <div className="space-y-6">
-                    {loading && (
-                        <div className="space-y-4">
-                            {[1, 2, 3].map(i => (
-                                <div key={i} className="h-32 bg-card rounded-2xl animate-pulse"></div>
-                            ))}
-                        </div>
-                    )}
-
-                    {!loading && searched && results.length === 0 && (
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                            className="text-center py-20 px-4"
-                        >
-                            <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
-                            <h3 className="text-2xl font-heading mb-2">No definitive matches found</h3>
-                            <p className="text-muted-foreground">Try adjusting your query. The system searches strictly over titles, subjects, and descriptions using TSVector processing natively.</p>
-                        </motion.div>
-                    )}
-
-                    {!loading && results.length > 0 && (
-                        <motion.div
-                            initial="hidden" animate="visible"
-                            variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-                            className="flex flex-col gap-4"
-                        >
-                            <div className="flex items-center justify-between text-sm font-medium text-muted-foreground pl-2 pb-2 border-b border-border/50">
-                                <span>{results.length} native results mapped</span>
-                                <span className="flex items-center gap-1"><Filter className="w-4 h-4" /> Relevance</span>
-                            </div>
-
-                            {results.map((mat) => (
-                                <motion.div
-                                    key={mat.id}
-                                    variants={{
-                                        hidden: { opacity: 0, y: 10 },
-                                        visible: { opacity: 1, y: 0 }
-                                    }}
-                                >
-                                    <Link href={`/viewer/${mat.id}`}>
-                                        <Card className="hover:-translate-y-0.5 transition-transform cursor-pointer soft-shadow border-border/50 hover:border-primary/30 group">
-                                            <CardHeader className="py-4">
-                                                <div className="flex justify-between items-start gap-4">
-                                                    <div>
-                                                        <div className="text-xs font-mono text-primary/80 mb-1.5">{mat.subject_code} • {mat.material_type}</div>
-                                                        <CardTitle className="text-xl group-hover:text-primary transition-colors">{mat.title}</CardTitle>
-                                                        <p className="text-muted-foreground mt-2 line-clamp-2 text-sm leading-relaxed">{mat.description}</p>
-                                                    </div>
-                                                </div>
-                                            </CardHeader>
-                                        </Card>
-                                    </Link>
+                    <div className="pr-4 flex items-center">
+                        <AnimatePresence>
+                            {loading && (
+                                <motion.div initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.5 }}>
+                                    <Loader2 className="w-5 h-5 animate-spin text-primary" />
                                 </motion.div>
-                            ))}
-                        </motion.div>
-                    )}
+                            )}
+                        </AnimatePresence>
+                    </div>
                 </div>
+            </motion.div>
 
+            {/* Results Engine */}
+            <div className="min-h-[400px]">
+                {loading && results.length === 0 ? (
+                    // Skeleton Loaders
+                    <div className="space-y-4">
+                        {[1, 2, 3].map((i) => (
+                            <Skeleton key={i} className="h-28 w-full rounded-2xl bg-surface border border-border" />
+                        ))}
+                    </div>
+                ) : hasSearched && results.length === 0 ? (
+                    // Empty State
+                    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex flex-col items-center justify-center text-center py-20">
+                        <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-6">
+                            <SearchIcon className="w-8 h-8 text-muted-foreground/50" />
+                        </div>
+                        <h3 className="text-xl font-heading font-bold mb-2">No indexing matched</h3>
+                        <p className="text-muted-foreground">Adjust your query. Advanced text-search covers document blocks securely.</p>
+                    </motion.div>
+                ) : (
+                    // Render Ranked Results
+                    <motion.div variants={listVariant} initial="hidden" animate="visible" className="space-y-4">
+                        {results.map((mat) => (
+                            <motion.div key={mat.id} variants={itemVariant} whileHover={{ y: -2 }} className="group">
+                                <Link href={`/viewer/${mat.id}`}>
+                                    <Card className="flex items-center gap-5 p-5 rounded-2xl bg-surface border border-border/50 hover:border-primary/50 soft-shadow hover:shadow-primary/5 transition-all">
+                                        <div className="w-16 h-20 rounded-xl bg-muted/30 flex items-center justify-center border border-border flex-shrink-0 group-hover:bg-primary/10 transition-colors">
+                                            <BookOpen className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
+                                        </div>
+                                        <div className="flex-1 min-w-0">
+                                            <div className="flex items-center justify-between mb-1">
+                                                <h3 className="font-heading font-bold text-lg truncate group-hover:text-primary transition-colors">
+                                                    {mat.title}
+                                                </h3>
+                                                {mat.rank && (
+                                                    <span className="text-[10px] font-mono bg-muted px-2 py-0.5 rounded-full border border-border text-muted-foreground ml-2">
+                                                        Rank: {mat.rank.toFixed(2)}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <p className="text-xs font-mono text-primary/80 mb-2">{mat.subjectCode}</p>
+                                            <p className="text-sm text-muted-foreground line-clamp-2 truncate">
+                                                {mat.description}
+                                            </p>
+                                        </div>
+                                        <div className="pl-4 opacity-0 group-hover:opacity-100 transition-opacity translate-x-4 group-hover:translate-x-0 duration-300">
+                                            <ArrowRight className="w-5 h-5 text-primary" />
+                                        </div>
+                                    </Card>
+                                </Link>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
             </div>
-        </div>
-    )
-}
 
-export default function SearchPage() {
-    return (
-        <Suspense fallback={<div className="min-h-screen bg-background" />}>
-            <SearchInterface />
-        </Suspense>
+        </div>
     )
 }

@@ -1,162 +1,179 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Search, TrendingUp, Clock, Compass, FileText } from 'lucide-react'
-import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
+import { Card } from '@/components/ui/card'
 import { apiFetch } from '@/lib/api'
+import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
+import { BookOpen, Clock, TrendingUp, Sparkles } from 'lucide-react'
 
-// Mock Data Type since backend returns raw
-type Material = {
-    id: string;
-    title: string;
-    subject_code: string;
-    description: string;
-    material_type: string;
-    views?: number;
+interface Material {
+    id: string
+    title: string
+    description: string
+    subjectCode: string
+    viewCount: number
+}
+
+const fadeUp = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
+}
+
+const stagger = {
+    visible: { transition: { staggerChildren: 0.05 } }
 }
 
 export default function DashboardPage() {
-    const router = useRouter()
-    const [loading, setLoading] = useState(true)
-    const [searchQuery, setSearchQuery] = useState('')
     const [trending, setTrending] = useState<Material[]>([])
     const [recent, setRecent] = useState<Material[]>([])
+    const [loading, setLoading] = useState(true)
 
     useEffect(() => {
-        async function loadDashboard() {
+        const fetchDashboardData = async () => {
             try {
-                // Parallel requests fetching multiple sets natively
-                const [trendingRes, recentRes] = await Promise.all([
-                    apiFetch<Material[]>('/materials/public?limit=4&sort=views'),
-                    apiFetch<Material[]>('/materials/public?limit=3&sort=recent')
+                const [trendRes, recentRes] = await Promise.all([
+                    apiFetch<Material[]>('/materials/discovery/trending'),
+                    apiFetch<Material[]>('/materials/discovery/recent')
                 ])
-                setTrending(trendingRes || [])
-                setRecent(recentRes || [])
-            } catch (err) {
-                console.error("Dashboard Load Failed", err)
+                setTrending(trendRes)
+                setRecent(recentRes)
+            } catch (error) {
+                console.error('Failed to preload dashboard integrations', error)
             } finally {
                 setLoading(false)
             }
         }
-        loadDashboard()
+        fetchDashboardData()
     }, [])
 
-    const handleSearchSubmit = (e: React.FormEvent) => {
-        e.preventDefault()
-        if (searchQuery.trim()) {
-            router.push(`/search?q=${encodeURIComponent(searchQuery)}`)
-        }
+    if (loading) {
+        return (
+            <div className="page-container pt-8">
+                <DashboardSkeleton />
+            </div>
+        )
     }
 
     return (
-        <div className="min-h-screen bg-background pb-20">
+        <div className="min-h-screen pb-24 pt-10 page-container">
+            <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-20">
 
-            {/* Top Navigation Spacer (If layout has nav) */}
-            <div className="h-20" />
-
-            <main className="container mx-auto px-6">
-
-                {loading ? (
-                    <DashboardSkeleton />
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                        className="space-y-12"
-                    >
-
-                        {/* Search Section */}
-                        <div className="flex flex-col flex-1 items-center justify-center pt-8 pb-4">
-                            <h1 className="text-3xl md:text-5xl font-heading font-semibold text-center mb-8 tracking-tight">
-                                What are you studying today?
-                            </h1>
-                            <form onSubmit={handleSearchSubmit} className="w-full max-w-2xl relative">
-                                <Search className="absolute left-6 top-1/2 -translate-y-1/2 w-6 h-6 text-muted-foreground" />
-                                <Input
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    placeholder="Search strictly for notes, PYQs, assignments..."
-                                    className="h-16 pl-16 pr-6 text-lg rounded-full border-border/50 soft-shadow bg-card focus-visible:ring-primary/20 transition-shadow hover:shadow-md"
-                                />
-                            </form>
+                {/* Continue Reading Section (Horizontal) */}
+                {recent.length > 0 && (
+                    <motion.section variants={fadeUp}>
+                        <div className="flex flex-col gap-1 mb-8">
+                            <h2 className="text-2xl font-heading font-bold flex items-center gap-3">
+                                <div className="p-1.5 bg-primary/10 rounded-lg"><Clock className="w-5 h-5 text-primary" /></div>
+                                Resume Flow
+                            </h2>
+                            <p className="text-muted-foreground font-medium text-sm ml-10">Pick up exactly where you left off</p>
                         </div>
 
-                        {/* Trending Section */}
-                        <section>
-                            <div className="flex items-center gap-2 mb-6">
-                                <TrendingUp className="w-6 h-6 text-primary" />
-                                <h2 className="text-2xl font-heading font-semibold">Trending Materials</h2>
-                            </div>
+                        <div className="flex space-x-6 overflow-x-auto pb-8 pt-2 px-2 -mx-2 no-scrollbar snap-x">
+                            {recent.map((mat) => (
+                                <Link href={`/viewer/${mat.id}`} key={`recent-${mat.id}`} className="snap-start min-w-[340px] sm:min-w-[420px]">
+                                    <motion.div whileHover={{ y: -6, scale: 1.02 }} transition={{ duration: 0.3, ease: 'easeOut' }}>
+                                        <Card className="flex items-center gap-5 p-5 rounded-[24px] bg-surface border-border/60 hover:border-primary/30 soft-shadow hover:shadow-primary/5 transition-all group overflow-hidden relative">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
 
-                            {trending.length === 0 ? (
-                                <div className="text-muted-foreground p-8 bg-card rounded-xl text-center border border-border border-dashed">No trending materials found.</div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                                    {trending.map((mat, i) => (
-                                        <Link href={`/viewer/${mat.id}`} key={mat.id}>
-                                            <motion.div
-                                                whileHover={{ y: -4 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="h-full"
-                                            >
-                                                <Card className="h-full soft-shadow cursor-pointer border-border hover:border-primary/20 transition-colors">
-                                                    <CardHeader className="pb-3">
-                                                        <div className="text-xs font-mono text-muted-foreground mb-1">{mat.subject_code} • {mat.material_type}</div>
-                                                        <CardTitle className="leading-tight text-lg">{mat.title}</CardTitle>
-                                                    </CardHeader>
-                                                    <CardContent>
-                                                        <CardDescription className="line-clamp-2">{mat.description}</CardDescription>
-                                                    </CardContent>
-                                                </Card>
-                                            </motion.div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
-                        {/* Continue Reading / Recent Section */}
-                        <section>
-                            <div className="flex items-center gap-2 mb-6 mt-12">
-                                <Clock className="w-6 h-6 text-primary" />
-                                <h2 className="text-2xl font-heading font-semibold">Recently Added</h2>
-                            </div>
-
-                            {recent.length === 0 ? (
-                                <div className="text-muted-foreground p-8 bg-card rounded-xl text-center border border-border border-dashed">No recent materials available.</div>
-                            ) : (
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    {recent.map((mat, i) => (
-                                        <Link href={`/viewer/${mat.id}`} key={mat.id}>
-                                            <motion.div
-                                                whileHover={{ y: -4 }}
-                                                transition={{ duration: 0.2 }}
-                                                className="h-full"
-                                            >
-                                                <Card className="h-full soft-shadow cursor-pointer border-border hover:border-primary/20 transition-colors flex flex-col justify-between">
-                                                    <CardHeader className="pb-3">
-                                                        <div className="flex justify-between items-start">
-                                                            <div className="text-xs font-mono text-muted-foreground mb-1">{mat.subject_code}</div>
-                                                        </div>
-                                                        <CardTitle className="text-base leading-tight line-clamp-2">{mat.title}</CardTitle>
-                                                    </CardHeader>
-                                                </Card>
-                                            </motion.div>
-                                        </Link>
-                                    ))}
-                                </div>
-                            )}
-                        </section>
-
-                    </motion.div>
+                                            <div className="w-20 h-28 rounded-2xl bg-muted/30 flex items-center justify-center border border-border/50 flex-shrink-0 group-hover:bg-primary/5 transition-colors duration-500 relative z-10">
+                                                <BookOpen className="w-8 h-8 text-muted-foreground/70 group-hover:text-primary transition-colors duration-500 group-hover:scale-110" />
+                                            </div>
+                                            <div className="flex-1 min-w-0 pr-2 relative z-10">
+                                                <h3 className="font-heading font-bold text-[17px] truncate group-hover:text-primary transition-colors">{mat.title}</h3>
+                                                <p className="text-xs font-mono font-bold tracking-wider text-muted-foreground uppercase mt-1 mb-4">{mat.subjectCode}</p>
+                                                <div className="h-1.5 w-full bg-muted/60 rounded-full overflow-hidden">
+                                                    <motion.div
+                                                        className="h-full bg-primary"
+                                                        initial={{ width: 0 }}
+                                                        whileInView={{ width: '66%' }}
+                                                        viewport={{ once: true }}
+                                                        transition={{ duration: 1.5, ease: 'easeOut' }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </motion.div>
+                                </Link>
+                            ))}
+                        </div>
+                    </motion.section>
                 )}
-            </main>
+
+                {/* Trending Section (Grid) */}
+                {trending.length > 0 && (
+                    <motion.section variants={fadeUp}>
+                        <div className="flex flex-col gap-1 mb-8">
+                            <h2 className="text-2xl font-heading font-bold flex items-center gap-3">
+                                <div className="p-1.5 bg-primary/10 rounded-lg text-primary"><TrendingUp className="w-5 h-5" /></div>
+                                Trending Vectors
+                            </h2>
+                            <p className="text-muted-foreground font-medium text-sm ml-10">High velocity materials actively researched</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {trending.map((mat) => (
+                                <Link href={`/viewer/${mat.id}`} key={`trend-${mat.id}`}>
+                                    <motion.div whileHover={{ y: -6 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="h-full">
+                                        <Card className="h-full flex flex-col p-6 rounded-[24px] bg-surface border-border/60 hover:border-primary/30 soft-shadow hover:shadow-primary/5 group relative overflow-hidden">
+                                            <div className="absolute right-0 bottom-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl -mr-10 -mb-10 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
+
+                                            <div className="aspect-[4/3] rounded-2xl bg-muted/30 flex items-center justify-center mb-5 relative overflow-hidden border border-border/30 group-hover:bg-primary/5 transition-colors duration-500 z-10">
+                                                <BookOpen className="w-12 h-12 text-muted-foreground/30 group-hover:text-primary/70 transition-colors duration-500 group-hover:scale-105" />
+                                                <div className="absolute top-3 right-3 bg-surface/80 backdrop-blur-md px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold text-foreground border border-border/50 soft-shadow">
+                                                    {mat.viewCount} ops
+                                                </div>
+                                            </div>
+                                            <div className="relative z-10 flex-1 flex flex-col">
+                                                <h3 className="font-heading font-bold text-[17px] line-clamp-2 leading-tight group-hover:text-primary transition-colors mb-2">
+                                                    {mat.title}
+                                                </h3>
+                                                <p className="text-sm text-muted-foreground line-clamp-2 mt-auto font-medium">
+                                                    {mat.description}
+                                                </p>
+                                            </div>
+                                        </Card>
+                                    </motion.div>
+                                </Link>
+                            ))}
+                        </div>
+                    </motion.section>
+                )}
+
+                {/* Recommendations Section */}
+                {recent.length > 0 && (
+                    <motion.section variants={fadeUp}>
+                        <div className="flex flex-col gap-1 mb-8">
+                            <h2 className="text-2xl font-heading font-bold flex items-center gap-3">
+                                <div className="p-1.5 bg-primary/10 rounded-lg text-primary"><Sparkles className="w-5 h-5" /></div>
+                                Curated Path
+                            </h2>
+                            <p className="text-muted-foreground font-medium text-sm ml-10">Intelligent discoveries based on access footprints</p>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                            {recent.map((mat) => (
+                                <Link href={`/viewer/${mat.id}`} key={`rec-${mat.id}`}>
+                                    <motion.div whileHover={{ y: -6 }} transition={{ duration: 0.3, ease: 'easeOut' }} className="h-full">
+                                        <Card className="h-full flex flex-col p-6 rounded-[24px] bg-surface border-border/60 hover:border-primary/30 soft-shadow hover:shadow-primary/5 group">
+                                            <div className="h-1.5 w-12 bg-muted rounded-full mb-5 group-hover:w-full group-hover:bg-primary transition-all duration-700 ease-out" />
+                                            <h3 className="font-heading font-bold text-[17px] line-clamp-2 leading-tight group-hover:text-primary transition-colors mb-2">
+                                                {mat.title}
+                                            </h3>
+                                            <p className="text-[10px] font-mono font-bold uppercase tracking-widest text-muted-foreground mb-4">{mat.subjectCode}</p>
+                                            <p className="text-sm text-muted-foreground line-clamp-3 mt-auto font-medium">
+                                                {mat.description}
+                                            </p>
+                                        </Card>
+                                    </motion.div>
+                                </Link>
+                            ))}
+                        </div>
+                    </motion.section>
+                )}
+            </motion.div>
         </div>
     )
 }
