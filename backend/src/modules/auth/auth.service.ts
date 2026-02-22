@@ -5,7 +5,20 @@ import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterInput, LoginInput } from './auth.schema';
-import ms from 'ms'; // We will install ms to parse string durations to int if needed, but since ms can be natively parsed by jsonwebtoken, we just pass the string.
+
+// Helper to manually parse JWT expiration strings to milliseconds natively
+function parseExpirationToMs(val: string): number {
+    const match = val.match(/^(\d+)([smhd])$/);
+    if (!match) return 7 * 24 * 60 * 60 * 1000; // 7 days fallback
+    const amount = parseInt(match[1]);
+    switch (match[2]) {
+        case 's': return amount * 1000;
+        case 'm': return amount * 60 * 1000;
+        case 'h': return amount * 60 * 60 * 1000;
+        case 'd': return amount * 24 * 60 * 60 * 1000;
+        default: return amount * 1000;
+    }
+}
 
 export class AuthService {
 
@@ -132,7 +145,7 @@ export class AuthService {
         const refreshHash = await bcrypt.hash(refreshTokenRaw, 10);
 
         // Calculate exact PG Datetime bounds based on env string dynamically
-        const expiresAt = new Date(Date.now() + Number(ms(env.JWT_REFRESH_EXPIRES as any)));
+        const expiresAt = new Date(Date.now() + parseExpirationToMs(env.JWT_REFRESH_EXPIRES));
 
         await pool.query(
             `INSERT INTO refresh_tokens (id, user_id, token_hash, expires_at) VALUES ($1, $2, $3, $4)`,
