@@ -46,7 +46,7 @@ export default function RegisterPage() {
             })
 
             toast.success('Account created successfully')
-            await checkAuth() // Synchronize global context allowing useEffect to catch redirection
+            router.push('/login')
         } catch (err: any) {
             toast.error(err.message || 'Registration failed')
         } finally {
