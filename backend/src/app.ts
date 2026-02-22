@@ -35,9 +35,9 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: env.FRONTEND_URL,
+    origin: [env.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE']
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
 }));
 
 app.use(express.json());
