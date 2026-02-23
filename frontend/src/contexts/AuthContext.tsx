@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/apiClient'
 import { BookOpen } from 'lucide-react'
 
@@ -48,6 +49,21 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
         refetchOnWindowFocus: false,
         refetchOnMount: false,
     });
+
+    const router = useRouter();
+    const queryClient = useQueryClient();
+
+    React.useEffect(() => {
+        const handleUnauthorized = () => {
+            queryClient.setQueryData(["auth", "me"], null);
+            setAuthModalMode('login');
+            setAuthModalOpen(true);
+            router.push('/');
+        };
+
+        window.addEventListener('auth:unauthorized', handleUnauthorized);
+        return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
+    }, [queryClient, router]);
 
     const currentUser = isError ? null : (user || null);
 
