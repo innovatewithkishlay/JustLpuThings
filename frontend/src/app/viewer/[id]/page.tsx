@@ -3,7 +3,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
-import { apiFetch } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
@@ -14,33 +15,32 @@ export default function ViewerPage() {
     const router = useRouter()
     const viewerRef = useRef<HTMLDivElement>(null)
 
-    const [loading, setLoading] = useState(true)
-    const [data, setData] = useState<{ url: string; title: string; metadata: any } | null>(null)
     const [showInfo, setShowInfo] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [distractionFree, setDistractionFree] = useState(false)
     const [progress, setProgress] = useState(5)
 
-    useEffect(() => {
-        const fetchMaterial = async () => {
-            try {
-                const materialData = await apiFetch<any>(`/materials/${params.id}`)
-                const signedUrlData = await apiFetch<{ signedUrl: string }>(`/materials/${params.id}/access`)
+    const { data, isLoading: loading, isError } = useQuery({
+        queryKey: ["material", params.id as string],
+        queryFn: async () => {
+            const materialData = await apiClient<any>(`/materials/${params.id}`)
+            const signedUrlData = await apiClient<{ signedUrl: string }>(`/materials/${params.id}/access`)
 
-                setData({
-                    title: materialData.title,
-                    metadata: materialData,
-                    url: signedUrlData.signedUrl
-                })
-            } catch (error: any) {
-                toast.error('Failed to load secure document', { description: error.message })
-                setTimeout(() => router.push('/dashboard'), 2000)
-            } finally {
-                setLoading(false)
+            return {
+                title: materialData.title,
+                metadata: materialData,
+                url: signedUrlData.signedUrl
             }
+        },
+        retry: false
+    })
+
+    useEffect(() => {
+        if (isError) {
+            toast.error('Failed to load secure document')
+            setTimeout(() => router.push('/dashboard'), 2000)
         }
-        fetchMaterial()
-    }, [params.id, router])
+    }, [isError, router])
 
     // Progress Auto-Save Pipeline
     useEffect(() => {

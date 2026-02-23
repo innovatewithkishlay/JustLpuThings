@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
-import { apiFetch } from '@/lib/api'
+import { apiClient } from '@/lib/apiClient'
 import { BookOpen, Loader2 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -34,7 +34,7 @@ export default function LoginPage() {
 
         setLoading(true)
         try {
-            await apiFetch<{ token: string }>('/auth/login', {
+            await apiClient<{ token: string }>('/auth/login', {
                 method: 'POST',
                 body: JSON.stringify(form)
             })

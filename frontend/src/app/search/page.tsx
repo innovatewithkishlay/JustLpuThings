@@ -7,7 +7,8 @@ import Link from 'next/link'
 import { Input } from '@/components/ui/input'
 import { Card } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { apiFetch } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
 import { Search as SearchIcon, BookOpen, Loader2, ArrowRight } from 'lucide-react'
 
 // Custom debounce hook natively built
@@ -49,37 +50,21 @@ export default function SearchPage() {
     const [query, setQuery] = useState(initialQuery)
     const debouncedQuery = useDebounce(query, 400) // 400ms delay on keystrokes
 
-    const [results, setResults] = useState<Material[]>([])
-    const [loading, setLoading] = useState(false)
-    const [hasSearched, setHasSearched] = useState(false)
+    const { data: results = [], isFetching: loading } = useQuery({
+        queryKey: ["materials", "search", debouncedQuery],
+        queryFn: () => apiClient<Material[]>(`/materials/search?q=${encodeURIComponent(debouncedQuery)}`),
+        enabled: debouncedQuery.trim().length > 0,
+    })
+
+    const hasSearched = debouncedQuery.trim().length > 0
 
     useEffect(() => {
-        const performSearch = async () => {
-            if (!debouncedQuery.trim()) {
-                setResults([])
-                setHasSearched(false)
-                return
-            }
+        if (!debouncedQuery.trim()) return
 
-            setLoading(true)
-            try {
-                const data = await apiFetch<Material[]>(`/materials/search?q=${encodeURIComponent(debouncedQuery)}`)
-                setResults(data || [])
-                setHasSearched(true)
-
-                // Update URL safely without triggering reload via Next.js 14 shallow route
-                const params = new URLSearchParams(searchParams.toString())
-                params.set('q', debouncedQuery)
-                window.history.replaceState(null, '', `?${params.toString()}`)
-            } catch (error) {
-                console.error('Search failed:', error)
-                setResults([])
-            } finally {
-                setLoading(false)
-            }
-        }
-
-        performSearch()
+        // Update URL safely without triggering reload via Next.js 14 shallow route
+        const params = new URLSearchParams(searchParams.toString())
+        params.set('q', debouncedQuery)
+        window.history.replaceState(null, '', `?${params.toString()}`)
     }, [debouncedQuery, searchParams])
 
     return (

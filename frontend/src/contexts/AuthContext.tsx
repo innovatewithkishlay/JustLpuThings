@@ -1,7 +1,9 @@
 "use client"
 
-import React, { createContext, useContext, useEffect, useState } from 'react'
-import { apiFetch } from '@/lib/api'
+import React, { createContext, useContext } from 'react'
+import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
+import { BookOpen } from 'lucide-react'
 
 interface User {
     id: string;
@@ -26,33 +28,45 @@ const AuthContext = createContext<AuthContextType>({
     checkAuth: async () => { },
 })
 
-export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
-    const [user, setUser] = useState<User | null>(null)
-    const [loading, setLoading] = useState(true)
+export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode }) => {
+    const queryClient = useQueryClient();
 
-    const checkAuth = async () => {
-        try {
-            setLoading(true)
-            const userData = await apiFetch<User>('/auth/me')
-            setUser(userData)
-        } catch (error) {
-            // Silent failure natively sets unauthorized state
-            setUser(null)
-        } finally {
-            setLoading(false)
-        }
+    const { data: user, isLoading, isError, refetch } = useQuery({
+        queryKey: ["auth", "me"],
+        queryFn: () => apiClient<User>('/auth/me'),
+        staleTime: 5 * 60 * 1000,
+        retry: false,
+        refetchOnWindowFocus: false,
+    });
+
+    const currentUser = isError ? null : (user || null);
+
+    if (isLoading) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/50 backdrop-blur-md">
+                <div className="flex flex-col items-center gap-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 rounded-full border border-primary/20 blur-sm scale-150 animate-pulse" />
+                        <div className="w-16 h-16 rounded-2xl bg-surface border border-border soft-shadow flex items-center justify-center relative overflow-hidden group">
+                            <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-primary/10 to-transparent" />
+                            <BookOpen className="w-8 h-8 text-primary animate-pulse" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+        )
     }
 
-    useEffect(() => {
-        checkAuth()
-    }, [])
+    const checkAuth = async () => {
+        await refetch();
+    }
 
     return (
         <AuthContext.Provider value={{
-            user,
-            isAuthenticated: !!user,
-            isAdmin: user?.role === 'ADMIN',
-            loading,
+            user: currentUser,
+            isAuthenticated: !!currentUser,
+            isAdmin: currentUser?.role === 'ADMIN',
+            loading: isLoading,
             checkAuth
         }}>
             {children}

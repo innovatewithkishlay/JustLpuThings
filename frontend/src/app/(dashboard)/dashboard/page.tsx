@@ -4,7 +4,8 @@ import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { apiFetch } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
 import { BookOpen, Clock, TrendingUp, Sparkles } from 'lucide-react'
 
@@ -26,27 +27,17 @@ const stagger = {
 }
 
 export default function DashboardPage() {
-    const [trending, setTrending] = useState<Material[]>([])
-    const [recent, setRecent] = useState<Material[]>([])
-    const [loading, setLoading] = useState(true)
+    const { data: trending = [], isLoading: trendingLoading } = useQuery({
+        queryKey: ["materials", "trending"],
+        queryFn: () => apiClient<Material[]>('/materials/discovery/trending')
+    })
 
-    useEffect(() => {
-        const fetchDashboardData = async () => {
-            try {
-                const [trendRes, recentRes] = await Promise.all([
-                    apiFetch<Material[]>('/materials/discovery/trending'),
-                    apiFetch<Material[]>('/materials/discovery/recent')
-                ])
-                setTrending(trendRes)
-                setRecent(recentRes)
-            } catch (error) {
-                console.error('Failed to preload dashboard integrations', error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        fetchDashboardData()
-    }, [])
+    const { data: recent = [], isLoading: recentLoading } = useQuery({
+        queryKey: ["materials", "recent"],
+        queryFn: () => apiClient<Material[]>('/materials/discovery/recent')
+    })
+
+    const loading = trendingLoading || recentLoading
 
     if (loading) {
         return (

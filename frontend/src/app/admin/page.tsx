@@ -3,7 +3,8 @@
 import { useEffect, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { apiFetch } from '@/lib/api'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
 import { Users, BookOpen, Activity, AlertTriangle, ShieldAlert } from 'lucide-react'
 
@@ -18,22 +19,10 @@ const itemVariants = {
 }
 
 export default function AdminDashboard() {
-    const [stats, setStats] = useState<any>(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const loadStats = async () => {
-            try {
-                const data = await apiFetch<any>('/admin/telemetry')
-                setStats(data)
-            } catch (error) {
-                console.error('Failed to load telemetry', error)
-            } finally {
-                setLoading(false)
-            }
-        }
-        loadStats()
-    }, [])
+    const { data: stats, isLoading: loading } = useQuery({
+        queryKey: ["admin", "analytics"],
+        queryFn: () => apiClient<any>('/admin/telemetry')
+    })
 
     if (loading) {
         return <div className="page-container pt-8"><DashboardSkeleton /></div>
