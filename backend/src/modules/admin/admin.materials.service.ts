@@ -28,10 +28,16 @@ export class AdminMaterialsService {
         try {
             await client.query('BEGIN');
 
+            const subjectRes = await client.query('SELECT id FROM subjects WHERE slug = $1', [data.subject]);
+            if (subjectRes.rows.length === 0) {
+                throw { statusCode: 404, message: `Subject '${data.subject}' not found in database.` };
+            }
+            const subjectId = subjectRes.rows[0].id;
+
             const insertRes = await client.query(
                 `INSERT INTO materials (subject_id, title, slug, description, file_key, category, unit, youtube_url, uploaded_by)
                  VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
-                [data.subject_id, data.title, uniqueSlug, data.description || null, fileKey, data.category || 'notes', data.unit || null, data.youtube_url || null, adminId]
+                [subjectId, data.title, uniqueSlug, data.description || null, fileKey, data.category || 'notes', data.unit || null, data.youtube_url || null, adminId]
             );
 
             const materialId = insertRes.rows[0].id;

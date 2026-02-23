@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
 export const adminMaterialUploadSchema = z.object({
-    subject_id: z.string().uuid('Invalid subject ID format'),
+    subject: z.string().min(1, 'Subject is required'),
+    semester: z.string().optional(),
     title: z.string().min(5, 'Title must be at least 5 characters').max(150),
     description: z.string().max(1000).optional(),
     category: z.enum(['notes', 'ppt', 'pyqs', 'midterm', 'ca']).default('notes'),
