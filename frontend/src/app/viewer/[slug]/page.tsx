@@ -14,8 +14,8 @@ import { useReadingProgress } from '@/hooks/useReadingProgress'
 import { Document, Page, pdfjs } from 'react-pdf'
 import { InView } from 'react-intersection-observer'
 import { useResizeDetector } from 'react-resize-detector'
-import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
-import 'react-pdf/dist/esm/Page/TextLayer.css'
+import 'react-pdf/dist/Page/AnnotationLayer.css'
+import 'react-pdf/dist/Page/TextLayer.css'
 
 pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
