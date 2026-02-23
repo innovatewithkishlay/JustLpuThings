@@ -35,8 +35,8 @@ export class AdminMaterialsService {
             const subjectId = subjectRes.rows[0].id;
 
             const insertRes = await client.query(
-                `INSERT INTO materials (subject_id, title, slug, description, file_key, category, unit, youtube_url, uploaded_by)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                `INSERT INTO materials (subject_id, title, slug, description, file_key, category, unit, youtube_url, uploaded_by, status)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'ACTIVE') RETURNING id`,
                 [subjectId, data.title, uniqueSlug, data.description || null, fileKey, data.category || 'notes', data.unit || null, data.youtube_url || null, adminId]
             );
 

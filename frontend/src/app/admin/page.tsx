@@ -64,7 +64,9 @@ interface Material {
     unit?: string;
     title: string;
     viewCount?: number;
-    createdAt: string;
+    total_views?: string | number;
+    created_at?: string;
+    createdAt?: string;
 }
 
 export default function AdminDashboard() {
@@ -230,8 +232,8 @@ export default function AdminDashboard() {
                                                                                         <div key={mat.id} className="p-3 bg-muted/30 border border-border rounded-xl text-sm flex flex-col justify-between">
                                                                                             <div className="font-semibold text-foreground truncate">{mat.title}</div>
                                                                                             <div className="text-xs text-muted-foreground flex justify-between mt-2">
-                                                                                                <span>Views: {mat.viewCount || 0}</span>
-                                                                                                <span className="font-mono">{new Date(mat.createdAt).toLocaleDateString()}</span>
+                                                                                                <span>Views: {mat.total_views || mat.viewCount || 0}</span>
+                                                                                                <span className="font-mono">{new Date(mat.created_at || mat.createdAt || new Date()).toLocaleDateString()}</span>
                                                                                             </div>
                                                                                         </div>
                                                                                     ))}
