@@ -7,7 +7,11 @@ import { usePathname } from "next/navigation"
 import { Moon, Sun, Search, User, BookOpen } from "lucide-react"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+import { useAuth } from "@/contexts/AuthContext"
+import { useQueryClient } from "@tanstack/react-query"
+import { apiClient } from "@/lib/apiClient"
+import { toast } from "sonner"
 
 const MODULES = [
     { name: 'Materials', path: '/dashboard' },
@@ -19,6 +23,21 @@ const MODULES = [
 export function TopNavbar() {
     const { setTheme, theme } = useTheme()
     const pathname = usePathname()
+    const { isAuthenticated, user, isAdmin, openAuthModal, checkAuth } = useAuth()
+    const queryClient = useQueryClient()
+    const router = require('next/navigation').useRouter() // Required locally as it's not imported at top
+
+    const handleLogout = async () => {
+        try {
+            await apiClient('/auth/logout', { method: 'POST' })
+            queryClient.clear()
+            await checkAuth()
+            toast.success("Logged out successfully")
+            router.push('/')
+        } catch (e) {
+            toast.error("Failed to logout securely")
+        }
+    }
 
     // Hide navbar heavily abstracted viewer pages
     if (pathname?.startsWith('/viewer/')) return null;
@@ -67,11 +86,57 @@ export function TopNavbar() {
                     </DropdownMenu>
 
                     {/* Profile / Avatar */}
-                    <Link href="/login">
-                        <Button variant="ghost" size="icon" className="rounded-full hover:bg-muted ml-2">
+                    {isAuthenticated ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="w-9 h-9 relative rounded-full ml-2 focus-visible:ring-primary/50">
+                                    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm uppercase">
+                                        {user?.email?.[0] || 'U'}
+                                    </div>
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-56 rounded-xl soft-shadow">
+                                <DropdownMenuLabel className="font-normal">
+                                    <div className="flex flex-col space-y-1">
+                                        <p className="text-sm font-medium leading-none">{user?.name || 'Student'}</p>
+                                        <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                                        <div className="pt-2">
+                                            <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold tracking-widest uppercase ${isAdmin ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'}`}>
+                                                {user?.role}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </DropdownMenuLabel>
+                                <DropdownMenuSeparator />
+
+                                {isAdmin && (
+                                    <>
+                                        <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer font-medium text-primary">
+                                            Admin Command Center
+                                        </DropdownMenuItem>
+                                        <DropdownMenuSeparator />
+                                    </>
+                                )}
+
+                                <DropdownMenuItem onClick={() => router.push('/dashboard')} className="cursor-pointer">
+                                    My Dashboard
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">
+                                    Log out
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="rounded-full hover:bg-muted ml-2"
+                            onClick={() => openAuthModal('login')}
+                        >
                             <User className="h-5 w-5 text-foreground" />
                         </Button>
-                    </Link>
+                    )}
                 </div>
             </div>
 

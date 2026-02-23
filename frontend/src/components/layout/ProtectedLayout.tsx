@@ -13,15 +13,16 @@ export function ProtectedLayout({
     children: React.ReactNode,
     requireAdmin?: boolean
 }) {
-    const { user, isAuthenticated, isAdmin, loading } = useAuth()
+    const { user, isAuthenticated, isAdmin, loading, openAuthModal } = useAuth()
     const router = useRouter()
     const pathname = usePathname()
 
     useEffect(() => {
         if (!loading) {
             if (!isAuthenticated) {
-                // Build isolated redirect preserving intended URL for post-login optionally
-                router.replace(`/login?redirect=${encodeURIComponent(pathname || '/dashboard')}`)
+                // Open modal and silently dump unauthorized users onto the public landing gracefully
+                openAuthModal('login')
+                router.replace(`/`)
             } else if (requireAdmin && !isAdmin) {
                 // Unauthorized non-admin attempt
                 router.replace('/dashboard')

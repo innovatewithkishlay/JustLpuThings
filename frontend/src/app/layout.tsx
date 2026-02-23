@@ -26,6 +26,7 @@ export const metadata: Metadata = {
 
 import { Toaster } from '@/components/ui/sonner';
 import { TopNavbar } from '@/components/layout/TopNavbar';
+import { AuthModal } from '@/components/auth/AuthModal';
 
 export default function RootLayout({
   children,
@@ -38,6 +39,7 @@ export default function RootLayout({
         <Providers>
           <GlobalErrorBoundary>
             <TopNavbar />
+            <AuthModal />
             {children}
             <Toaster position="top-center" richColors />
           </GlobalErrorBoundary>
