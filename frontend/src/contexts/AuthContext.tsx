@@ -37,6 +37,7 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
         staleTime: 5 * 60 * 1000,
         retry: false,
         refetchOnWindowFocus: false,
+        refetchOnMount: false,
     });
 
     const currentUser = isError ? null : (user || null);

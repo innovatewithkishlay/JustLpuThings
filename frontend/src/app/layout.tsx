@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Inter, Outfit, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from '@/lib/providers';
+import { GlobalErrorBoundary } from '@/components/layout/GlobalErrorBoundary';
 
 const inter = Inter({
   variable: '--font-sans',
@@ -35,9 +36,11 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${outfit.variable} ${jetbrainsMono.variable} font-sans antialiased`} suppressHydrationWarning>
         <Providers>
-          <TopNavbar />
-          {children}
-          <Toaster position="top-center" richColors />
+          <GlobalErrorBoundary>
+            <TopNavbar />
+            {children}
+            <Toaster position="top-center" richColors />
+          </GlobalErrorBoundary>
         </Providers>
       </body>
     </html>

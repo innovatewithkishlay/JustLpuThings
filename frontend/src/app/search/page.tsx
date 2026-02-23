@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
@@ -42,7 +42,7 @@ const itemVariant = {
     visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
 }
 
-export default function SearchPage() {
+function SearchContent() {
     const router = useRouter()
     const searchParams = useSearchParams()
     const initialQuery = searchParams.get('q') || ''
@@ -152,5 +152,17 @@ export default function SearchPage() {
             </div>
 
         </div>
+    )
+}
+
+export default function SearchPage() {
+    return (
+        <Suspense fallback={
+            <div className="min-h-screen bg-background pb-20 pt-8 flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            </div>
+        }>
+            <SearchContent />
+        </Suspense>
     )
 }

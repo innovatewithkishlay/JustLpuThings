@@ -21,10 +21,10 @@ export function ProtectedLayout({
         if (!loading) {
             if (!isAuthenticated) {
                 // Build isolated redirect preserving intended URL for post-login optionally
-                router.push(`/login?redirect=${encodeURIComponent(pathname || '/dashboard')}`)
+                router.replace(`/login?redirect=${encodeURIComponent(pathname || '/dashboard')}`)
             } else if (requireAdmin && !isAdmin) {
                 // Unauthorized non-admin attempt
-                router.push('/dashboard')
+                router.replace('/dashboard')
             }
         }
     }, [loading, isAuthenticated, isAdmin, requireAdmin, router, pathname])

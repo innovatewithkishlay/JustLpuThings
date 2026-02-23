@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,14 +17,27 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function RegisterPage() {
     const router = useRouter()
     const { isAuthenticated, isAdmin, loading: authLoading, checkAuth } = useAuth()
-    const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({ name: '', email: '', password: '' })
 
     useEffect(() => {
         if (!authLoading && isAuthenticated) {
-            router.push(isAdmin ? '/admin' : '/dashboard')
+            router.replace(isAdmin ? '/admin' : '/dashboard')
         }
     }, [isAuthenticated, isAdmin, authLoading, router])
+
+    const registerMutation = useMutation({
+        mutationFn: async (credentials: typeof form) => {
+            return await apiClient('/auth/register', {
+                method: 'POST',
+                body: JSON.stringify(credentials)
+            })
+        },
+        onSuccess: () => {
+            toast.success('Account created successfully')
+            router.replace('/login')
+        }
+        // global mutationCache intercepts failures cleanly 
+    })
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -38,20 +52,7 @@ export default function RegisterPage() {
             return
         }
 
-        setLoading(true)
-        try {
-            await apiClient('/auth/register', {
-                method: 'POST',
-                body: JSON.stringify(form)
-            })
-
-            toast.success('Account created successfully')
-            router.push('/login')
-        } catch (err: any) {
-            toast.error(err.message || 'Registration failed')
-        } finally {
-            setLoading(false)
-        }
+        registerMutation.mutate(form)
     }
 
     return (
@@ -89,7 +90,7 @@ export default function RegisterPage() {
                                     placeholder="John Doe"
                                     value={form.name}
                                     onChange={(e) => setForm({ ...form, name: e.target.value })}
-                                    disabled={loading}
+                                    disabled={registerMutation.isPending}
                                     className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
                                 />
                             </div>
@@ -101,7 +102,7 @@ export default function RegisterPage() {
                                     placeholder="name@university.edu"
                                     value={form.email}
                                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    disabled={loading}
+                                    disabled={registerMutation.isPending}
                                     className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
                                 />
                             </div>
@@ -112,13 +113,13 @@ export default function RegisterPage() {
                                     type="password"
                                     value={form.password}
                                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    disabled={loading}
+                                    disabled={registerMutation.isPending}
                                     className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
                                 />
                             </div>
-                            <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-4" disabled={loading}>
+                            <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-4" disabled={registerMutation.isPending}>
                                 <AnimatePresence mode="wait">
-                                    {loading ? (
+                                    {registerMutation.isPending ? (
                                         <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
                                             <Loader2 className="w-4 h-4 animate-spin" /> Creating Account...
                                         </motion.div>

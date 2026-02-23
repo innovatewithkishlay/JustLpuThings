@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -20,37 +20,55 @@ export default function ViewerPage() {
     const [distractionFree, setDistractionFree] = useState(false)
     const [progress, setProgress] = useState(5)
 
-    const { data, isLoading: loading, isError } = useQuery({
+    const [url, setUrl] = useState<string | null>(null)
+
+    // 1. Fetch only static non-violent metadata natively mapped to the query cache
+    const { data: documentData, isLoading: metadataLoading, isError: metadataError } = useQuery({
         queryKey: ["material", params.id as string],
         queryFn: async () => {
-            const materialData = await apiClient<any>(`/materials/${params.id}`)
-            const signedUrlData = await apiClient<{ signedUrl: string }>(`/materials/${params.id}/access`)
-
-            return {
-                title: materialData.title,
-                metadata: materialData,
-                url: signedUrlData.signedUrl
-            }
+            return await apiClient<any>(`/materials/${params.id}`)
         },
-        retry: false
+        retry: 1
     })
 
-    useEffect(() => {
-        if (isError) {
-            toast.error('Failed to load secure document')
-            setTimeout(() => router.push('/dashboard'), 2000)
+    // 2. Fetch Signed URL dynamically avoiding query caches directly natively
+    const accessMutation = useMutation({
+        mutationFn: async () => {
+            const res = await apiClient<{ signedUrl: string }>(`/materials/${params.id}/access`)
+            return res.signedUrl
+        },
+        onSuccess: (fetchedUrl) => {
+            setUrl(fetchedUrl)
+        },
+        onError: () => {
+            toast.error('Failed to generate secure access token')
+            setTimeout(() => router.replace('/dashboard'), 2000)
         }
-    }, [isError, router])
+    })
+
+    // Request signed access passively strictly bypassing cache lookups
+    useEffect(() => {
+        if (!url && !accessMutation.isPending && documentData) {
+            accessMutation.mutate()
+        }
+    }, [url, accessMutation.isPending, documentData, params.id])
+
+    useEffect(() => {
+        if (metadataError) {
+            toast.error('Failed to load document metadata')
+            setTimeout(() => router.replace('/dashboard'), 2000)
+        }
+    }, [metadataError, router])
 
     // Progress Auto-Save Pipeline
     useEffect(() => {
-        if (!data) return
+        if (!documentData) return
         const saveInterval = setInterval(() => {
             setProgress(p => Math.min(p + 2, 100))
             console.log('[Viewer] Auto-saving progression state...')
         }, 15000)
         return () => clearInterval(saveInterval)
-    }, [data])
+    }, [documentData])
 
     // Security Mechanisms
     const handleContextMenu = (e: React.MouseEvent) => e.preventDefault()
@@ -72,6 +90,8 @@ export default function ViewerPage() {
         }
     }
 
+    const loading = metadataLoading || accessMutation.isPending || !url
+
     if (loading) {
         return (
             <div className="flex flex-col h-screen bg-background">
@@ -86,7 +106,7 @@ export default function ViewerPage() {
         )
     }
 
-    if (!data) return null
+    if (!documentData || !url) return null
 
     return (
         <div
@@ -110,7 +130,7 @@ export default function ViewerPage() {
                             </Button>
                             <div className="flex flex-col">
                                 <h1 className="font-heading font-semibold text-[15px] truncate max-w-[300px] md:max-w-md lg:max-w-xl">
-                                    {data.title}
+                                    {documentData.title}
                                 </h1>
                                 <div className="flex items-center gap-2 mt-0.5">
                                     <ShieldCheck className="w-3 h-3 text-emerald-500" />
@@ -164,9 +184,9 @@ export default function ViewerPage() {
                     style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
                 >
                     <iframe
-                        src={`${data.url}#toolbar=0&navpanes=0&scrollbar=0`}
+                        src={`${url}#toolbar=0&navpanes=0&scrollbar=0`}
                         className="w-full h-full border-0"
-                        title={data.title}
+                        title={documentData.title}
                     />
                     <div className="absolute inset-x-0 top-0 h-10 z-20 bg-transparent" />
                     <div className="absolute inset-y-0 right-0 w-6 z-20 bg-transparent" />
@@ -191,11 +211,11 @@ export default function ViewerPage() {
                             <div className="p-6 space-y-6 flex-1 overflow-y-auto no-scrollbar">
                                 <div>
                                     <p className="text-xs font-bold uppercase text-muted-foreground mb-2 tracking-wider">Subject Code</p>
-                                    <p className="font-mono text-sm bg-background inline-flex px-3 py-1.5 rounded-lg border border-border shadow-sm">{data.metadata?.subjectCode}</p>
+                                    <p className="font-mono text-sm bg-background inline-flex px-3 py-1.5 rounded-lg border border-border shadow-sm">{documentData.subjectCode}</p>
                                 </div>
                                 <div>
                                     <p className="text-xs font-bold uppercase text-muted-foreground mb-2 tracking-wider">Description</p>
-                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{data.metadata?.description}</p>
+                                    <p className="text-sm text-foreground/80 leading-relaxed font-medium">{documentData.description}</p>
                                 </div>
                                 <div className="bg-primary/5 p-4 rounded-2xl border border-primary/20 space-y-2 mt-auto">
                                     <p className="text-xs font-bold uppercase text-primary tracking-wider flex items-center gap-1.5"><EyeOff className="w-4 h-4" /> Defense Log</p>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
@@ -16,14 +17,27 @@ import { useAuth } from '@/contexts/AuthContext'
 export default function LoginPage() {
     const router = useRouter()
     const { isAuthenticated, isAdmin, loading: authLoading, checkAuth } = useAuth()
-    const [loading, setLoading] = useState(false)
     const [form, setForm] = useState({ email: '', password: '' })
 
     useEffect(() => {
         if (!authLoading && isAuthenticated) {
-            router.push(isAdmin ? '/admin' : '/dashboard')
+            router.replace(isAdmin ? '/admin' : '/dashboard')
         }
     }, [isAuthenticated, isAdmin, authLoading, router])
+
+    const loginMutation = useMutation({
+        mutationFn: async (credentials: typeof form) => {
+            return await apiClient<{ token: string }>('/auth/login', {
+                method: 'POST',
+                body: JSON.stringify(credentials)
+            })
+        },
+        onSuccess: async () => {
+            toast.success('Authentication successful')
+            await checkAuth() // Synchronize global state
+        }
+        // onError uses global mutationCache now defined in queryClient.ts natively
+    })
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -31,22 +45,7 @@ export default function LoginPage() {
             toast.error('Please fill in all fields')
             return
         }
-
-        setLoading(true)
-        try {
-            await apiClient<{ token: string }>('/auth/login', {
-                method: 'POST',
-                body: JSON.stringify(form)
-            })
-
-            toast.success('Authentication successful')
-            await checkAuth() // Synchronize global state
-            // Router redirection is handled via useEffect monitoring isAuthenticated natively
-        } catch (err: any) {
-            toast.error(err.message || 'Invalid credentials')
-        } finally {
-            setLoading(false)
-        }
+        loginMutation.mutate(form)
     }
 
     return (
@@ -84,7 +83,7 @@ export default function LoginPage() {
                                     placeholder="name@university.edu"
                                     value={form.email}
                                     onChange={(e) => setForm({ ...form, email: e.target.value })}
-                                    disabled={loading}
+                                    disabled={loginMutation.isPending}
                                     className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
                                 />
                             </div>
@@ -97,13 +96,13 @@ export default function LoginPage() {
                                     type="password"
                                     value={form.password}
                                     onChange={(e) => setForm({ ...form, password: e.target.value })}
-                                    disabled={loading}
+                                    disabled={loginMutation.isPending}
                                     className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
                                 />
                             </div>
-                            <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-4" disabled={loading}>
+                            <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-4" disabled={loginMutation.isPending}>
                                 <AnimatePresence mode="wait">
-                                    {loading ? (
+                                    {loginMutation.isPending ? (
                                         <motion.div key="loading" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
                                             <Loader2 className="w-4 h-4 animate-spin" /> Authenticating...
                                         </motion.div>
