@@ -40,11 +40,13 @@ export class AdminController {
     // --- Materials ---
     static async uploadMaterial(req: Request, res: Response, next: NextFunction) {
         try {
-            const file = req.file as any;
-            if (!file) throw { statusCode: 400, message: 'PDF file is required' };
-
             const adminId = req.user!.userId;
             const data = adminMaterialUploadSchema.parse(req.body);
+
+            const file = req.file as any;
+            if (!file && !data.youtube_url) {
+                throw { statusCode: 400, message: 'Either a PDF file or a valid YouTube URL is required' };
+            }
 
             const result = await AdminMaterialsService.uploadMaterial(adminId, data, file);
 

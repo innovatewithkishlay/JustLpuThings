@@ -6,19 +6,22 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class AdminMaterialsService {
 
-    static async uploadMaterial(adminId: string, data: AdminMaterialUploadInput, file: Express.Multer.File) {
-        if (file.mimetype !== 'application/pdf') {
+    static async uploadMaterial(adminId: string, data: AdminMaterialUploadInput, file?: Express.Multer.File) {
+        if (file && file.mimetype !== 'application/pdf') {
             throw { statusCode: 400, message: 'Invalid file type. Only PDF is allowed.' };
         }
 
         const rawSlug = slugify(data.title, { lower: true, strict: true });
         const uniqueSlug = `${rawSlug}-${Math.random().toString(36).substring(2, 8)}`;
-        const fileKey = `materials/${uuidv4()}.pdf`;
+        let fileKey: string | null = null;
 
-        // 1. Upload to R2
-        const uploadSuccess = await R2Service.uploadFile(file.buffer, fileKey);
-        if (!uploadSuccess) {
-            throw { statusCode: 500, message: 'Failed to upload file to storage.' };
+        if (file) {
+            fileKey = `materials/${uuidv4()}.pdf`;
+            // 1. Upload to R2
+            const uploadSuccess = await R2Service.uploadFile(file.buffer, fileKey);
+            if (!uploadSuccess) {
+                throw { statusCode: 500, message: 'Failed to upload file to storage.' };
+            }
         }
 
         const client = await pool.connect();
@@ -26,9 +29,9 @@ export class AdminMaterialsService {
             await client.query('BEGIN');
 
             const insertRes = await client.query(
-                `INSERT INTO materials (subject_id, title, slug, description, file_key, category, unit, uploaded_by)
-                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
-                [data.subject_id, data.title, uniqueSlug, data.description || null, fileKey, data.category || 'notes', data.unit || null, adminId]
+                `INSERT INTO materials (subject_id, title, slug, description, file_key, category, unit, youtube_url, uploaded_by)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id`,
+                [data.subject_id, data.title, uniqueSlug, data.description || null, fileKey, data.category || 'notes', data.unit || null, data.youtube_url || null, adminId]
             );
 
             const materialId = insertRes.rows[0].id;
@@ -46,7 +49,9 @@ export class AdminMaterialsService {
         } catch (error) {
             await client.query('ROLLBACK');
             // Cleanup orphaned file
-            await R2Service.deleteFile(fileKey);
+            if (fileKey) {
+                await R2Service.deleteFile(fileKey);
+            }
             throw error;
         } finally {
             client.release();
@@ -81,6 +86,10 @@ export class AdminMaterialsService {
         if (data.unit !== undefined) {
             fields.push(`unit = $${index++}`);
             values.push(data.unit);
+        }
+        if (data.youtube_url !== undefined) {
+            fields.push(`youtube_url = $${index++}`);
+            values.push(data.youtube_url);
         }
 
         values.push(materialId);
@@ -127,10 +136,12 @@ export class AdminMaterialsService {
             }
             const fileKey = res.rows[0].file_key;
 
-            // 2. Erase from R2 securely before DB drop
-            const deleted = await R2Service.deleteFile(fileKey);
-            if (!deleted) {
-                throw { statusCode: 500, message: 'Could not remove material from remote storage. DB retention active.' };
+            // 2. Erase from R2 securely before DB drop if a file natively exists
+            if (fileKey) {
+                const deleted = await R2Service.deleteFile(fileKey);
+                if (!deleted) {
+                    throw { statusCode: 500, message: 'Could not remove material from remote storage. DB retention active.' };
+                }
             }
 
             // 3. Delete from DB (Hard Drop)

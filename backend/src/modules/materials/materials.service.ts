@@ -11,7 +11,8 @@ export class MaterialsService {
         const safeLimit = Math.min(limit, 50);
 
         let sql = `
-      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit,
+      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit, m.youtube_url,
+             (m.file_key IS NOT NULL) AS has_file,
              s.name as subject_name, sem.number as semester_number, c.name as college_name
       FROM materials m
       JOIN subjects s ON m.subject_id = s.id
@@ -97,7 +98,8 @@ export class MaterialsService {
 
     static async getMaterialBySlug(slug: string, userId: string) {
         const sql = `
-      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit, m.status,
+      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit, m.youtube_url, m.status,
+             (m.file_key IS NOT NULL) AS has_file,
              s.name as subject_name, sem.number as semester_number, 
              p.last_page, p.total_pages
       FROM materials m

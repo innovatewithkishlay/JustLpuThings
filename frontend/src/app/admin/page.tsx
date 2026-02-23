@@ -25,12 +25,17 @@ const itemVariants = {
 // Subject Mappings for Admin Upload
 const subjectMap: Record<string, { slug: string, name: string }[]> = {
     "2": [
-        { slug: "mathematics", name: "Mathematics" },
-        { slug: "engineering-mechanics", name: "Engineering Mechanics" },
-        { slug: "basic-electronics", name: "Basic Electronics" },
-        { slug: "programming-fundamentals", name: "Programming Fundamentals" },
-        { slug: "environmental-studies", name: "Environmental Studies" },
-        { slug: "communication-skills", name: "Communication Skills" }
+        { slug: "int306", name: "INT306 - Internet and Web Designing" },
+        { slug: "phy110", name: "PHY110 - Engineering Physics" },
+        { slug: "cse121", name: "CSE121 - Object Oriented Programming" },
+        { slug: "cse101", name: "CSE101 - Computer Programming" },
+        { slug: "mec136", name: "MEC136 - Engineering Graphics" },
+        { slug: "cse320", name: "CSE320 - Software Engineering" },
+        { slug: "pel121", name: "PEL121 - Communication Skills I" },
+        { slug: "pel125", name: "PEL125 - Communication Skills II" },
+        { slug: "pel130", name: "PEL130 - Communication Skills III" },
+        { slug: "ece249", name: "ECE249 - Basic Electrical & Electronics" },
+        { slug: "che110", name: "CHE110 - Environmental Sciences" }
     ],
     "4": [
         { slug: "data-structures", name: "Data Structures" },
@@ -68,8 +73,9 @@ export default function AdminDashboard() {
     const [uploadForm, setUploadForm] = useState({
         title: '',
         description: '',
+        youtube_url: '',
         semester: '2',
-        subject: 'mathematics',
+        subject: 'int306',
         category: 'notes',
         unit: ''
     })
@@ -99,7 +105,7 @@ export default function AdminDashboard() {
             queryClient.invalidateQueries({ queryKey: ["materials", uploadForm.semester, uploadForm.subject, uploadForm.category] })
 
             // Reset state natively
-            setUploadForm({ title: '', description: '', semester: '2', subject: 'mathematics', category: 'notes', unit: '' })
+            setUploadForm({ title: '', description: '', youtube_url: '', semester: '2', subject: 'int306', category: 'notes', unit: '' })
             setFile(null)
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
@@ -107,8 +113,8 @@ export default function AdminDashboard() {
 
     const handleUploadSubmit = (e: React.FormEvent) => {
         e.preventDefault()
-        if (!uploadForm.title || !uploadForm.description || !file) {
-            toast.error('All fields including the PDF file are required')
+        if (!uploadForm.title || !uploadForm.description || (!file && !uploadForm.youtube_url)) {
+            toast.error('You must provide either a PDF Document or a YouTube URL (or both)')
             return
         }
 
@@ -119,7 +125,8 @@ export default function AdminDashboard() {
         formData.append('subject', uploadForm.subject)
         formData.append('category', uploadForm.category)
         if (uploadForm.unit) formData.append('unit', uploadForm.unit)
-        formData.append('file', file)
+        if (uploadForm.youtube_url) formData.append('youtube_url', uploadForm.youtube_url)
+        if (file) formData.append('file', file)
 
         uploadMutation.mutate(formData)
     }
@@ -346,7 +353,17 @@ export default function AdminDashboard() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">PDF Document</Label>
+                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">YouTube Video URL (Optional)</Label>
+                                        <Input
+                                            value={uploadForm.youtube_url} onChange={e => setUploadForm({ ...uploadForm, youtube_url: e.target.value })}
+                                            placeholder="https://youtu.be/..."
+                                            disabled={uploadMutation.isPending}
+                                            className="h-10 rounded-xl"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">PDF Document (Optional if video linked)</Label>
                                         <Input
                                             ref={fileInputRef}
                                             type="file"

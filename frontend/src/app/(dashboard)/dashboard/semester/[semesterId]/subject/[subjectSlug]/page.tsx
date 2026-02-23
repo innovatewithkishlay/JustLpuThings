@@ -31,6 +31,8 @@ interface Material {
     subjectCode: string
     category: string
     unit: string
+    youtube_url?: string
+    has_file: boolean
     createdAt: string
     updatedAt: string
 }
@@ -172,8 +174,8 @@ export default function SubjectMaterialsPage() {
                                 {displayedMaterials.map((mat) => (
                                     <motion.div key={mat.id} variants={fadeUp} whileHover={{ y: -4, scale: 1.01 }}>
                                         <Card
-                                            onClick={() => router.push(`/viewer/${mat.id}`)}
-                                            className="cursor-pointer h-full flex flex-col p-5 rounded-[24px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden"
+                                            onClick={() => mat.has_file ? router.push(`/viewer/${mat.id}`) : mat.youtube_url ? window.open(mat.youtube_url, '_blank') : null}
+                                            className={`h-full flex flex-col p-5 rounded-[24px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden ${mat.has_file || mat.youtube_url ? 'cursor-pointer' : 'cursor-default'}`}
                                         >
                                             <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
 
@@ -203,9 +205,29 @@ export default function SubjectMaterialsPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="mt-4 pt-4 border-t border-border/30 flex justify-between items-center opacity-60 group-hover:opacity-100 transition-opacity">
-                                                <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{mat.category === 'notes' ? 'Read Document' : mat.category === 'ppt' ? 'View Slides' : 'Open Material'}</span>
-                                                <ArrowRight className="w-4 h-4 text-primary" />
+                                            <div className="mt-4 pt-4 border-t border-border/30 flex flex-col gap-3 opacity-80 group-hover:opacity-100 transition-opacity">
+                                                {mat.youtube_url ? (
+                                                    <a
+                                                        href={mat.youtube_url}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        onClick={(e) => e.stopPropagation()}
+                                                        className="flex items-center justify-between bg-red-500/10 text-red-500 px-3 py-2 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                                                    >
+                                                        <span className="text-xs font-bold uppercase tracking-wider">Watch Video Lecture</span>
+                                                        <MonitorPlay className="w-4 h-4 text-red-500" />
+                                                    </a>
+                                                ) : (
+                                                    <div className="flex items-center justify-between bg-muted/30 text-muted-foreground px-3 py-2 rounded-xl border border-border/50">
+                                                        <span className="text-xs font-bold uppercase tracking-wider opacity-60">No Video Available</span>
+                                                    </div>
+                                                )}
+                                                {mat.has_file && (
+                                                    <div className="flex justify-between items-center px-1">
+                                                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{mat.category === 'notes' ? 'Read Document' : mat.category === 'ppt' ? 'View Slides' : 'Open Document'}</span>
+                                                        <ArrowRight className="w-4 h-4 text-primary" />
+                                                    </div>
+                                                )}
                                             </div>
                                         </Card>
                                     </motion.div>

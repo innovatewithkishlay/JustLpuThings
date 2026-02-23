@@ -6,6 +6,7 @@ export const adminMaterialUploadSchema = z.object({
     description: z.string().max(1000).optional(),
     category: z.enum(['notes', 'ppt', 'pyqs', 'midterm', 'ca']).default('notes'),
     unit: z.string().max(10).optional(),
+    youtube_url: z.string().url('Invalid YouTube URL').max(255).optional(),
 });
 
 export const adminMaterialUpdateSchema = z.object({
@@ -14,6 +15,7 @@ export const adminMaterialUpdateSchema = z.object({
     status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
     category: z.enum(['notes', 'ppt', 'pyqs', 'midterm', 'ca']).optional(),
     unit: z.string().max(10).optional(),
+    youtube_url: z.string().url('Invalid YouTube URL').max(255).optional(),
 });
 
 export const adminUserBlockSchema = z.object({
