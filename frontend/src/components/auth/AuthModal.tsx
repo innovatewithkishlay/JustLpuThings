@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/apiClient'
-import { BookOpen, Loader2, X, Eye, EyeOff, KeyRound, Mail } from 'lucide-react'
+import { BookOpen, Loader2, X, Eye, EyeOff, KeyRound, Mail, User } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthModal() {
@@ -18,7 +18,7 @@ export function AuthModal() {
     const { authModalOpen, authModalMode, closeAuthModal, openAuthModal, checkAuth, isAuthenticated, isAdmin, loading } = useAuth()
 
     const [loginForm, setLoginForm] = useState({ email: '', password: '' })
-    const [registerForm, setRegisterForm] = useState({ email: '', password: '', confirmPassword: '' })
+    const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
@@ -64,7 +64,7 @@ export function AuthModal() {
         onSuccess: () => {
             toast.success('Account created successfully! Please sign in.')
             openAuthModal('login')
-            setRegisterForm({ email: '', password: '', confirmPassword: '' })
+            setRegisterForm({ name: '', email: '', password: '', confirmPassword: '' })
             setShowPassword(false)
             setShowConfirmPassword(false)
         }
@@ -81,7 +81,7 @@ export function AuthModal() {
 
     const handleRegisterSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
-        if (!registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
+        if (!registerForm.name || !registerForm.email || !registerForm.password || !registerForm.confirmPassword) {
             toast.error('Please fill in all fields')
             return
         }
@@ -89,7 +89,7 @@ export function AuthModal() {
             toast.error('Passwords do not match')
             return
         }
-        registerMutation.mutate({ email: registerForm.email, password: registerForm.password })
+        registerMutation.mutate({ name: registerForm.name, email: registerForm.email, password: registerForm.password })
     }
 
     return (
@@ -123,29 +123,14 @@ export function AuthModal() {
                                 <X className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
                             </Button>
 
-                            <Card className="soft-shadow border-border/50 overflow-hidden rounded-[24px] bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 relative">
-                                {/* Subtle inner glow effect */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
-
-                                <div className="h-1.5 w-full bg-gradient-to-r from-primary via-indigo-400 to-primary" />
-
-                                <CardHeader className="space-y-2 pt-8 px-8">
-                                    <div className="flex justify-center mb-6">
-                                        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center border border-primary/20">
-                                            <BookOpen className="w-6 h-6 text-primary" />
-                                        </div>
-                                    </div>
-                                    <CardTitle className="text-2xl font-heading font-bold text-center">
-                                        {authModalMode === 'login' ? 'Welcome back' : 'Join the Vault'}
+                            <Card className="soft-shadow border-[0.5px] border-border/80 overflow-hidden rounded-[20px] bg-background/95 backdrop-blur-2xl relative">
+                                <CardHeader className="space-y-1.5 pt-6 px-6">
+                                    <CardTitle className="text-xl font-heading font-bold text-center tracking-tight">
+                                        {authModalMode === 'login' ? 'Sign In' : 'Create Account'}
                                     </CardTitle>
-                                    <CardDescription className="text-center font-medium">
-                                        {authModalMode === 'login'
-                                            ? 'Enter your credentials to securely access your materials'
-                                            : 'Create an account to securely store and track your academic progress'}
-                                    </CardDescription>
                                 </CardHeader>
 
-                                <CardContent className="px-8 pb-8">
+                                <CardContent className="px-6 pb-6">
                                     <AnimatePresence mode="wait">
                                         {authModalMode === 'login' ? (
                                             <motion.form
@@ -155,11 +140,11 @@ export function AuthModal() {
                                                 exit={{ opacity: 0, x: 20 }}
                                                 transition={{ duration: 0.2 }}
                                                 onSubmit={handleLoginSubmit}
-                                                className="space-y-5"
+                                                className="space-y-4"
                                             >
-                                                <div className="space-y-4">
-                                                    <div className="space-y-1.5">
-                                                        <Label htmlFor="login-email" className="text-xs font-semibold text-muted-foreground ml-1">Email Address</Label>
+                                                <div className="space-y-3">
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="login-email" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Email</Label>
                                                         <div className="relative group">
                                                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                                                 <Mail className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -171,13 +156,13 @@ export function AuthModal() {
                                                                 value={loginForm.email}
                                                                 onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
                                                                 disabled={loginMutation.isPending}
-                                                                className="h-12 pl-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                                className="h-11 pl-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-1.5">
+                                                    <div className="space-y-1">
                                                         <div className="flex items-center justify-between ml-1">
-                                                            <Label htmlFor="login-password" className="text-xs font-semibold text-muted-foreground">Password</Label>
+                                                            <Label htmlFor="login-password" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">Password</Label>
                                                         </div>
                                                         <div className="relative group">
                                                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -189,7 +174,7 @@ export function AuthModal() {
                                                                 value={loginForm.password}
                                                                 onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                                                                 disabled={loginMutation.isPending}
-                                                                className="h-12 pl-10 pr-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                                className="h-11 pl-10 pr-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
                                                             />
                                                             <button
                                                                 type="button"
@@ -201,7 +186,7 @@ export function AuthModal() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-8 group relative overflow-hidden" disabled={loginMutation.isPending}>
+                                                <Button type="submit" className="w-full h-11 rounded-[10px] text-sm font-semibold active:scale-[0.98] transition-all mt-6 group relative overflow-hidden" disabled={loginMutation.isPending}>
                                                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                                                     {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                     {loginMutation.isPending ? 'Authenticating...' : 'Sign In'}
@@ -215,11 +200,28 @@ export function AuthModal() {
                                                 exit={{ opacity: 0, x: -20 }}
                                                 transition={{ duration: 0.2 }}
                                                 onSubmit={handleRegisterSubmit}
-                                                className="space-y-5"
+                                                className="space-y-4"
                                             >
-                                                <div className="space-y-4">
-                                                    <div className="space-y-1.5">
-                                                        <Label htmlFor="reg-email" className="text-xs font-semibold text-muted-foreground ml-1">Email Address</Label>
+                                                <div className="space-y-3">
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="reg-name" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Full Name</Label>
+                                                        <div className="relative group">
+                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                                <User className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                            </div>
+                                                            <Input
+                                                                id="reg-name"
+                                                                type="text"
+                                                                placeholder="Alice Doe"
+                                                                value={registerForm.name}
+                                                                onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                                                                disabled={registerMutation.isPending}
+                                                                className="h-11 pl-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="reg-email" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Email</Label>
                                                         <div className="relative group">
                                                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                                                 <Mail className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -231,12 +233,12 @@ export function AuthModal() {
                                                                 value={registerForm.email}
                                                                 onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
                                                                 disabled={registerMutation.isPending}
-                                                                className="h-12 pl-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                                className="h-11 pl-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
                                                             />
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-1.5">
-                                                        <Label htmlFor="reg-password" className="text-xs font-semibold text-muted-foreground ml-1">Password</Label>
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="reg-password" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Password</Label>
                                                         <div className="relative group">
                                                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                                                 <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -247,7 +249,7 @@ export function AuthModal() {
                                                                 value={registerForm.password}
                                                                 onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                                                                 disabled={registerMutation.isPending}
-                                                                className="h-12 pl-10 pr-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                                className="h-11 pl-10 pr-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
                                                             />
                                                             <button
                                                                 type="button"
@@ -258,8 +260,8 @@ export function AuthModal() {
                                                             </button>
                                                         </div>
                                                     </div>
-                                                    <div className="space-y-1.5">
-                                                        <Label htmlFor="reg-confirm" className="text-xs font-semibold text-muted-foreground ml-1">Confirm Password</Label>
+                                                    <div className="space-y-1">
+                                                        <Label htmlFor="reg-confirm" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Confirm Password</Label>
                                                         <div className="relative group">
                                                             <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                                                                 <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -270,7 +272,7 @@ export function AuthModal() {
                                                                 value={registerForm.confirmPassword}
                                                                 onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
                                                                 disabled={registerMutation.isPending}
-                                                                className="h-12 pl-10 pr-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                                className="h-11 pl-10 pr-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
                                                             />
                                                             <button
                                                                 type="button"
@@ -282,7 +284,7 @@ export function AuthModal() {
                                                         </div>
                                                     </div>
                                                 </div>
-                                                <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-8 group relative overflow-hidden" disabled={registerMutation.isPending}>
+                                                <Button type="submit" className="w-full h-11 rounded-[10px] text-sm font-semibold active:scale-[0.98] transition-all mt-6 group relative overflow-hidden" disabled={registerMutation.isPending}>
                                                     <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                                                     {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                     {registerMutation.isPending ? 'Creating...' : 'Create Account'}
@@ -291,17 +293,16 @@ export function AuthModal() {
                                         )}
                                     </AnimatePresence>
                                 </CardContent>
-
-                                <CardFooter className="flex flex-col gap-4 px-8 pb-8 pt-0">
-                                    <div className="text-sm border-t border-border pt-6 w-full text-center text-muted-foreground font-medium">
+                                <CardFooter className="flex flex-col px-6 pb-6 pt-0 mt-2">
+                                    <div className="text-xs w-full text-center text-muted-foreground font-medium">
                                         {authModalMode === 'login' ? (
                                             <>
                                                 Don't have an account?{' '}
                                                 <button
                                                     onClick={() => openAuthModal('register')}
-                                                    className="text-primary hover:text-primary/80 transition-colors font-bold"
+                                                    className="text-primary hover:underline underline-offset-4 focus-visible:underline focus-visible:outline-none transition-colors font-semibold"
                                                 >
-                                                    Create one now
+                                                    Sign up
                                                 </button>
                                             </>
                                         ) : (
@@ -309,9 +310,9 @@ export function AuthModal() {
                                                 Already have an account?{' '}
                                                 <button
                                                     onClick={() => openAuthModal('login')}
-                                                    className="text-primary hover:text-primary/80 transition-colors font-bold"
+                                                    className="text-primary hover:underline underline-offset-4 focus-visible:underline focus-visible:outline-none transition-colors font-semibold"
                                                 >
-                                                    Sign in instead
+                                                    Sign in
                                                 </button>
                                             </>
                                         )}

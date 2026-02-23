@@ -37,7 +37,6 @@ const AuthContext = createContext<AuthContextType>({
 })
 
 export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode }) => {
-    const queryClient = useQueryClient();
     const [authModalOpen, setAuthModalOpen] = React.useState(false);
     const [authModalMode, setAuthModalMode] = React.useState<'login' | 'register'>('login');
 

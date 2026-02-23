@@ -23,7 +23,7 @@ function parseExpirationToMs(val: string): number {
 export class AuthService {
 
     static async register(data: RegisterInput) {
-        const { email, password } = data;
+        const { name, email, password } = data;
 
         // Check existing
         const existing = await pool.query('SELECT id FROM users WHERE email = $1', [email]);
@@ -34,8 +34,8 @@ export class AuthService {
         const hash = await bcrypt.hash(password, 12);
 
         const result = await pool.query(
-            `INSERT INTO users (email, password_hash, role) VALUES ($1, $2, 'USER') RETURNING id, email, role`,
-            [email, hash]
+            `INSERT INTO users (name, email, password_hash, role) VALUES ($1, $2, $3, 'USER') RETURNING id, name, email, role`,
+            [name, email, hash]
         );
 
         return result.rows[0];
@@ -55,7 +55,7 @@ export class AuthService {
     }
 
     static async getMe(userId: string) {
-        const userResult = await pool.query('SELECT id, email, role FROM users WHERE id = $1', [userId]);
+        const userResult = await pool.query('SELECT id, name, email, role FROM users WHERE id = $1', [userId]);
         const user = userResult.rows[0];
 
         if (!user) {
@@ -65,7 +65,7 @@ export class AuthService {
         return {
             id: user.id,
             email: user.email,
-            name: user.email.split('@')[0],
+            name: user.name || user.email.split('@')[0],
             role: user.role
         };
     }

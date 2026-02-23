@@ -4,14 +4,14 @@ import { MaterialQueryInput } from './materials.schema';
 export class MaterialsService {
 
     static async getMaterials(query: MaterialQueryInput) {
-        const { page, limit, college, semester } = query;
+        const { page, limit, college, semester, subject, category, unit } = query;
         const offset = (page - 1) * limit;
 
         // Hard cap limits enforcing backend stamina
         const safeLimit = Math.min(limit, 50);
 
         let sql = `
-      SELECT m.id, m.title, m.slug, m.description, 
+      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit,
              s.name as subject_name, sem.number as semester_number, c.name as college_name
       FROM materials m
       JOIN subjects s ON m.subject_id = s.id
@@ -44,6 +44,24 @@ export class MaterialsService {
             paramIndex++;
         }
 
+        if (subject) {
+            sql += ` AND s.name = $${paramIndex}`;
+            values.push(subject.replace(/-/g, ' '));
+            paramIndex++;
+        }
+
+        if (category) {
+            sql += ` AND m.category = $${paramIndex}`;
+            values.push(category);
+            paramIndex++;
+        }
+
+        if (unit) {
+            sql += ` AND m.unit = $${paramIndex}`;
+            values.push(unit);
+            paramIndex++;
+        }
+
         // Add sorting and pagination
         sql += ` ORDER BY m.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
 
@@ -61,6 +79,9 @@ export class MaterialsService {
         let cnIdx = 1;
         if (college) { finalCountSql += ` AND c.code = $${cnIdx++}`; }
         if (semester) { finalCountSql += ` AND sem.number = $${cnIdx++}`; }
+        if (subject) { finalCountSql += ` AND s.name = $${cnIdx++}`; }
+        if (category) { finalCountSql += ` AND m.category = $${cnIdx++}`; }
+        if (unit) { finalCountSql += ` AND m.unit = $${cnIdx++}`; }
 
         const actualCount = await pool.query(finalCountSql, countValues);
 
@@ -76,7 +97,7 @@ export class MaterialsService {
 
     static async getMaterialBySlug(slug: string, userId: string) {
         const sql = `
-      SELECT m.id, m.title, m.slug, m.description, m.status,
+      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit, m.status,
              s.name as subject_name, sem.number as semester_number, 
              p.last_page, p.total_pages
       FROM materials m

@@ -1,12 +1,12 @@
 "use client"
 
 import { useEffect, useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { Users, BookOpen, Activity, AlertTriangle, ShieldAlert, Upload, FileIcon, Loader2 } from 'lucide-react'
+import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -42,6 +42,25 @@ const subjectMap: Record<string, { slug: string, name: string }[]> = {
     ]
 }
 
+interface TelemetryStats {
+    totalUsers: number;
+    totalMaterials: number;
+    totalViews: number;
+    activeUsers: number;
+    flaggedUsers: number;
+}
+
+interface Material {
+    id: string;
+    semester?: number;
+    subjectCode?: string;
+    category?: string;
+    unit?: string;
+    title: string;
+    viewCount?: number;
+    createdAt: string;
+}
+
 export default function AdminDashboard() {
     const queryClient = useQueryClient()
     const fileInputRef = useRef<HTMLInputElement>(null)
@@ -51,26 +70,20 @@ export default function AdminDashboard() {
         description: '',
         semester: '2',
         subject: 'mathematics',
-        type: 'notes'
+        category: 'notes',
+        unit: ''
     })
     const [file, setFile] = useState<File | null>(null)
 
-    // Sync subjects when semester changes natively
-    useEffect(() => {
-        if (subjectMap[uploadForm.semester]) {
-            setUploadForm(prev => ({ ...prev, subject: subjectMap[uploadForm.semester][0].slug }))
-        }
-    }, [uploadForm.semester])
-
     const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ["admin", "analytics"],
-        queryFn: () => apiClient<any>('/admin/telemetry')
+        queryFn: () => apiClient<TelemetryStats>('/admin/telemetry')
     })
 
     // Fetch materials to display in grouped lists
     const { data: allMaterials = [], isLoading: materialsLoading } = useQuery({
         queryKey: ["admin", "materials", "all"],
-        queryFn: () => apiClient<any[]>('/materials?admin=true') // Standard query block generic
+        queryFn: () => apiClient<Material[]>('/materials?admin=true') // Standard query block generic
     })
 
     const uploadMutation = useMutation({
@@ -83,10 +96,10 @@ export default function AdminDashboard() {
         onSuccess: () => {
             toast.success('Material deployed successfully to R2 pipeline')
             queryClient.invalidateQueries({ queryKey: ["admin", "materials", "all"] })
-            queryClient.invalidateQueries({ queryKey: ["materials", uploadForm.semester, uploadForm.subject, uploadForm.type] })
+            queryClient.invalidateQueries({ queryKey: ["materials", uploadForm.semester, uploadForm.subject, uploadForm.category] })
 
             // Reset state natively
-            setUploadForm({ title: '', description: '', semester: '2', subject: 'mathematics', type: 'notes' })
+            setUploadForm({ title: '', description: '', semester: '2', subject: 'mathematics', category: 'notes', unit: '' })
             setFile(null)
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
@@ -104,7 +117,8 @@ export default function AdminDashboard() {
         formData.append('description', uploadForm.description)
         formData.append('semester', uploadForm.semester)
         formData.append('subject', uploadForm.subject)
-        formData.append('type', uploadForm.type)
+        formData.append('category', uploadForm.category)
+        if (uploadForm.unit) formData.append('unit', uploadForm.unit)
         formData.append('file', file)
 
         uploadMutation.mutate(formData)
@@ -114,17 +128,19 @@ export default function AdminDashboard() {
         return <div className="page-container pt-8"><DashboardSkeleton /></div>
     }
 
-    // Grouping Materials By Semester -> Subject -> Type purely mathematically
-    const groupedMaterials = allMaterials.reduce((acc: any, mat) => {
+    // Grouping Materials By Semester -> Subject -> Category -> Unit purely mathematically
+    const groupedMaterials = allMaterials.reduce((acc: Record<string, Record<string, Record<string, Record<string, Material[]>>>>, mat) => {
         const sem = mat.semester?.toString() || 'Unknown'
         const sub = mat.subjectCode || 'Unknown'
-        const type = mat.materialType || 'Unknown'
+        const cat = mat.category || 'notes'
+        const unit = mat.unit || 'general'
 
         if (!acc[sem]) acc[sem] = {}
         if (!acc[sem][sub]) acc[sem][sub] = {}
-        if (!acc[sem][sub][type]) acc[sem][sub][type] = []
+        if (!acc[sem][sub][cat]) acc[sem][sub][cat] = {}
+        if (!acc[sem][sub][cat][unit]) acc[sem][sub][cat][unit] = []
 
-        acc[sem][sub][type].push(mat)
+        acc[sem][sub][cat][unit].push(mat)
         return acc
     }, {})
 
@@ -192,16 +208,23 @@ export default function AdminDashboard() {
                                                     <div key={subject}>
                                                         <div className="text-sm font-mono font-bold uppercase tracking-widest text-muted-foreground mb-3">{subject}</div>
                                                         <div className="pl-4 space-y-4">
-                                                            {Object.keys(groupedMaterials[semester][subject]).sort().map(type => (
-                                                                <div key={type}>
-                                                                    <div className="text-xs font-bold font-mono text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded inline-block uppercase tracking-wider mb-2">{type}</div>
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-2">
-                                                                        {groupedMaterials[semester][subject][type].map((mat: any) => (
-                                                                            <div key={mat.id} className="p-3 bg-muted/30 border border-border rounded-xl text-sm flex flex-col justify-between">
-                                                                                <div className="font-semibold text-foreground truncate">{mat.title}</div>
-                                                                                <div className="text-xs text-muted-foreground flex justify-between mt-2">
-                                                                                    <span>Views: {mat.viewCount || 0}</span>
-                                                                                    <span className="font-mono">{new Date(mat.createdAt).toLocaleDateString()}</span>
+                                                            {Object.keys(groupedMaterials[semester][subject]).sort().map(cat => (
+                                                                <div key={cat}>
+                                                                    <div className="text-xs font-bold font-mono text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded inline-block uppercase tracking-wider mb-2">{cat}</div>
+                                                                    <div className="pl-4 space-y-4">
+                                                                        {Object.keys(groupedMaterials[semester][subject][cat]).sort().map(unit => (
+                                                                            <div key={unit}>
+                                                                                <div className="text-[10px] font-bold font-mono text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded inline-block uppercase tracking-wider mb-2">Unit: {unit}</div>
+                                                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-2">
+                                                                                    {groupedMaterials[semester][subject][cat][unit].map((mat) => (
+                                                                                        <div key={mat.id} className="p-3 bg-muted/30 border border-border rounded-xl text-sm flex flex-col justify-between">
+                                                                                            <div className="font-semibold text-foreground truncate">{mat.title}</div>
+                                                                                            <div className="text-xs text-muted-foreground flex justify-between mt-2">
+                                                                                                <span>Views: {mat.viewCount || 0}</span>
+                                                                                                <span className="font-mono">{new Date(mat.createdAt).toLocaleDateString()}</span>
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    ))}
                                                                                 </div>
                                                                             </div>
                                                                         ))}
@@ -235,7 +258,11 @@ export default function AdminDashboard() {
                                             <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Semester</Label>
                                             <select
                                                 value={uploadForm.semester}
-                                                onChange={e => setUploadForm({ ...uploadForm, semester: e.target.value })}
+                                                onChange={e => {
+                                                    const semester = e.target.value;
+                                                    const subject = subjectMap[semester] ? subjectMap[semester][0].slug : 'generic';
+                                                    setUploadForm({ ...uploadForm, semester, subject });
+                                                }}
                                                 disabled={uploadMutation.isPending}
                                                 className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             >
@@ -245,16 +272,37 @@ export default function AdminDashboard() {
                                             </select>
                                         </div>
                                         <div className="space-y-2">
-                                            <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Material Type</Label>
+                                            <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Category</Label>
                                             <select
-                                                value={uploadForm.type}
-                                                onChange={e => setUploadForm({ ...uploadForm, type: e.target.value })}
+                                                value={uploadForm.category}
+                                                onChange={e => setUploadForm({ ...uploadForm, category: e.target.value })}
                                                 disabled={uploadMutation.isPending}
                                                 className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             >
-                                                <option value="notes">Subjective Notes</option>
-                                                <option value="ppt">Official PPT</option>
-                                                <option value="syllabus">Syllabus</option>
+                                                <option value="notes">Notes</option>
+                                                <option value="ppt">Presentations</option>
+                                                <option value="pyqs">PYQs</option>
+                                                <option value="midterm">Mid Terms</option>
+                                                <option value="ca">Continuous Assessment (CA)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Unit</Label>
+                                            <select
+                                                value={uploadForm.unit}
+                                                onChange={e => setUploadForm({ ...uploadForm, unit: e.target.value })}
+                                                disabled={uploadMutation.isPending}
+                                                className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                            >
+                                                <option value="">General / Extracurricular</option>
+                                                <option value="1">Unit 1</option>
+                                                <option value="2">Unit 2</option>
+                                                <option value="3">Unit 3</option>
+                                                <option value="4">Unit 4</option>
+                                                <option value="5">Unit 5</option>
+                                                <option value="6">Unit 6</option>
                                             </select>
                                         </div>
                                     </div>

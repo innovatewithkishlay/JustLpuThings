@@ -89,10 +89,12 @@ export function TopNavbar() {
                     {isAuthenticated ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" className="w-9 h-9 relative rounded-full ml-2 focus-visible:ring-primary/50">
-                                    <div className="w-8 h-8 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center font-bold text-primary text-sm uppercase">
-                                        {user?.email?.[0] || 'U'}
-                                    </div>
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="relative rounded-full ml-2 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold text-sm uppercase focus-visible:ring-primary/50 transition-colors"
+                                >
+                                    {user?.name?.[0] || user?.email?.[0] || 'U'}
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end" className="w-56 rounded-xl soft-shadow">

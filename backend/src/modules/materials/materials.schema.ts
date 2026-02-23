@@ -5,6 +5,9 @@ export const materialQuerySchema = z.object({
     limit: z.preprocess((val) => (val ? Number(val) : 20), z.number().min(1).max(50)),
     college: z.string().optional(),
     semester: z.preprocess((val) => (val ? Number(val) : undefined), z.number().optional()),
+    subject: z.string().optional(),
+    category: z.string().optional(),
+    unit: z.string().optional(),
 });
 
 export const progressSchema = z.object({

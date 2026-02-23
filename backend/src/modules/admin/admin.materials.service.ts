@@ -26,9 +26,9 @@ export class AdminMaterialsService {
             await client.query('BEGIN');
 
             const insertRes = await client.query(
-                `INSERT INTO materials (subject_id, title, slug, description, file_key, uploaded_by)
-                 VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`,
-                [data.subject_id, data.title, uniqueSlug, data.description || null, fileKey, adminId]
+                `INSERT INTO materials (subject_id, title, slug, description, file_key, category, unit, uploaded_by)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id`,
+                [data.subject_id, data.title, uniqueSlug, data.description || null, fileKey, data.category || 'notes', data.unit || null, adminId]
             );
 
             const materialId = insertRes.rows[0].id;
@@ -73,6 +73,14 @@ export class AdminMaterialsService {
         if (data.status !== undefined) {
             fields.push(`status = $${index++}`);
             values.push(data.status);
+        }
+        if (data.category !== undefined) {
+            fields.push(`category = $${index++}`);
+            values.push(data.category);
+        }
+        if (data.unit !== undefined) {
+            fields.push(`unit = $${index++}`);
+            values.push(data.unit);
         }
 
         values.push(materialId);
