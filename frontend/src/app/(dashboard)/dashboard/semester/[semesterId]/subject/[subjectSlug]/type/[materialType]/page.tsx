@@ -25,10 +25,11 @@ const formatSlug = (slug: string) => {
 interface Material {
     id: string
     title: string
+    slug: string
     description: string
     subjectCode: string
-    createdAt: string
-    updatedAt: string
+    created_at: string
+    updated_at: string
 }
 
 export default function MaterialListPage() {
@@ -101,7 +102,7 @@ export default function MaterialListPage() {
                                 {materials.map((mat) => (
                                     <motion.div key={mat.id} variants={fadeUp} whileHover={{ y: -2, scale: 1.005 }}>
                                         <Card
-                                            onClick={() => router.push(`/viewer/${mat.id}`)}
+                                            onClick={() => router.push(`/viewer/${mat.slug}`)}
                                             className="cursor-pointer flex flex-col sm:flex-row sm:items-center gap-5 p-5 sm:p-6 rounded-[24px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden"
                                         >
                                             <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
@@ -114,7 +115,7 @@ export default function MaterialListPage() {
                                                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 mb-2">
                                                     <h3 className="font-heading font-bold text-[17px] truncate group-hover:text-primary transition-colors">{mat.title}</h3>
                                                     <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-muted-foreground whitespace-nowrap">
-                                                        Updated {new Date(mat.updatedAt || mat.createdAt).toLocaleDateString()}
+                                                        Updated {new Date(mat.updated_at || mat.created_at).toLocaleDateString()}
                                                     </span>
                                                 </div>
                                                 <p className="text-sm text-muted-foreground line-clamp-2 leading-relaxed font-medium">

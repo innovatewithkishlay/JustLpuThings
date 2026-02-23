@@ -27,6 +27,7 @@ const formatSlug = (slug: string) => {
 interface Material {
     id: string
     title: string
+    slug: string
     description: string
     subjectCode: string
     category: string
@@ -174,7 +175,7 @@ export default function SubjectMaterialsPage() {
                                 {displayedMaterials.map((mat) => (
                                     <motion.div key={mat.id} variants={fadeUp} whileHover={{ y: -4, scale: 1.01 }}>
                                         <Card
-                                            onClick={() => mat.has_file ? router.push(`/viewer/${mat.id}`) : mat.youtube_url ? window.open(mat.youtube_url, '_blank') : null}
+                                            onClick={() => mat.has_file ? router.push(`/viewer/${mat.slug}`) : mat.youtube_url ? window.open(mat.youtube_url, '_blank') : null}
                                             className={`h-full flex flex-col p-5 rounded-[24px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden ${mat.has_file || mat.youtube_url ? 'cursor-pointer' : 'cursor-default'}`}
                                         >
                                             <div className="absolute right-0 top-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -mr-10 -mt-10 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />

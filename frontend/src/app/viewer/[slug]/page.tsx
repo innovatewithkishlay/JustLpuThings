@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useRef } from 'react'
+import { useEffect, useState, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
 import { useQuery, useMutation } from '@tanstack/react-query'
@@ -8,72 +8,102 @@ import { apiClient } from '@/lib/apiClient'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
-import { ArrowLeft, Maximize, Loader2, Info, X, ShieldCheck, EyeOff, Focus } from 'lucide-react'
+import { ArrowLeft, Maximize, Loader2, Info, X, ShieldCheck, EyeOff, Focus, AlertTriangle } from 'lucide-react'
+import { useAuth } from '@/contexts/AuthContext'
+
+interface DocumentData {
+    id: string
+    title: string
+    description: string
+    subjectCode: string
+    subject_name: string
+    semester_number: number
+}
 
 export default function ViewerPage() {
     const params = useParams()
     const router = useRouter()
     const viewerRef = useRef<HTMLDivElement>(null)
+    const { checkAuth } = useAuth()
 
+    const slug = params.slug as string
+
+    // UI states
     const [showInfo, setShowInfo] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [distractionFree, setDistractionFree] = useState(false)
     const [progress, setProgress] = useState(5)
 
+    // Secure local component state for the file stream
     const [url, setUrl] = useState<string | null>(null)
+    const [accessError, setAccessError] = useState<{ status: number, message: string } | null>(null)
 
-    // 1. Fetch only static non-violent metadata natively mapped to the query cache
+    // 1. Fetch only static non-secure metadata
     const { data: documentData, isLoading: metadataLoading, isError: metadataError } = useQuery({
-        queryKey: ["material", params.id as string],
+        queryKey: ["material", slug],
         queryFn: async () => {
-            return await apiClient<any>(`/materials/${params.id}`)
+            return await apiClient<DocumentData>(`/materials/${slug}`)
         },
         retry: 1
     })
 
-    // 2. Fetch Signed URL dynamically avoiding query caches directly natively
+    // 2. Fetch Signed URL dynamically bypassing cache (useMutation ONLY for access)
+    // The backend `GET /materials/:slug/access` returns { url: string }
     const accessMutation = useMutation({
         mutationFn: async () => {
-            const res = await apiClient<{ signedUrl: string }>(`/materials/${params.id}/access`)
-            return res.signedUrl
+            const res = await apiClient<{ url: string }>(`/materials/${slug}/access`, { method: 'GET' })
+            return res.url
         },
         onSuccess: (fetchedUrl) => {
             setUrl(fetchedUrl)
+            setAccessError(null)
         },
-        onError: () => {
-            toast.error('Failed to generate secure access token')
-            setTimeout(() => router.replace('/dashboard'), 2000)
+        onError: (err: any) => {
+            console.error("Access generation failed", err)
+            const status = err?.status || 500
+            const message = err?.message || 'Failed to generate secure access token'
+
+            setAccessError({ status, message })
+
+            if (status === 401) {
+                toast.error('Authentication expired. Redirecting...')
+                checkAuth() // will trigger standard auth fail event
+            } else if (status === 403) {
+                toast.error('Access Denied: You do not have permission to view this.')
+            } else if (status === 404) {
+                toast.error('Document not found or unavailable.')
+            } else {
+                toast.error('Secure tunnel failure. Let\'s try again.')
+            }
         }
     })
 
-    // Request signed access passively strictly bypassing cache lookups
-    useEffect(() => {
-        if (!url && !accessMutation.isPending && documentData) {
+    // Expiration Watcher (Signed URLs expire in 120 seconds on backend)
+    // Refresh at 110 seconds seamlessly
+    const requestAccess = useCallback(() => {
+        if (!accessMutation.isPending) {
             accessMutation.mutate()
         }
-    }, [url, accessMutation.isPending, documentData, params.id])
+    }, [accessMutation])
 
     useEffect(() => {
-        if (metadataError) {
-            toast.error('Failed to load document metadata')
-            setTimeout(() => router.replace('/dashboard'), 2000)
+        // Initial fetch directly
+        requestAccess()
+    }, []) // Run once safely
+
+    useEffect(() => {
+        // Expiration auto-renewal
+        if (url) {
+            const renewInterval = setInterval(() => {
+                requestAccess() // Background silent renewal
+            }, 110 * 1000)
+
+            return () => clearInterval(renewInterval)
         }
-    }, [metadataError, router])
-
-    // Progress Auto-Save Pipeline
-    useEffect(() => {
-        if (!documentData) return
-        const saveInterval = setInterval(() => {
-            setProgress(p => Math.min(p + 2, 100))
-            console.log('[Viewer] Auto-saving progression state...')
-        }, 15000)
-        return () => clearInterval(saveInterval)
-    }, [documentData])
+    }, [url, requestAccess])
 
     // Security Mechanisms
     const handleContextMenu = (e: React.MouseEvent) => e.preventDefault()
-
-    // Use a generic wrapper div specifically to handle the drag block without colliding with framer-motion
     const handleDragStart = (e: React.DragEvent) => e.preventDefault()
 
     const toggleFullscreen = () => {
@@ -90,17 +120,40 @@ export default function ViewerPage() {
         }
     }
 
-    const loading = metadataLoading || accessMutation.isPending || !url
+    const initialLoading = metadataLoading || (accessMutation.isPending && !url)
 
-    if (loading) {
+    if (initialLoading && !accessError) {
         return (
             <div className="flex flex-col h-screen bg-background">
                 <div className="h-16 border-b border-border bg-surface px-6 flex items-center justify-between">
                     <Skeleton className="h-6 w-32 shimmer-gradient rounded-md" />
                     <Skeleton className="h-8 w-8 rounded-full shimmer-gradient" />
                 </div>
-                <div className="flex-1 flex items-center justify-center">
+                <div className="flex-1 flex flex-col items-center justify-center gap-4">
                     <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                    <span className="text-sm font-mono font-bold tracking-widest text-muted-foreground uppercase">Negotiating Secure Tunnel</span>
+                </div>
+            </div>
+        )
+    }
+
+    if (metadataError || accessError) {
+        return (
+            <div className="flex flex-col h-screen bg-background items-center justify-center p-6">
+                <div className="w-full max-w-md p-8 bg-surface border border-border/60 rounded-[24px] soft-shadow flex flex-col items-center text-center">
+                    <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 text-red-500 border border-red-500/20">
+                        <AlertTriangle className="w-8 h-8" />
+                    </div>
+                    <h2 className="text-xl font-heading font-bold mb-2">
+                        {accessError?.status === 403 ? 'Access Denied' : accessError?.status === 404 ? 'Document Missing' : 'Connection Failed'}
+                    </h2>
+                    <p className="text-sm text-muted-foreground mb-8">
+                        {accessError?.message || 'We could not securely load this document metadata. It might be corrupted or rate-limited.'}
+                    </p>
+                    <div className="flex gap-4 w-full">
+                        <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => router.back()}>Go Back</Button>
+                        <Button variant="default" className="flex-1 h-11 rounded-xl" onClick={() => requestAccess()}>Retry Tunnel</Button>
+                    </div>
                 </div>
             </div>
         )

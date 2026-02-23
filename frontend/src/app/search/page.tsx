@@ -26,6 +26,7 @@ function useDebounce<T>(value: T, delay: number): T {
 interface Material {
     id: string
     title: string
+    slug: string
     description: string
     subjectCode: string
     year: number
@@ -119,7 +120,7 @@ function SearchContent() {
                     <motion.div variants={listVariant} initial="hidden" animate="visible" className="space-y-4">
                         {results.map((mat) => (
                             <motion.div key={mat.id} variants={itemVariant} whileHover={{ y: -2 }} className="group">
-                                <Link href={`/viewer/${mat.id}`}>
+                                <Link href={`/viewer/${mat.slug}`}>
                                     <Card className="flex items-center gap-5 p-5 rounded-2xl bg-surface border border-border/50 hover:border-primary/50 soft-shadow hover:shadow-primary/5 transition-all">
                                         <div className="w-16 h-20 rounded-xl bg-muted/30 flex items-center justify-center border border-border flex-shrink-0 group-hover:bg-primary/10 transition-colors">
                                             <BookOpen className="w-6 h-6 text-muted-foreground group-hover:text-primary transition-colors" />
