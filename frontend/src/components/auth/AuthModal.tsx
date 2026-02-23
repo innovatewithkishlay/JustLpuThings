@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/apiClient'
-import { BookOpen, Loader2, X } from 'lucide-react'
+import { BookOpen, Loader2, X, Eye, EyeOff, KeyRound, Mail } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthModal() {
@@ -19,6 +19,8 @@ export function AuthModal() {
 
     const [loginForm, setLoginForm] = useState({ email: '', password: '' })
     const [registerForm, setRegisterForm] = useState({ email: '', password: '', confirmPassword: '' })
+    const [showPassword, setShowPassword] = useState(false)
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
     // Auto-close if already authenticated
     useEffect(() => {
@@ -63,6 +65,8 @@ export function AuthModal() {
             toast.success('Account created successfully! Please sign in.')
             openAuthModal('login')
             setRegisterForm({ email: '', password: '', confirmPassword: '' })
+            setShowPassword(false)
+            setShowConfirmPassword(false)
         }
     })
 
@@ -98,7 +102,7 @@ export function AuthModal() {
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={closeAuthModal}
-                        className="fixed inset-0 z-[100] bg-background/80 backdrop-blur-md"
+                        className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-sm"
                     />
 
                     {/* Modal Content */}
@@ -119,8 +123,11 @@ export function AuthModal() {
                                 <X className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
                             </Button>
 
-                            <Card className="soft-shadow border-border overflow-hidden rounded-2xl bg-surface">
-                                <div className="h-1 w-full bg-gradient-to-r from-primary via-indigo-400 to-primary" />
+                            <Card className="soft-shadow border-border/50 overflow-hidden rounded-[24px] bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/80 relative">
+                                {/* Subtle inner glow effect */}
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent pointer-events-none" />
+
+                                <div className="h-1.5 w-full bg-gradient-to-r from-primary via-indigo-400 to-primary" />
 
                                 <CardHeader className="space-y-2 pt-8 px-8">
                                     <div className="flex justify-center mb-6">
@@ -150,30 +157,52 @@ export function AuthModal() {
                                                 onSubmit={handleLoginSubmit}
                                                 className="space-y-5"
                                             >
-                                                <div className="space-y-2.5">
-                                                    <Label htmlFor="login-email" className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Email Address</Label>
-                                                    <Input
-                                                        id="login-email"
-                                                        type="email"
-                                                        placeholder="name@university.edu"
-                                                        value={loginForm.email}
-                                                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                                                        disabled={loginMutation.isPending}
-                                                        className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
-                                                    />
+                                                <div className="space-y-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="login-email" className="text-xs font-semibold text-muted-foreground ml-1">Email Address</Label>
+                                                        <div className="relative group">
+                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                                <Mail className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                            </div>
+                                                            <Input
+                                                                id="login-email"
+                                                                type="email"
+                                                                placeholder="name@university.edu"
+                                                                value={loginForm.email}
+                                                                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                                                                disabled={loginMutation.isPending}
+                                                                className="h-12 pl-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <div className="flex items-center justify-between ml-1">
+                                                            <Label htmlFor="login-password" className="text-xs font-semibold text-muted-foreground">Password</Label>
+                                                        </div>
+                                                        <div className="relative group">
+                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                                <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                            </div>
+                                                            <Input
+                                                                id="login-password"
+                                                                type={showPassword ? "text" : "password"}
+                                                                value={loginForm.password}
+                                                                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                                                                disabled={loginMutation.isPending}
+                                                                className="h-12 pl-10 pr-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowPassword(!showPassword)}
+                                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                                                            >
+                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-2.5">
-                                                    <Label htmlFor="login-password" className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Password</Label>
-                                                    <Input
-                                                        id="login-password"
-                                                        type="password"
-                                                        value={loginForm.password}
-                                                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                                                        disabled={loginMutation.isPending}
-                                                        className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
-                                                    />
-                                                </div>
-                                                <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-6" disabled={loginMutation.isPending}>
+                                                <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-8 group relative overflow-hidden" disabled={loginMutation.isPending}>
+                                                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                                                     {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                     {loginMutation.isPending ? 'Authenticating...' : 'Sign In'}
                                                 </Button>
@@ -188,41 +217,73 @@ export function AuthModal() {
                                                 onSubmit={handleRegisterSubmit}
                                                 className="space-y-5"
                                             >
-                                                <div className="space-y-2.5">
-                                                    <Label htmlFor="reg-email" className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Email Address</Label>
-                                                    <Input
-                                                        id="reg-email"
-                                                        type="email"
-                                                        placeholder="name@university.edu"
-                                                        value={registerForm.email}
-                                                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                                                        disabled={registerMutation.isPending}
-                                                        className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
-                                                    />
+                                                <div className="space-y-4">
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="reg-email" className="text-xs font-semibold text-muted-foreground ml-1">Email Address</Label>
+                                                        <div className="relative group">
+                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                                <Mail className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                            </div>
+                                                            <Input
+                                                                id="reg-email"
+                                                                type="email"
+                                                                placeholder="name@university.edu"
+                                                                value={registerForm.email}
+                                                                onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                                                                disabled={registerMutation.isPending}
+                                                                className="h-12 pl-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="reg-password" className="text-xs font-semibold text-muted-foreground ml-1">Password</Label>
+                                                        <div className="relative group">
+                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                                <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                            </div>
+                                                            <Input
+                                                                id="reg-password"
+                                                                type={showPassword ? "text" : "password"}
+                                                                value={registerForm.password}
+                                                                onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                                                                disabled={registerMutation.isPending}
+                                                                className="h-12 pl-10 pr-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowPassword(!showPassword)}
+                                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                                                            >
+                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div className="space-y-1.5">
+                                                        <Label htmlFor="reg-confirm" className="text-xs font-semibold text-muted-foreground ml-1">Confirm Password</Label>
+                                                        <div className="relative group">
+                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                                                                <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                                                            </div>
+                                                            <Input
+                                                                id="reg-confirm"
+                                                                type={showConfirmPassword ? "text" : "password"}
+                                                                value={registerForm.confirmPassword}
+                                                                onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                                                                disabled={registerMutation.isPending}
+                                                                className="h-12 pl-10 pr-10 bg-muted/30 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/20 focus-visible:border-primary rounded-xl"
+                                                            />
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                                                            >
+                                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                                            </button>
+                                                        </div>
+                                                    </div>
                                                 </div>
-                                                <div className="space-y-2.5">
-                                                    <Label htmlFor="reg-password" className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Password</Label>
-                                                    <Input
-                                                        id="reg-password"
-                                                        type="password"
-                                                        value={registerForm.password}
-                                                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                                                        disabled={registerMutation.isPending}
-                                                        className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2.5">
-                                                    <Label htmlFor="reg-confirm" className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Confirm Password</Label>
-                                                    <Input
-                                                        id="reg-confirm"
-                                                        type="password"
-                                                        value={registerForm.confirmPassword}
-                                                        onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                                                        disabled={registerMutation.isPending}
-                                                        className="h-12 bg-background border-border transition-all focus-visible:ring-primary/30 focus-visible:border-primary rounded-xl"
-                                                    />
-                                                </div>
-                                                <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-6" disabled={registerMutation.isPending}>
+                                                <Button type="submit" className="w-full h-12 rounded-xl font-semibold active:scale-[0.98] transition-all mt-8 group relative overflow-hidden" disabled={registerMutation.isPending}>
+                                                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
                                                     {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                                                     {registerMutation.isPending ? 'Creating...' : 'Create Account'}
                                                 </Button>
