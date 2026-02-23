@@ -11,7 +11,11 @@ export class MaterialsController {
             const result = await MaterialsService.getMaterials(query);
 
             res.setHeader('Cache-Control', 'private, max-age=60');
-            res.json({ success: true, ...result });
+            res.json({
+                success: true,
+                data: result.items,
+                meta: result.meta
+            });
 
         } catch (err) {
             next(err);

@@ -30,6 +30,7 @@ const adminLimiter = rateLimit({
 router.use(requireAuth, requireAdmin, adminLimiter);
 
 // --- Analytics & Intelligence ---
+router.get('/telemetry', AdminController.getDashboard);
 router.get('/dashboard', AdminController.getDashboard);
 router.get('/materials/:id/stats', AdminController.getMaterialStats);
 router.get('/abuse', AdminController.getAbuseEvents);

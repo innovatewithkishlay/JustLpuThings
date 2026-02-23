@@ -20,20 +20,16 @@ export class AdminDashboardService {
         const [users, materials, views, activeUsers, topMaterials, abuse] = await Promise.all(queries);
 
         return {
-            total_users: parseInt(users.rows[0].total, 10),
-            total_materials: parseInt(materials.rows[0].total, 10),
-            total_views: parseInt(views.rows[0]?.total || 0, 10),
-            active_users_last_24h: parseInt(activeUsers.rows[0]?.total || 0, 10),
-            suspicious_users_count: parseInt(abuse.rows[0].total, 10),
-            top_5_materials: topMaterials.rows.map(row => ({
-                material_id: row.id,
+            totalUsers: parseInt(users.rows[0].total, 10),
+            totalMaterials: parseInt(materials.rows[0].total, 10),
+            totalViews: parseInt(views.rows[0]?.total || 0, 10),
+            activeUsers: parseInt(activeUsers.rows[0]?.total || 0, 10),
+            flaggedUsers: parseInt(abuse.rows[0].total, 10),
+            top5Materials: topMaterials.rows.map(row => ({
+                materialId: row.id,
                 title: row.title,
-                total_views: parseInt(row.total_views, 10)
-            })),
-            todays_stats: {
-                total_views: parseInt(views.rows[0]?.total || 0, 10),
-                total_active_users: parseInt(activeUsers.rows[0]?.total || 0, 10)
-            }
+                totalViews: parseInt(row.total_views, 10)
+            }))
         };
     }
 }
