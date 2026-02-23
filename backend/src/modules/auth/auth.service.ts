@@ -54,6 +54,22 @@ export class AuthService {
         return await this.generateTokens(user.id, user.role);
     }
 
+    static async getMe(userId: string) {
+        const userResult = await pool.query('SELECT id, email, role FROM users WHERE id = $1', [userId]);
+        const user = userResult.rows[0];
+
+        if (!user) {
+            throw { statusCode: 404, message: 'User not found' };
+        }
+
+        return {
+            id: user.id,
+            email: user.email,
+            name: user.email.split('@')[0],
+            role: user.role
+        };
+    }
+
     static async logout(accessTokenRaw: string, refreshTokenId: string) {
         // Decode the access token safely
         const decoded = jwt.decode(accessTokenRaw) as { jti: string; exp: number } | null;

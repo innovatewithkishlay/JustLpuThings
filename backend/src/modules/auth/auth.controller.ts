@@ -69,6 +69,18 @@ export class AuthController {
         }
     }
 
+    static async me(req: Request, res: Response, next: NextFunction) {
+        try {
+            if (!req.user?.userId) {
+                return res.status(401).json({ success: false, error: { message: 'Not authenticated' } });
+            }
+            const user = await AuthService.getMe(req.user.userId);
+            res.json({ success: true, data: user });
+        } catch (err) {
+            next(err);
+        }
+    }
+
     static async logout(req: Request, res: Response, next: NextFunction) {
         try {
             const accessRaw = req.cookies?.accessToken;
