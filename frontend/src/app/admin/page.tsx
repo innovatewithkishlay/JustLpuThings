@@ -1,12 +1,16 @@
 "use client"
 
-import { useEffect, useState } from 'react'
-import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { useQuery } from '@tanstack/react-query'
+import { useEffect, useState, useRef } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { Users, BookOpen, Activity, AlertTriangle, ShieldAlert } from 'lucide-react'
+import { Users, BookOpen, Activity, AlertTriangle, ShieldAlert, Upload, FileIcon, Loader2 } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Button } from '@/components/ui/button'
+import { toast } from 'sonner'
 
 const containerVariants = {
     hidden: { opacity: 0 },
@@ -18,15 +22,111 @@ const itemVariants = {
     visible: { y: 0, opacity: 1 }
 }
 
+// Subject Mappings for Admin Upload
+const subjectMap: Record<string, { slug: string, name: string }[]> = {
+    "2": [
+        { slug: "mathematics", name: "Mathematics" },
+        { slug: "engineering-mechanics", name: "Engineering Mechanics" },
+        { slug: "basic-electronics", name: "Basic Electronics" },
+        { slug: "programming-fundamentals", name: "Programming Fundamentals" },
+        { slug: "environmental-studies", name: "Environmental Studies" },
+        { slug: "communication-skills", name: "Communication Skills" }
+    ],
+    "4": [
+        { slug: "data-structures", name: "Data Structures" },
+        { slug: "operating-systems", name: "Operating Systems" },
+        { slug: "database-management", name: "Database Management" },
+        { slug: "computer-networks", name: "Computer Networks" },
+        { slug: "software-engineering", name: "Software Engineering" },
+        { slug: "theory-of-computation", name: "Theory of Computation" }
+    ]
+}
+
 export default function AdminDashboard() {
-    const { data: stats, isLoading: loading } = useQuery({
+    const queryClient = useQueryClient()
+    const fileInputRef = useRef<HTMLInputElement>(null)
+
+    const [uploadForm, setUploadForm] = useState({
+        title: '',
+        description: '',
+        semester: '2',
+        subject: 'mathematics',
+        type: 'notes'
+    })
+    const [file, setFile] = useState<File | null>(null)
+
+    // Sync subjects when semester changes natively
+    useEffect(() => {
+        if (subjectMap[uploadForm.semester]) {
+            setUploadForm(prev => ({ ...prev, subject: subjectMap[uploadForm.semester][0].slug }))
+        }
+    }, [uploadForm.semester])
+
+    const { data: stats, isLoading: statsLoading } = useQuery({
         queryKey: ["admin", "analytics"],
         queryFn: () => apiClient<any>('/admin/telemetry')
     })
 
-    if (loading) {
+    // Fetch materials to display in grouped lists
+    const { data: allMaterials = [], isLoading: materialsLoading } = useQuery({
+        queryKey: ["admin", "materials", "all"],
+        queryFn: () => apiClient<any[]>('/materials?admin=true') // Standard query block generic
+    })
+
+    const uploadMutation = useMutation({
+        mutationFn: async (formData: FormData) => {
+            return await apiClient('/admin/materials', {
+                method: 'POST',
+                body: formData
+            })
+        },
+        onSuccess: () => {
+            toast.success('Material deployed successfully to R2 pipeline')
+            queryClient.invalidateQueries({ queryKey: ["admin", "materials", "all"] })
+            queryClient.invalidateQueries({ queryKey: ["materials", uploadForm.semester, uploadForm.subject, uploadForm.type] })
+
+            // Reset state natively
+            setUploadForm({ title: '', description: '', semester: '2', subject: 'mathematics', type: 'notes' })
+            setFile(null)
+            if (fileInputRef.current) fileInputRef.current.value = ''
+        }
+    })
+
+    const handleUploadSubmit = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (!uploadForm.title || !uploadForm.description || !file) {
+            toast.error('All fields including the PDF file are required')
+            return
+        }
+
+        const formData = new FormData()
+        formData.append('title', uploadForm.title)
+        formData.append('description', uploadForm.description)
+        formData.append('semester', uploadForm.semester)
+        formData.append('subject', uploadForm.subject)
+        formData.append('type', uploadForm.type)
+        formData.append('file', file)
+
+        uploadMutation.mutate(formData)
+    }
+
+    if (statsLoading || materialsLoading) {
         return <div className="page-container pt-8"><DashboardSkeleton /></div>
     }
+
+    // Grouping Materials By Semester -> Subject -> Type purely mathematically
+    const groupedMaterials = allMaterials.reduce((acc: any, mat) => {
+        const sem = mat.semester?.toString() || 'Unknown'
+        const sub = mat.subjectCode || 'Unknown'
+        const type = mat.materialType || 'Unknown'
+
+        if (!acc[sem]) acc[sem] = {}
+        if (!acc[sem][sub]) acc[sem][sub] = {}
+        if (!acc[sem][sub][type]) acc[sem][sub][type] = []
+
+        acc[sem][sub][type].push(mat)
+        return acc
+    }, {})
 
     return (
         <div className="min-h-screen pb-20 pt-8 bg-[#F8FAFC] dark:bg-[#080B11] selection:bg-primary/20">
@@ -36,7 +136,7 @@ export default function AdminDashboard() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 pb-4 border-b border-border/50">
                     <div>
                         <h1 className="text-3xl font-heading font-bold tracking-tight mb-2">Command Center</h1>
-                        <p className="text-muted-foreground font-medium">Aggregated platform health, metrics, and risk monitoring.</p>
+                        <p className="text-muted-foreground font-medium">Aggregated platform health, metrics, and data operations pipeline.</p>
                     </div>
                     <div className="mt-4 md:mt-0 flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20 text-primary text-sm font-bold">
                         <Activity className="w-4 h-4 animate-pulse" /> Live Telemetry Linked
@@ -70,96 +170,156 @@ export default function AdminDashboard() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-                    {/* Primary Datatables Layout */}
+                    {/* Left Column: Data Tables Pipeline */}
                     <motion.div variants={itemVariants} className="lg:col-span-2 space-y-8">
-
                         <Card className="bg-surface border-border/50 soft-shadow overflow-hidden rounded-[24px]">
                             <CardHeader className="border-b border-border/40 bg-muted/10 p-5">
                                 <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-foreground">
-                                    <Users className="w-5 h-5 text-primary" /> Recent Identity Integrations
+                                    <BookOpen className="w-5 h-5 text-primary" /> Active Document Architecture Tree
                                 </CardTitle>
                             </CardHeader>
-                            <div className="w-full overflow-x-auto">
-                                <table className="w-full text-sm text-left font-medium">
-                                    <thead className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground bg-background">
-                                        <tr>
-                                            <th className="px-6 py-4 border-b border-border/40">User Identity</th>
-                                            <th className="px-6 py-4 border-b border-border/40">Role Authority</th>
-                                            <th className="px-6 py-4 border-b border-border/40 text-right">Status</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-border/40">
-                                        {/* Simulation Stub */}
-                                        {[1, 2, 3].map((u) => (
-                                            <tr key={u} className="hover:bg-muted/30 transition-colors group">
-                                                <td className="px-6 py-5">
-                                                    <div className="flex items-center gap-3">
-                                                        <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-xs font-bold border border-primary/20">U{u}</div>
-                                                        <span className="font-semibold text-foreground">u123891{u}@lpu.in</span>
+                            <div className="w-full overflow-x-auto p-4 flex flex-col gap-6">
+                                {Object.keys(groupedMaterials).length === 0 ? (
+                                    <div className="text-center py-8 text-muted-foreground">No documents uploaded to pipeline yet.</div>
+                                ) : (
+                                    Object.keys(groupedMaterials).sort().map(semester => (
+                                        <div key={semester} className="space-y-4">
+                                            <div className="bg-primary/5 border border-primary/20 px-4 py-2 rounded-lg font-heading font-bold text-primary">
+                                                Semester {semester}
+                                            </div>
+                                            <div className="pl-6 space-y-6">
+                                                {Object.keys(groupedMaterials[semester]).sort().map(subject => (
+                                                    <div key={subject}>
+                                                        <div className="text-sm font-mono font-bold uppercase tracking-widest text-muted-foreground mb-3">{subject}</div>
+                                                        <div className="pl-4 space-y-4">
+                                                            {Object.keys(groupedMaterials[semester][subject]).sort().map(type => (
+                                                                <div key={type}>
+                                                                    <div className="text-xs font-bold font-mono text-indigo-500 bg-indigo-500/10 px-2 py-1 rounded inline-block uppercase tracking-wider mb-2">{type}</div>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pl-2">
+                                                                        {groupedMaterials[semester][subject][type].map((mat: any) => (
+                                                                            <div key={mat.id} className="p-3 bg-muted/30 border border-border rounded-xl text-sm flex flex-col justify-between">
+                                                                                <div className="font-semibold text-foreground truncate">{mat.title}</div>
+                                                                                <div className="text-xs text-muted-foreground flex justify-between mt-2">
+                                                                                    <span>Views: {mat.viewCount || 0}</span>
+                                                                                    <span className="font-mono">{new Date(mat.createdAt).toLocaleDateString()}</span>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </td>
-                                                <td className="px-6 py-5">
-                                                    <span className="px-2.5 py-1 rounded-md text-[10px] font-mono font-bold uppercase bg-muted text-muted-foreground border border-border/50">Student</span>
-                                                </td>
-                                                <td className="px-6 py-5 text-right">
-                                                    <span className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">
-                                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" /> Authorized
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </Card>
-
-                        <Card className="bg-surface border-border/50 soft-shadow overflow-hidden rounded-[24px]">
-                            <CardHeader className="border-b border-border/40 bg-muted/10 p-5">
-                                <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-foreground">
-                                    <BookOpen className="w-5 h-5 text-primary" /> Storage Index Sync Line
-                                </CardTitle>
-                            </CardHeader>
-                            <div className="p-6">
-                                <div className="w-full rounded-xl border border-dashed border-border flex flex-col items-center justify-center p-12 text-center bg-muted/10">
-                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
-                                        <BookOpen className="w-6 h-6 text-primary" />
-                                    </div>
-                                    <h4 className="font-heading font-bold text-lg mb-1">Index Operations Disabled</h4>
-                                    <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                                        Manual R2 pipeline synchronization is restricted by IAM policies here natively.
-                                    </p>
-                                </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
                             </div>
                         </Card>
                     </motion.div>
 
-                    {/* Abuse Log Sidebar Structure */}
-                    <motion.div variants={itemVariants}>
-                        <Card className="bg-surface border-red-500/20 soft-shadow h-full rounded-[24px] overflow-hidden">
-                            <CardHeader className="border-b border-red-500/10 bg-red-500/5 p-5">
-                                <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-red-500">
-                                    <AlertTriangle className="w-5 h-5" /> Threat Traps
+                    {/* Right Column: Upload Forms & Logs */}
+                    <motion.div variants={itemVariants} className="space-y-8">
+                        <Card className="bg-surface border-border/50 soft-shadow rounded-[24px] overflow-hidden">
+                            <CardHeader className="border-b border-border/40 bg-muted/10 p-5">
+                                <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-foreground">
+                                    <Upload className="w-5 h-5 text-primary" /> R2 Upload Pipeline
                                 </CardTitle>
+                                <CardDescription className="font-medium">Push secure documents natively.</CardDescription>
                             </CardHeader>
-                            <div className="p-0">
-                                <div className="divide-y divide-border/40">
-                                    {/* Risk Events Block */}
-                                    {[1, 2, 3, 4, 5].map((log) => (
-                                        <div key={log} className="p-5 hover:bg-muted/30 transition-colors flex gap-4 items-start relative group">
-                                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                            <div className="w-8 h-8 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-                                                <ShieldAlert className="w-4 h-4 text-red-500" />
-                                            </div>
-                                            <div>
-                                                <p className="text-[13px] font-bold mb-1 text-foreground leading-tight">Rate Limit Breached (IP: 142.250.xxx)</p>
-                                                <p className="text-xs text-muted-foreground font-medium pr-2">Redis sliding window auto-blocked signature originating from aggressive scan attempt.</p>
-                                                <p className="text-[10px] font-mono font-bold text-red-500/80 uppercase mt-2">T-{log}4 mins ago</p>
-                                            </div>
+                            <CardContent className="p-6">
+                                <form onSubmit={handleUploadSubmit} className="space-y-5">
+                                    <div className="grid grid-cols-2 gap-4">
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Semester</Label>
+                                            <select
+                                                value={uploadForm.semester}
+                                                onChange={e => setUploadForm({ ...uploadForm, semester: e.target.value })}
+                                                disabled={uploadMutation.isPending}
+                                                className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                            >
+                                                {[1, 2, 3, 4, 5, 6, 7, 8].map(s => (
+                                                    <option key={s} value={s.toString()}>Semester {s}</option>
+                                                ))}
+                                            </select>
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
+                                        <div className="space-y-2">
+                                            <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Material Type</Label>
+                                            <select
+                                                value={uploadForm.type}
+                                                onChange={e => setUploadForm({ ...uploadForm, type: e.target.value })}
+                                                disabled={uploadMutation.isPending}
+                                                className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                            >
+                                                <option value="notes">Subjective Notes</option>
+                                                <option value="ppt">Official PPT</option>
+                                                <option value="syllabus">Syllabus</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Subject Route</Label>
+                                        <select
+                                            value={uploadForm.subject}
+                                            onChange={e => setUploadForm({ ...uploadForm, subject: e.target.value })}
+                                            disabled={uploadMutation.isPending}
+                                            className="w-full h-10 px-3 rounded-xl border border-border bg-background text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                        >
+                                            {subjectMap[uploadForm.semester] ? (
+                                                subjectMap[uploadForm.semester].map(sub => (
+                                                    <option key={sub.slug} value={sub.slug}>{sub.name}</option>
+                                                ))
+                                            ) : (
+                                                <option value="generic">Generic Subject (Placeholder)</option>
+                                            )}
+                                        </select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Title</Label>
+                                        <Input
+                                            value={uploadForm.title} onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
+                                            placeholder="Unit 1 Foundations..."
+                                            disabled={uploadMutation.isPending}
+                                            className="h-10 rounded-xl"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">Description</Label>
+                                        <Input
+                                            value={uploadForm.description} onChange={e => setUploadForm({ ...uploadForm, description: e.target.value })}
+                                            placeholder="Deep dive into mathematical matrices..."
+                                            disabled={uploadMutation.isPending}
+                                            className="h-10 rounded-xl"
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <Label className="text-xs font-bold tracking-wide uppercase text-muted-foreground">PDF Document</Label>
+                                        <Input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="application/pdf"
+                                            onChange={e => setFile(e.target.files ? e.target.files[0] : null)}
+                                            disabled={uploadMutation.isPending}
+                                            className="file:bg-muted file:text-muted-foreground file:border-0 file:rounded-md file:mr-4 file:px-4 file:py-1 cursor-pointer"
+                                        />
+                                    </div>
+
+                                    <Button type="submit" className="w-full h-11 rounded-xl font-bold mt-2" disabled={uploadMutation.isPending}>
+                                        {uploadMutation.isPending ? (
+                                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Pushing to Grid...</>
+                                        ) : (
+                                            <><FileIcon className="w-4 h-4 mr-2" /> Dispatch Material</>
+                                        )}
+                                    </Button>
+                                </form>
+                            </CardContent>
                         </Card>
+
                     </motion.div>
 
                 </div>
