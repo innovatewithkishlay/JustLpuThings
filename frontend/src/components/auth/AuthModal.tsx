@@ -10,14 +10,14 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/apiClient'
-import { BookOpen, Loader2, X, Eye, EyeOff, KeyRound, Mail, User } from 'lucide-react'
+import { BookOpen, Loader2, X, Eye, EyeOff, KeyRound, Mail, User, ShieldCheck, Users } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthModal() {
     const router = useRouter()
     const { authModalOpen, authModalMode, closeAuthModal, openAuthModal, checkAuth, isAuthenticated, isAdmin, loading } = useAuth()
 
-    const [loginForm, setLoginForm] = useState({ email: '', password: '' })
+    const [loginForm, setLoginForm] = useState({ email: '', password: '', role: 'USER' as 'USER' | 'ADMIN' })
     const [registerForm, setRegisterForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
@@ -142,6 +142,27 @@ export function AuthModal() {
                                                 onSubmit={handleLoginSubmit}
                                                 className="space-y-4"
                                             >
+                                                <div className="flex p-1 bg-muted/30 rounded-xl mb-4">
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setLoginForm({ ...loginForm, role: 'USER' })}
+                                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${loginForm.role === 'USER' ? 'bg-background text-primary soft-shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    >
+                                                        <Users className="w-3.5 h-3.5" />
+                                                        Student
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setLoginForm({ ...loginForm, role: 'ADMIN' });
+                                                            if (authModalMode === 'register') openAuthModal('login');
+                                                        }}
+                                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${loginForm.role === 'ADMIN' ? 'bg-background text-primary soft-shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                                                    >
+                                                        <ShieldCheck className="w-3.5 h-3.5" />
+                                                        Admin
+                                                    </button>
+                                                </div>
                                                 <div className="space-y-3">
                                                     <div className="space-y-1">
                                                         <Label htmlFor="login-email" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Email</Label>
@@ -297,13 +318,17 @@ export function AuthModal() {
                                     <div className="text-xs w-full text-center text-muted-foreground font-medium">
                                         {authModalMode === 'login' ? (
                                             <>
-                                                Don't have an account?{' '}
-                                                <button
-                                                    onClick={() => openAuthModal('register')}
-                                                    className="text-primary hover:underline underline-offset-4 focus-visible:underline focus-visible:outline-none transition-colors font-semibold"
-                                                >
-                                                    Sign up
-                                                </button>
+                                                {loginForm.role !== 'ADMIN' && (
+                                                    <>
+                                                        Don't have an account?{' '}
+                                                        <button
+                                                            onClick={() => openAuthModal('register')}
+                                                            className="text-primary hover:underline underline-offset-4 focus-visible:underline focus-visible:outline-none transition-colors font-semibold"
+                                                        >
+                                                            Sign up
+                                                        </button>
+                                                    </>
+                                                )}
                                             </>
                                         ) : (
                                             <>
