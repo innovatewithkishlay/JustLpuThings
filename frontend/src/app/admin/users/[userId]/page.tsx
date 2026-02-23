@@ -41,10 +41,18 @@ interface MaterialHistory {
     last_opened: string;
 }
 
+interface SuspiciousEvent {
+    id: string;
+    event_type: string;
+    count: number;
+    created_at: string;
+}
+
 interface UserDetailResponse {
     profile: UserProfile;
     engagement: UserEngagement;
     history: MaterialHistory[];
+    suspicious_activity: SuspiciousEvent[];
 }
 
 const containerVariants = {
@@ -112,7 +120,7 @@ export default function AdminUserDetailPage() {
         )
     }
 
-    const { profile, engagement, history } = data
+    const { profile, engagement, history, suspicious_activity } = data
 
     return (
         <div className="min-h-screen pb-20 pt-8 bg-[#F8FAFC] dark:bg-[#080B11] selection:bg-primary/20">
@@ -142,8 +150,8 @@ export default function AdminUserDetailPage() {
 
                     <div className="flex flex-col gap-3 min-w-[200px]">
                         <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-center border ${profile.role === 'ADMIN' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' :
-                                profile.is_blocked ? 'bg-red-500/10 text-red-500 border-red-500/20 text-red-500 animate-pulse' :
-                                    'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                            profile.is_blocked ? 'bg-red-500/10 text-red-500 border-red-500/20 text-red-500 animate-pulse' :
+                                'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
                             }`}>
                             {profile.is_blocked ? 'ACCOUNT SUSPENDED' : `${profile.role} CLEARANCE`}
                         </div>
@@ -161,7 +169,7 @@ export default function AdminUserDetailPage() {
                 </div>
 
                 {/* Engagement Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <motion.div variants={itemVariants}>
                         <Card className="h-full bg-surface border-border/50 soft-shadow transition-all hover:border-border hover:shadow-md rounded-[20px]">
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -219,80 +227,121 @@ export default function AdminUserDetailPage() {
                     </motion.div>
                 </div>
 
-                {/* Per Material Breakdown Table */}
-                <motion.div variants={itemVariants}>
-                    <Card className="bg-surface border-border/50 overflow-hidden rounded-[24px] soft-shadow min-h-[400px]">
-                        <CardHeader className="border-b border-border/40 bg-muted/10 p-5 px-6">
-                            <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-foreground">
-                                <FileText className="w-5 h-5 text-primary" /> Consumption History Log
-                            </CardTitle>
-                        </CardHeader>
-                        <CardContent className="p-0">
-                            {!history || history.length === 0 ? (
-                                <div className="p-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
-                                    <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-2">
-                                        <BookOpen className="w-8 h-8 text-muted-foreground/50" />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
+                    {/* Per Material Breakdown Table */}
+                    <motion.div variants={itemVariants} className="lg:col-span-2">
+                        <Card className="bg-surface border-border/50 overflow-hidden rounded-[24px] soft-shadow min-h-[400px]">
+                            <CardHeader className="border-b border-border/40 bg-muted/10 p-5 px-6">
+                                <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-foreground">
+                                    <FileText className="w-5 h-5 text-primary" /> Consumption History Log
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="p-0">
+                                {!history || history.length === 0 ? (
+                                    <div className="p-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
+                                        <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-2">
+                                            <BookOpen className="w-8 h-8 text-muted-foreground/50" />
+                                        </div>
+                                        <h3 className="text-lg font-bold font-heading text-foreground">No Document History</h3>
+                                        <p>This user has not accessed any secure materials yet.</p>
                                     </div>
-                                    <h3 className="text-lg font-bold font-heading text-foreground">No Document History</h3>
-                                    <p>This user has not accessed any secure materials yet.</p>
-                                </div>
-                            ) : (
-                                <div className="overflow-x-auto">
-                                    <table className="w-full text-sm text-left">
-                                        <thead className="text-xs text-muted-foreground uppercase bg-muted/30 font-bold tracking-wider">
-                                            <tr>
-                                                <th className="px-6 py-4 whitespace-nowrap">Document Title</th>
-                                                <th className="px-6 py-4 whitespace-nowrap">Domain</th>
-                                                <th className="px-6 py-4 whitespace-nowrap">Progress</th>
-                                                <th className="px-6 py-4 whitespace-nowrap">Time Invested</th>
-                                                <th className="px-6 py-4 whitespace-nowrap">Last Accessed</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className="divide-y divide-border/40">
-                                            {history.map((mat) => (
-                                                <tr key={mat.id} className="hover:bg-muted/30 transition-colors group">
-                                                    <td className="px-6 py-5 font-medium text-foreground max-w-[300px] truncate">
-                                                        {mat.title}
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex flex-col gap-1">
-                                                            <span className="text-xs font-bold uppercase text-muted-foreground tracking-wider">{mat.subject_name}</span>
-                                                            <span className="text-[10px] font-mono text-primary bg-primary/10 px-2 py-0.5 rounded-md inline-block w-max">SEM {mat.semester_number}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5">
-                                                        <div className="flex flex-col gap-2">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-16 h-1.5 bg-muted rounded-full overflow-hidden shrink-0">
-                                                                    <div
-                                                                        className={`h-full ${mat.completion_percentage > 80 ? 'bg-emerald-500' : mat.completion_percentage > 30 ? 'bg-amber-500' : 'bg-primary'}`}
-                                                                        style={{ width: `${Math.min(100, Math.round(mat.completion_percentage))}%` }}
-                                                                    />
-                                                                </div>
-                                                                <span className="text-[10px] font-mono tracking-widest font-bold text-muted-foreground">
-                                                                    {Math.round(mat.completion_percentage)}%
-                                                                </span>
-                                                            </div>
-                                                            <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">
-                                                                Pg {mat.last_page} / {mat.total_pages || '?'}
-                                                            </span>
-                                                        </div>
-                                                    </td>
-                                                    <td className="px-6 py-5 font-mono text-muted-foreground font-semibold">
-                                                        {formatTime(mat.total_time_spent)}
-                                                    </td>
-                                                    <td className="px-6 py-5 font-mono text-xs text-muted-foreground">
-                                                        {formatDistanceToNow(new Date(mat.last_opened), { addSuffix: true })}
-                                                    </td>
+                                ) : (
+                                    <div className="overflow-x-auto">
+                                        <table className="w-full text-sm text-left">
+                                            <thead className="text-xs text-muted-foreground uppercase bg-muted/30 font-bold tracking-wider">
+                                                <tr>
+                                                    <th className="px-6 py-4 whitespace-nowrap">Document Title</th>
+                                                    <th className="px-6 py-4 whitespace-nowrap">Progress</th>
+                                                    <th className="px-6 py-4 whitespace-nowrap">Time</th>
+                                                    <th className="px-6 py-4 whitespace-nowrap">Last Active</th>
                                                 </tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            )}
-                        </CardContent>
-                    </Card>
-                </motion.div>
+                                            </thead>
+                                            <tbody className="divide-y divide-border/40">
+                                                {history.map((mat) => (
+                                                    <tr key={mat.id} className="hover:bg-muted/30 transition-colors group">
+                                                        <td className="px-6 py-5">
+                                                            <div className="flex flex-col gap-1 max-w-[200px] md:max-w-[300px]">
+                                                                <span className="font-medium text-foreground truncate">{mat.title}</span>
+                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{mat.subject_name} • SEM {mat.semester_number}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-5 whitespace-nowrap">
+                                                            <div className="flex flex-col gap-1.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
+                                                                        <div
+                                                                            className={`h-full ${mat.completion_percentage > 80 ? 'bg-emerald-500' : mat.completion_percentage > 30 ? 'bg-amber-500' : 'bg-primary'}`}
+                                                                            style={{ width: `${Math.min(100, Math.round(mat.completion_percentage))}%` }}
+                                                                        />
+                                                                    </div>
+                                                                    <span className="text-[10px] font-mono font-bold">{Math.round(mat.completion_percentage)}%</span>
+                                                                </div>
+                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Pg {mat.last_page}/{mat.total_pages || '?'}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td className="px-6 py-5 font-mono text-xs text-muted-foreground">
+                                                            {formatTime(mat.total_time_spent)}
+                                                        </td>
+                                                        <td className="px-6 py-5 font-mono text-[10px] text-muted-foreground uppercase">
+                                                            {formatDistanceToNow(new Date(mat.last_opened), { addSuffix: true })}
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+
+                    {/* Suspicious Activity Sidebar */}
+                    <motion.div variants={itemVariants}>
+                        <Card className="bg-surface border-border/50 rounded-[24px] soft-shadow h-full">
+                            <CardHeader className="p-5 px-6 border-b border-border/40 bg-red-500/5">
+                                <CardTitle className="flex items-center gap-2 text-[15px] font-heading font-bold text-red-500">
+                                    <ShieldAlert className="w-5 h-5" /> Behavioral Flags
+                                </CardTitle>
+                                <CardDescription className="text-xs">Automatic threat vectors detected via R2 Guard</CardDescription>
+                            </CardHeader>
+                            <CardContent className="p-6">
+                                {!suspicious_activity || suspicious_activity.length === 0 ? (
+                                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                                        <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
+                                            <ShieldAlert className="w-6 h-6 text-emerald-500 opacity-50" />
+                                        </div>
+                                        <p className="text-sm font-bold text-emerald-500 tracking-tight">Clean Behavioral Profile</p>
+                                        <p className="text-[10px] text-muted-foreground mt-1 px-4 leading-relaxed">No high-frequency traffic patterns or proxy usage detected in the last 24 hours.</p>
+                                    </div>
+                                ) : (
+                                    <div className="space-y-4">
+                                        {suspicious_activity.map((event) => (
+                                            <div key={event.id} className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 flex flex-col gap-2">
+                                                <div className="flex items-center justify-between">
+                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-500 leading-none">
+                                                        {event.event_type.replace(/_/g, ' ')}
+                                                    </span>
+                                                    <span className="text-[10px] font-mono text-muted-foreground">
+                                                        {formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
+                                                    </span>
+                                                </div>
+                                                <div className="flex items-center justify-between text-xs">
+                                                    <span className="font-semibold text-foreground/80">Occurrences</span>
+                                                    <span className="font-mono bg-red-500/10 text-red-600 px-2 py-0.5 rounded-md font-bold">{event.count}</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                        <div className="pt-4 mt-4 border-t border-border/40">
+                                            <p className="text-[10px] text-muted-foreground italic leading-relaxed text-center px-4">
+                                                Threat vectors are automatically cleared every 24 hours if no further violations occur.
+                                            </p>
+                                        </div>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    </motion.div>
+                </div>
             </motion.div>
         </div>
     )

@@ -66,9 +66,19 @@ export class AdminUsersService {
             ORDER BY mp.updated_at DESC
         `;
 
-        const [summaryResult, materialsResult] = await Promise.all([
+        // 3. Suspicious Activity
+        const abuseQuery = `
+            SELECT id, event_type, count, created_at
+            FROM abuse_events
+            WHERE user_id = $1
+            ORDER BY created_at DESC
+            LIMIT 20
+        `;
+
+        const [summaryResult, materialsResult, abuseResult] = await Promise.all([
             pool.query(summaryQuery, [userId]),
-            pool.query(materialsQuery, [userId])
+            pool.query(materialsQuery, [userId]),
+            pool.query(abuseQuery, [userId])
         ]);
 
         if (!summaryResult.rows.length) {
@@ -98,7 +108,8 @@ export class AdminUsersService {
                 completion_rate: Math.round(summary.global_completion_rate),
                 last_active: summary.last_active
             },
-            history: materialsResult.rows
+            history: materialsResult.rows,
+            suspicious_activity: abuseResult.rows
         };
     }
 

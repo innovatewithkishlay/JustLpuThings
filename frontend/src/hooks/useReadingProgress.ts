@@ -67,7 +67,7 @@ export function useReadingProgress(slug: string, initialPage: number = 1, totalP
 
         const timeoutId = setTimeout(() => {
             syncProgress(currentPage);
-        }, 10000); // Wait 10s on a page before syncing it to avoid spam during fast scrolling
+        }, 15000); // 15s pulse as per architectural requirement
 
         return () => clearTimeout(timeoutId);
     }, [currentPage, syncProgress]);
