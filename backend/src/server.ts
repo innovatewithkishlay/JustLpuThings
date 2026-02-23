@@ -1,7 +1,7 @@
 import { env } from './config/env'; // Validates at bootstrap
 import { logger } from './config/logger';
 import { checkDbConnection, pool } from './config/db';
-import { checkRedisConnection, redis } from './config/redis';
+// import { checkRedisConnection, redis } from './config/redis';
 import app from './app';
 
 const startServer = async () => {
@@ -14,9 +14,9 @@ const startServer = async () => {
 
     // Verify Core Infrastructure Services before accepting traffic
     const dbUp = await checkDbConnection();
-    const redisUp = await checkRedisConnection();
+    // const redisUp = await checkRedisConnection();
 
-    if (!dbUp || !redisUp) {
+    if (!dbUp) { // Temporarily removed !redisUp
         logger.fatal('❌ Critical infrastructure unreachable. Shutting down.');
         process.exit(1);
     }
@@ -34,8 +34,8 @@ const startServer = async () => {
             try {
                 await pool.end();
                 logger.info('[SYSTEM] PostgreSQL pool closed.');
-                await (redis as any).quit();
-                logger.info('[SYSTEM] Redis connection closed.');
+                // await (redis as any).quit();
+                // logger.info('[SYSTEM] Redis connection closed.');
 
                 logger.info('[SYSTEM] Graceful shutdown complete.');
                 process.exit(0);

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { redis } from '../../config/redis';
+// import { redis } from '../../config/redis';
 import { pool } from '../../config/db';
 
 export const userAccessLimiter = async (req: Request, res: Response, next: NextFunction) => {
@@ -10,10 +10,10 @@ export const userAccessLimiter = async (req: Request, res: Response, next: NextF
         const userId = req.user.userId;
         const key = `user:${userId}:access_count`;
 
-        const count = await redis.incr(key);
-        if (count === 1) {
-            await redis.expire(key, 300); // 5 minutes TTL
-        }
+        const count = 1; // await redis.incr(key);
+        // if (count === 1) {
+        //     await redis.expire(key, 300); // 5 minutes TTL
+        // }
 
         // Limit allowed: 50 access calls per 5 minutes
         if (count > 50) {

@@ -1,16 +1,16 @@
 import { pool } from '../../config/db';
-import { redis } from '../../config/redis';
+// import { redis } from '../../config/redis';
 
 export class DiscoveryService {
 
     // 1. Trending Materials
     static async getTrending() {
-        const cacheKey = 'materials:trending';
-        const cached = await redis.get(cacheKey);
+        // const cacheKey = 'materials:trending';
+        // const cached = await redis.get(cacheKey);
 
-        if (cached) {
-            return typeof cached === 'string' ? JSON.parse(cached) : cached;
-        }
+        // if (cached) {
+        //     return typeof cached === 'string' ? JSON.parse(cached) : cached;
+        // }
 
         const result = await pool.query(`
             SELECT m.id, m.title, m.slug, m.description, s.last_24h_views, s.total_views
@@ -21,7 +21,7 @@ export class DiscoveryService {
             LIMIT 10
         `);
 
-        await redis.set(cacheKey, JSON.stringify(result.rows), { ex: 60 });
+        // await redis.set(cacheKey, JSON.stringify(result.rows), { ex: 60 });
         return result.rows;
     }
 

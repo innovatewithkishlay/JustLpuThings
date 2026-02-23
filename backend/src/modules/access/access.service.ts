@@ -1,5 +1,5 @@
 import { pool } from '../../config/db';
-import { redis } from '../../config/redis';
+// import { redis } from '../../config/redis';
 import { R2Service } from '../storage/r2.service';
 
 export class AccessService {
@@ -8,7 +8,7 @@ export class AccessService {
         const cacheKey = `material:meta:${slug}`;
 
         // 1. Check Redis for Cached metadata
-        let metadataStr = await redis.get(cacheKey) as string | null;
+        let metadataStr = null; // await redis.get(cacheKey) as string | null;
         let metadata: { id: string, file_key: string };
 
         if (metadataStr) {
@@ -27,7 +27,7 @@ export class AccessService {
             metadata = result.rows[0];
 
             // Cache minimal metadata struct (TTL 60s)
-            await redis.set(cacheKey, JSON.stringify(metadata), { ex: 60 });
+            // await redis.set(cacheKey, JSON.stringify(metadata), { ex: 60 });
         }
 
         // 3. Log telemetry asynchronously via Redis Queue
@@ -39,7 +39,7 @@ export class AccessService {
             timestamp: new Date().toISOString()
         });
 
-        redis.lpush('analytics_queue', eventPayload).catch(e => console.error('Silent drop on analytics enqueue', e));
+        // redis.lpush('analytics_queue', eventPayload).catch(e => console.error('Silent drop on analytics enqueue', e));
 
         // 4. Compute R2 Signed URL natively
         const signedUrl = await R2Service.generateSignedUrl(metadata.file_key, 120);

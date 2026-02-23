@@ -14,7 +14,7 @@ import progressRouter from './modules/progress/progress.routes';
 import adminRouter from './modules/admin/admin.routes';
 import searchRouter from './modules/search/search.routes';
 import discoveryRouter from './modules/discovery/discovery.routes';
-import { AnalyticsWorker } from './modules/analytics/analytics.worker';
+// import { AnalyticsWorker } from './modules/analytics/analytics.worker';
 import { requestMetrics } from './middlewares/requestMetrics';
 
 const app: Express = express();
@@ -54,9 +54,9 @@ setInterval(() => {
 }, 5 * 60 * 1000);
 
 // Spin up Intelligence background worker immediately (skipping test suites safely)
-if (env.NODE_ENV !== 'test') {
-    AnalyticsWorker.start();
-}
+// if (env.NODE_ENV !== 'test') {
+//     AnalyticsWorker.start();
+// }
 
 // Active Routes
 app.use('/api/v1/health', healthRouter);

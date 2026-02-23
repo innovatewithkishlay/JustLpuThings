@@ -1,6 +1,6 @@
 import { pool } from '../../config/db';
 import { env } from '../../config/env';
-import { redis } from '../../config/redis';
+// import { redis } from '../../config/redis';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
@@ -62,7 +62,7 @@ export class AuthService {
             const remaining = decoded.exp - currentUnixTime;
 
             if (remaining > 0) {
-                await redis.set(`blocklist:${decoded.jti}`, 'revoked', { ex: remaining });
+                // await redis.set(`blocklist:${decoded.jti}`, 'revoked', { ex: remaining });
             }
         }
 

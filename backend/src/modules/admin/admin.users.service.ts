@@ -1,5 +1,5 @@
 import { pool } from '../../config/db';
-import { redis } from '../../config/redis';
+// import { redis } from '../../config/redis';
 
 export class AdminUsersService {
 

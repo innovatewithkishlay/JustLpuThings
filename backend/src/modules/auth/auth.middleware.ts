@@ -1,7 +1,7 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { env } from '../../config/env';
-import { redis } from '../../config/redis';
+// import { redis } from '../../config/redis';
 import { pool } from '../../config/db';
 
 export interface TokenPayload {
@@ -31,7 +31,7 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
 
         // Check if token was explicitly revoked (e.g. during logout)
-        const isRevoked = await redis.get(`blocklist:${decoded.jti}`);
+        const isRevoked = false; // await redis.get(`blocklist:${decoded.jti}`);
         if (isRevoked) {
             return res.status(401).json({ success: false, error: { message: 'Token revoked. Please log in again.' } });
         }
