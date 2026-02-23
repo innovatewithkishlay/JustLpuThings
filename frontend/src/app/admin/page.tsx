@@ -58,8 +58,8 @@ interface TelemetryStats {
 
 interface Material {
     id: string;
-    semester?: number;
-    subjectCode?: string;
+    semester_number?: number;
+    subject_name?: string;
     category?: string;
     unit?: string;
     title: string;
@@ -137,9 +137,11 @@ export default function AdminDashboard() {
     }
 
     // Grouping Materials By Semester -> Subject -> Category -> Unit purely mathematically
-    const groupedMaterials = allMaterials.reduce((acc: Record<string, Record<string, Record<string, Record<string, Material[]>>>>, mat) => {
-        const sem = mat.semester?.toString() || 'Unknown'
-        const sub = mat.subjectCode || 'Unknown'
+    const materialsArray = Array.isArray(allMaterials) ? allMaterials : []
+
+    const groupedMaterials = materialsArray.reduce((acc: Record<string, Record<string, Record<string, Record<string, Material[]>>>>, mat) => {
+        const sem = mat.semester_number?.toString() || 'Unknown'
+        const sub = mat.subject_name || 'Unknown'
         const cat = mat.category || 'notes'
         const unit = mat.unit || 'general'
 

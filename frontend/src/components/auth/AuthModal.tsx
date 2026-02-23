@@ -155,7 +155,8 @@ export function AuthModal() {
                                                         type="button"
                                                         onClick={() => {
                                                             setLoginForm({ ...loginForm, role: 'ADMIN' });
-                                                            if (authModalMode === 'register') openAuthModal('login');
+                                                            // Force to login mode if clicking Admin
+                                                            openAuthModal('login');
                                                         }}
                                                         className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${loginForm.role === 'ADMIN' ? 'bg-background text-primary soft-shadow' : 'text-muted-foreground hover:text-foreground'}`}
                                                     >

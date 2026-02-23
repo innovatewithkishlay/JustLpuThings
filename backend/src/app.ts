@@ -19,6 +19,11 @@ import { requestMetrics } from './middlewares/requestMetrics';
 
 const app: Express = express();
 
+app.use((req, _res, next) => {
+    console.log(`[DEBUG] Request: ${req.method} ${req.url}`);
+    next();
+});
+
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: env.RATE_LIMIT_AUTH,
