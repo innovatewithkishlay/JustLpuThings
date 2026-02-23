@@ -12,7 +12,8 @@ export const materialQuerySchema = z.object({
 
 export const progressSchema = z.object({
     last_page: z.number().int().min(1),
-    total_pages: z.number().int().min(1).optional()
+    total_pages: z.number().int().min(1).optional(),
+    time_spent_increment: z.number().int().min(0).default(0)
 });
 
 export type MaterialQueryInput = z.infer<typeof materialQuerySchema>;

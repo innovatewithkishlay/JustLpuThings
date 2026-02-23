@@ -3,6 +3,105 @@ import { pool } from '../../config/db';
 
 export class AdminUsersService {
 
+    static async getUsersAnalytics(searchTerm?: string) {
+        let query = `
+            SELECT 
+                u.id, 
+                u.email, 
+                u.name,
+                u.role, 
+                u.is_blocked,
+                u.created_at,
+                COUNT(DISTINCT mp.material_id) as total_materials_opened,
+                COALESCE(SUM(mp.time_spent), 0) as total_time_spent,
+                COALESCE(AVG(CAST(mp.last_page AS FLOAT) / NULLIF(mp.total_pages, 0)) * 100, 0) as completion_rate,
+                MAX(mp.updated_at) as last_active
+            FROM users u
+            LEFT JOIN material_progress mp ON u.id = mp.user_id
+        `;
+
+        const values: any[] = [];
+        if (searchTerm) {
+            query += ` WHERE u.email ILIKE $1 OR u.name ILIKE $1`;
+            values.push(`%${searchTerm}%`);
+        }
+
+        query += ` GROUP BY u.id ORDER BY last_active DESC NULLS LAST, u.created_at DESC LIMIT 100`;
+
+        const result = await pool.query(query, values);
+        return result.rows;
+    }
+
+    static async getUserDetailAnalytics(userId: string) {
+        // 1. Basic Info & Summary
+        const summaryQuery = `
+            SELECT 
+                u.id, u.email, u.name, u.role, u.is_blocked, u.created_at,
+                COUNT(DISTINCT mp.material_id) as total_materials_opened,
+                COALESCE(SUM(mp.time_spent), 0) as total_time_spent,
+                COALESCE(AVG(CAST(mp.last_page AS FLOAT) / NULLIF(mp.total_pages, 0)) * 100, 0) as global_completion_rate,
+                MAX(mp.updated_at) as last_active
+            FROM users u
+            LEFT JOIN material_progress mp ON u.id = mp.user_id
+            WHERE u.id = $1
+            GROUP BY u.id
+        `;
+
+        // 2. Per Material Breakdown
+        const materialsQuery = `
+            SELECT 
+                m.id, m.title, m.slug,
+                s.name as subject_name,
+                sem.number as semester_number,
+                mp.last_page,
+                mp.total_pages,
+                COALESCE((CAST(mp.last_page AS FLOAT) / NULLIF(mp.total_pages, 0)) * 100, 0) as completion_percentage,
+                mp.time_spent as total_time_spent,
+                mp.updated_at as last_opened
+            FROM material_progress mp
+            JOIN materials m ON mp.material_id = m.id
+            JOIN subjects s ON m.subject_id = s.id
+            JOIN semesters sem ON s.semester_id = sem.id
+            WHERE mp.user_id = $1
+            ORDER BY mp.updated_at DESC
+        `;
+
+        const [summaryResult, materialsResult] = await Promise.all([
+            pool.query(summaryQuery, [userId]),
+            pool.query(materialsQuery, [userId])
+        ]);
+
+        if (!summaryResult.rows.length) {
+            throw { statusCode: 404, message: 'User not found' };
+        }
+
+        const summary = summaryResult.rows[0];
+
+        // Compute average time per material
+        const avg_time_per_material = summary.total_materials_opened > 0
+            ? Math.floor(summary.total_time_spent / summary.total_materials_opened)
+            : 0;
+
+        return {
+            profile: {
+                id: summary.id,
+                email: summary.email,
+                name: summary.name,
+                role: summary.role,
+                is_blocked: summary.is_blocked,
+                created_at: summary.created_at
+            },
+            engagement: {
+                total_time_spent: summary.total_time_spent,
+                total_materials_opened: summary.total_materials_opened,
+                avg_time_per_material,
+                completion_rate: Math.round(summary.global_completion_rate),
+                last_active: summary.last_active
+            },
+            history: materialsResult.rows
+        };
+    }
+
     static async blockUser(adminId: string, userId: string, componentReason: string) {
         const client = await pool.connect();
         try {

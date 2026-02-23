@@ -17,7 +17,7 @@ const MODULES = [
     { name: 'Materials', path: '/dashboard' },
     { name: 'MCQs', path: '/mcqs', disabled: true },
     { name: 'Practice', path: '/practice', disabled: true },
-    { name: 'Analytics', path: '/analytics', disabled: true }
+    { name: 'Analytics', path: '/dashboard/analytics' }
 ];
 
 export function TopNavbar() {
@@ -122,6 +122,9 @@ export function TopNavbar() {
 
                                 <DropdownMenuItem onClick={() => router.push('/dashboard')} className="cursor-pointer">
                                     My Dashboard
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer">
+                                    My Analytics
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10">

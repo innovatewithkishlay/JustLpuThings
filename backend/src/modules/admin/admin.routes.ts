@@ -40,7 +40,9 @@ router.post('/materials', upload.single('file'), AdminController.uploadMaterial)
 router.patch('/materials/:id', AdminController.updateMaterial);
 router.delete('/materials/:id', AdminController.deleteMaterial);
 
-// --- Users Policy ---
+// --- Users Policy & Analytics ---
+router.get('/users', AdminController.getUsersAnalytics);
+router.get('/users/:id', AdminController.getUserDetailAnalytics);
 router.patch('/users/:id/block', AdminController.blockUser);
 router.patch('/users/:id/unblock', AdminController.unblockUser);
 router.delete('/users/:id', AdminController.deleteUser);

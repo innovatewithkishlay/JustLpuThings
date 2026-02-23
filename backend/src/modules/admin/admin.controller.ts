@@ -83,7 +83,27 @@ export class AdminController {
         }
     }
 
-    // --- Users Moderation ---
+    // --- Users Moderation & Analytics ---
+    static async getUsersAnalytics(req: Request, res: Response, next: NextFunction) {
+        try {
+            const searchTerm = req.query.search as string | undefined;
+            const data = await AdminUsersService.getUsersAnalytics(searchTerm);
+            res.json({ success: true, data });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async getUserDetailAnalytics(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = req.params.id as string;
+            const data = await AdminUsersService.getUserDetailAnalytics(userId);
+            res.json({ success: true, data });
+        } catch (err) {
+            next(err);
+        }
+    }
+
     static async blockUser(req: Request, res: Response, next: NextFunction) {
         try {
             const adminId = req.user!.userId;

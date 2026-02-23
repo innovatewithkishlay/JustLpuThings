@@ -10,6 +10,14 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
 import { ArrowLeft, Maximize, Loader2, Info, X, ShieldCheck, EyeOff, Focus, AlertTriangle } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
+import { useReadingProgress } from '@/hooks/useReadingProgress'
+import { Document, Page, pdfjs } from 'react-pdf'
+import { InView } from 'react-intersection-observer'
+import { useResizeDetector } from 'react-resize-detector'
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css'
+import 'react-pdf/dist/esm/Page/TextLayer.css'
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`
 
 interface DocumentData {
     id: string
@@ -18,6 +26,8 @@ interface DocumentData {
     subjectCode: string
     subject_name: string
     semester_number: number
+    last_page?: number
+    total_pages?: number
 }
 
 export default function ViewerPage() {
@@ -32,7 +42,11 @@ export default function ViewerPage() {
     const [showInfo, setShowInfo] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [distractionFree, setDistractionFree] = useState(false)
-    const [progress, setProgress] = useState(5)
+
+    // PDF specific states
+    const [numPages, setNumPages] = useState<number | null>(null)
+    const { width: containerWidth, ref: containerRef } = useResizeDetector()
+    const containerElRef = useRef<HTMLDivElement>(null)
 
     // Secure local component state for the file stream
     const [url, setUrl] = useState<string | null>(null)
@@ -101,6 +115,30 @@ export default function ViewerPage() {
             return () => clearInterval(renewInterval)
         }
     }, [url, requestAccess])
+
+    const { currentPage, handlePageChange } = useReadingProgress(slug, documentData?.last_page || 1, numPages || undefined)
+
+    const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
+        setNumPages(numPages)
+
+        // Seamless Resume implementation
+        if (documentData?.last_page && documentData.last_page > 1) {
+            toast.success(`Resumed from Page ${documentData.last_page}`)
+
+            // Allow DOM to insert pages
+            setTimeout(() => {
+                const element = document.getElementById(`pdf-page-${documentData.last_page}`)
+                const scrollContainer = containerElRef.current;
+
+                if (element && scrollContainer) {
+                    const topOffset = element.offsetTop - 30; // padding offset
+                    scrollContainer.scrollTo({ top: topOffset, behavior: 'smooth' })
+                }
+            }, 600)
+        }
+    }
+
+    const calculatedProgress = numPages ? Math.min(100, Math.round((currentPage / numPages) * 100)) : 5
 
     // Security Mechanisms
     const handleContextMenu = (e: React.MouseEvent) => e.preventDefault()
@@ -193,11 +231,11 @@ export default function ViewerPage() {
                                         <motion.div
                                             className="h-full bg-primary"
                                             initial={{ width: 0 }}
-                                            animate={{ width: `${progress}%` }}
+                                            animate={{ width: `${calculatedProgress}%` }}
                                             transition={{ duration: 1, ease: 'easeOut' }}
                                         />
                                     </div>
-                                    <span className="text-[10px] font-mono text-muted-foreground font-bold">{progress}%</span>
+                                    <span className="text-[10px] font-mono text-muted-foreground font-bold">{calculatedProgress}%</span>
                                 </div>
                             </div>
                         </div>
@@ -220,30 +258,62 @@ export default function ViewerPage() {
             <div className="flex-1 flex relative overflow-hidden bg-background">
                 {distractionFree && (
                     <div
-                        className="absolute top-0 inset-x-0 h-4 z-50 cursor-pointer group"
-                        onClick={() => setDistractionFree(false)}
+                        className="absolute top-0 inset-x-0 h-16 z-50 cursor-pointer group"
+                        onClick={() => {
+                            setDistractionFree(false)
+                            router.back()
+                        }}
                     >
-                        <div className="absolute top-2 left-1/2 -translate-x-1/2 px-3 py-1.5 bg-surface border border-border rounded-full soft-shadow opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                            <Focus className="w-3 h-3 text-primary" /> Exit Focus
+                        <div className="absolute top-4 left-6 px-4 py-2 bg-surface border border-border rounded-xl soft-shadow opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 text-sm font-bold tracking-wide text-foreground hover:bg-muted/80">
+                            <ArrowLeft className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" /> Go Back
                         </div>
                     </div>
                 )}
 
                 <motion.div
+                    ref={containerRef}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.8 }}
-                    className={`flex-1 h-full w-full relative z-10 selection:bg-transparent transition-colors duration-700 ${distractionFree ? 'bg-[#0A0A0A]' : 'bg-background'}`}
-                    style={{ WebkitUserSelect: 'none', userSelect: 'none' }}
+                    className={`flex-1 h-full w-full relative z-10 selection:bg-transparent overflow-y-auto custom-scrollbar transition-colors duration-700 ${distractionFree ? 'bg-[#0A0A0A]' : 'bg-muted/30'}`}
                 >
-                    <iframe
-                        src={`${url}#toolbar=0&navpanes=0&scrollbar=0`}
-                        className="w-full h-full border-0"
-                        title={documentData.title}
-                    />
-                    <div className="absolute inset-x-0 top-0 h-10 z-20 bg-transparent" />
-                    <div className="absolute inset-y-0 right-0 w-6 z-20 bg-transparent" />
-                    <div className="absolute inset-y-0 left-0 w-6 z-20 bg-transparent" />
+                    <div ref={containerElRef} className="max-w-4xl mx-auto py-8 px-4 flex flex-col items-center">
+                        <Document
+                            file={url}
+                            onLoadSuccess={onDocumentLoadSuccess}
+                            loading={
+                                <div className="py-20 flex flex-col items-center justify-center gap-4">
+                                    <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                                    <span className="text-sm font-bold tracking-widest text-muted-foreground uppercase">Decrypting Stream...</span>
+                                </div>
+                            }
+                            className="flex flex-col items-center gap-6"
+                        >
+                            {numPages && Array.from(new Array(numPages), (el, index) => (
+                                <InView
+                                    key={`page_${index + 1}`}
+                                    as="div"
+                                    threshold={0.5}
+                                    onChange={(inView) => {
+                                        if (inView) {
+                                            handlePageChange(index + 1)
+                                        }
+                                    }}
+                                    id={`pdf-page-${index + 1}`}
+                                    className="w-full bg-background rounded-sm shadow-xl flex items-center justify-center min-h-[500px]"
+                                >
+                                    <Page
+                                        pageNumber={index + 1}
+                                        width={containerWidth ? Math.min(containerWidth - 32, 1000) : 800}
+                                        renderAnnotationLayer={false}
+                                        renderTextLayer={true}
+                                        className="pdf-page-render"
+                                        loading={<Skeleton className="w-full h-[800px] bg-muted/50" />}
+                                    />
+                                </InView>
+                            ))}
+                        </Document>
+                    </div>
                 </motion.div>
 
                 <AnimatePresence>
