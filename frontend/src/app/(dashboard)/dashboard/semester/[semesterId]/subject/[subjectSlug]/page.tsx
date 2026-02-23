@@ -74,7 +74,7 @@ export default function SubjectMaterialsPage() {
         { id: 'theory', label: 'Lectures & Notes', icon: BookOpenText },
         { id: 'ca', label: 'CA PYQs', icon: Clock },
         { id: 'midterm', label: 'Mid-Term PYQs', icon: LayoutGrid },
-        { id: 'pyqs', label: 'Final PYQs', icon: FileImage }
+        { id: 'pyqs', label: 'End-Term PYQs', icon: FileImage }
     ]
 
     const UNIT_TABS = ['all', '1', '2', '3', '4', '5', '6']
@@ -166,7 +166,7 @@ export default function SubjectMaterialsPage() {
                                 <div className="w-16 h-16 bg-muted rounded-2xl flex items-center justify-center mb-5 border border-border text-muted-foreground">
                                     <SearchX className="w-8 h-8 opacity-50" />
                                 </div>
-                                <h3 className="font-heading font-bold text-lg mb-1 text-foreground">No materials found</h3>
+                                <h3 className="font-heading font-bold text-lg mb-1 text-foreground">No data available</h3>
                                 <p className="text-muted-foreground font-medium text-sm max-w-[250px]">The pipeline is currently empty for this specific section.</p>
                             </motion.div>
                         ) : (

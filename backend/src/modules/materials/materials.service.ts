@@ -41,13 +41,13 @@ export class MaterialsService {
 
         if (semester) {
             sql += ` AND sem.number = $${paramIndex}`;
-            values.push(semester);
+            values.push(parseInt(semester as unknown as string, 10));
             paramIndex++;
         }
 
         if (subject) {
-            sql += ` AND s.name = $${paramIndex}`;
-            values.push(subject.replace(/-/g, ' '));
+            sql += ` AND s.slug = $${paramIndex}`;
+            values.push(subject);
             paramIndex++;
         }
 
@@ -64,21 +64,15 @@ export class MaterialsService {
         }
 
         // Add sorting and pagination
-        sql += ` ORDER BY m.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-        values.push(safeLimit, offset);
+        const paginatedSql = sql + ` ORDER BY m.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
+        const paginatedValues = [...values, safeLimit, offset];
 
-        const materialsResult = await pool.query(sql, values);
+        const [materialsResult, countResult] = await Promise.all([
+            pool.query(paginatedSql, paginatedValues),
+            pool.query(countSqlBase + sql.split('WHERE m.status = \'ACTIVE\'')[1] || '', values)
+        ]);
 
-        let finalCountSql = countSqlBase;
-        const countValues: any[] = [];
-        let cnIdx = 1;
-        if (college) { finalCountSql += ` AND c.code = $${cnIdx++}`; countValues.push(college); }
-        if (semester) { finalCountSql += ` AND sem.number = $${cnIdx++}`; countValues.push(semester); }
-        if (subject) { finalCountSql += ` AND s.name = $${cnIdx++}`; countValues.push(subject.replace(/-/g, ' ')); }
-        if (category) { finalCountSql += ` AND m.category = $${cnIdx++}`; countValues.push(category); }
-        if (unit) { finalCountSql += ` AND m.unit = $${cnIdx++}`; countValues.push(unit); }
-
-        const actualCount = await pool.query(finalCountSql, countValues);
+        const actualCount = countResult;
 
         return {
             items: materialsResult.rows,

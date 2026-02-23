@@ -9,8 +9,8 @@ const setAuthCookies = (res: Response, access: string, refresh: string, refreshI
     const isProd = env.NODE_ENV === 'production';
     const cookieOptions = {
         httpOnly: true,
-        secure: true, // Cross-origin requires secure: true
-        sameSite: 'none' as const, // Allows cross-site cookie transmission
+        secure: isProd, // Must be false for local HTTP
+        sameSite: isProd ? 'none' as const : 'lax' as const,
         path: '/'
     };
 
