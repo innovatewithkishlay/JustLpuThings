@@ -33,8 +33,8 @@ interface Material {
     unit: string
     youtube_url?: string
     has_file: boolean
-    createdAt: string
-    updatedAt: string
+    created_at: string
+    updated_at: string
 }
 
 export default function SubjectMaterialsPage() {
@@ -201,8 +201,8 @@ export default function SubjectMaterialsPage() {
                                                             {mat.category === 'ca' ? 'CA PQ' : 'MT PQ'}
                                                         </span>
                                                     )}
-                                                    <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-muted-foreground whitespace-nowrap">
-                                                        {new Date(mat.updatedAt || mat.createdAt).toLocaleDateString()}
+                                                    <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-muted-foreground whitespace-nowrap bg-muted/50 px-2 py-0.5 rounded-full border border-border">
+                                                        {new Date(mat.updated_at || mat.created_at).toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric' })}
                                                     </span>
                                                 </div>
                                             </div>
@@ -214,27 +214,24 @@ export default function SubjectMaterialsPage() {
                                                 </p>
                                             </div>
 
-                                            <div className="mt-4 pt-4 border-t border-border/30 flex flex-col gap-3 opacity-80 group-hover:opacity-100 transition-opacity">
-                                                {mat.youtube_url ? (
+                                            <div className="mt-5 pt-5 border-t border-border/40 flex flex-col gap-2 mt-auto">
+                                                {mat.youtube_url && (
                                                     <a
                                                         href={mat.youtube_url}
                                                         target="_blank"
                                                         rel="noreferrer"
                                                         onClick={(e) => e.stopPropagation()}
-                                                        className="flex items-center justify-between bg-red-500/10 text-red-500 px-3 py-2 rounded-xl border border-red-500/20 hover:bg-red-500/20 transition-colors"
+                                                        className="group/btn flex items-center justify-between bg-red-500/10 hover:bg-red-500 text-red-500 hover:text-white px-4 py-2.5 rounded-xl border border-red-500/20 hover:border-red-500 transition-all duration-300 soft-shadow hover:shadow-red-500/20"
                                                     >
-                                                        <span className="text-xs font-bold uppercase tracking-wider">Watch Video Lecture</span>
-                                                        <MonitorPlay className="w-4 h-4 text-red-500" />
+                                                        <span className="text-[11px] font-mono font-bold uppercase tracking-wider">Watch Video Lecture</span>
+                                                        <MonitorPlay className="w-4 h-4 transition-transform group-hover/btn:scale-110" />
                                                     </a>
-                                                ) : (
-                                                    <div className="flex items-center justify-between bg-muted/30 text-muted-foreground px-3 py-2 rounded-xl border border-border/50">
-                                                        <span className="text-xs font-bold uppercase tracking-wider opacity-60">No Video Available</span>
-                                                    </div>
                                                 )}
+
                                                 {mat.has_file && (
-                                                    <div className="flex justify-between items-center px-1">
-                                                        <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{mat.category === 'notes' ? 'Read Document' : mat.category === 'ppt' ? 'View Slides' : 'Open Document'}</span>
-                                                        <ArrowRight className="w-4 h-4 text-primary" />
+                                                    <div className="flex justify-between items-center px-4 py-2.5 bg-primary/5 hover:bg-primary text-primary hover:text-primary-foreground rounded-xl border border-primary/20 hover:border-primary transition-all duration-300 soft-shadow hover:shadow-primary/20 group/read">
+                                                        <span className="text-[11px] font-mono font-bold uppercase tracking-wider">{mat.category === 'notes' ? 'Read Document' : mat.category === 'ppt' ? 'View Slides' : 'Open Document'}</span>
+                                                        <ArrowRight className="w-4 h-4 transition-transform group-hover/read:-rotate-45" />
                                                     </div>
                                                 )}
                                             </div>

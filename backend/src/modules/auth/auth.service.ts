@@ -51,6 +51,11 @@ export class AuthService {
             throw { statusCode: 401, message: 'Invalid credentials' };
         }
 
+        // Strict role enforcement matching GUI intention
+        if (data.role && user.role !== data.role) {
+            throw { statusCode: 403, message: `Access denied: Expected ${data.role} account but found ${user.role} role.` };
+        }
+
         return await this.generateTokens(user.id, user.role);
     }
 

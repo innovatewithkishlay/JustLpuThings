@@ -8,7 +8,8 @@ export const registerSchema = z.object({
 
 export const loginSchema = z.object({
     email: z.string().email('Invalid email address'),
-    password: z.string()
+    password: z.string(),
+    role: z.enum(['USER', 'ADMIN']).optional()
 });
 
 export type RegisterInput = z.infer<typeof registerSchema>;
