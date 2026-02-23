@@ -72,9 +72,9 @@ export default function SubjectMaterialsPage() {
     // Sub-tab definitions
     const TABS = [
         { id: 'theory', label: 'Lectures & Notes', icon: BookOpenText },
-        { id: 'ca', label: 'Continuous Assessment', icon: Clock },
-        { id: 'midterm', label: 'Mid-Terms', icon: LayoutGrid },
-        { id: 'pyqs', label: 'PYQs', icon: FileImage }
+        { id: 'ca', label: 'CA PYQs', icon: Clock },
+        { id: 'midterm', label: 'Mid-Term PYQs', icon: LayoutGrid },
+        { id: 'pyqs', label: 'Final PYQs', icon: FileImage }
     ]
 
     const UNIT_TABS = ['all', '1', '2', '3', '4', '5', '6']
@@ -183,13 +183,22 @@ export default function SubjectMaterialsPage() {
                                                 <div className={`w-12 h-12 rounded-xl flex items-center justify-center border flex-shrink-0 transition-colors duration-300
                                                     ${mat.category === 'notes' ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-500 group-hover:bg-emerald-500/20' :
                                                         mat.category === 'ppt' ? 'bg-blue-500/10 border-blue-500/20 text-blue-500 group-hover:bg-blue-500/20' :
-                                                            'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary/20'}`}>
-                                                    {mat.category === 'notes' ? <FileText className="w-5 h-5" /> : mat.category === 'ppt' ? <MonitorPlay className="w-5 h-5" /> : <FileIcon className="w-5 h-5" />}
+                                                            mat.category === 'pyqs' || mat.category === 'ca' || mat.category === 'midterm' ? 'bg-amber-500/10 border-amber-500/20 text-amber-500 group-hover:bg-amber-500/20' :
+                                                                'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary/20'}`}>
+                                                    {mat.category === 'notes' ? <FileText className="w-5 h-5" /> :
+                                                        mat.category === 'ppt' ? <MonitorPlay className="w-5 h-5" /> :
+                                                            mat.category === 'pyqs' || mat.category === 'ca' || mat.category === 'midterm' ? <FileImage className="w-5 h-5" /> :
+                                                                <FileIcon className="w-5 h-5" />}
                                                 </div>
                                                 <div className="flex flex-col items-end gap-1">
-                                                    {mat.unit && mat.category !== 'ca' && mat.category !== 'midterm' && mat.category !== 'pyqs' && (
+                                                    {mat.unit && activeTab === 'theory' && (
                                                         <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-emerald-500 bg-emerald-500/10 px-2 py-0.5 rounded-full">
                                                             Unit {mat.unit}
+                                                        </span>
+                                                    )}
+                                                    {(mat.category === 'ca' || mat.category === 'midterm') && (
+                                                        <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded-full">
+                                                            {mat.category === 'ca' ? 'CA PQ' : 'MT PQ'}
                                                         </span>
                                                     )}
                                                     <span className="text-[10px] font-mono font-bold tracking-wider uppercase text-muted-foreground whitespace-nowrap">

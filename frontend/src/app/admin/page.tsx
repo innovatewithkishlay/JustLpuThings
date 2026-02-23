@@ -35,7 +35,8 @@ const subjectMap: Record<string, { slug: string, name: string }[]> = {
         { slug: "pel125", name: "PEL125 - Communication Skills II" },
         { slug: "pel130", name: "PEL130 - Communication Skills III" },
         { slug: "ece249", name: "ECE249 - Basic Electrical & Electronics" },
-        { slug: "che110", name: "CHE110 - Environmental Sciences" }
+        { slug: "che110", name: "CHE110 - Environmental Sciences" },
+        { slug: "mth166", name: "MTH166 - Mathematics" }
     ],
     "4": [
         { slug: "data-structures", name: "Data Structures" },

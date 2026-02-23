@@ -19,12 +19,18 @@ const stagger = {
 // Subject Mappings explicitly defined for MVP Phase 2
 const subjectMap: Record<string, { slug: string, name: string, code: string }[]> = {
     "2": [
-        { slug: "mathematics", name: "Mathematics", code: "MAT102" },
-        { slug: "engineering-mechanics", name: "Engineering Mechanics", code: "MEC101" },
-        { slug: "basic-electronics", name: "Basic Electronics", code: "ECE101" },
-        { slug: "programming-fundamentals", name: "Programming Fundamentals", code: "CSE111" },
-        { slug: "environmental-studies", name: "Environmental Studies", code: "EVS100" },
-        { slug: "communication-skills", name: "Communication Skills", code: "ENG101" }
+        { slug: "int306", name: "Internet and Web Designing", code: "INT306" },
+        { slug: "phy110", name: "Engineering Physics", code: "PHY110" },
+        { slug: "cse121", name: "Object Oriented Programming", code: "CSE121" },
+        { slug: "cse101", name: "Computer Programming", code: "CSE101" },
+        { slug: "mec136", name: "Engineering Graphics", code: "MEC136" },
+        { slug: "cse320", name: "Software Engineering", code: "CSE320" },
+        { slug: "pel121", name: "Communication Skills I", code: "PEL121" },
+        { slug: "pel125", name: "Communication Skills II", code: "PEL125" },
+        { slug: "pel130", name: "Communication Skills III", code: "PEL130" },
+        { slug: "ece249", name: "Basic Electrical & Electronics", code: "ECE249" },
+        { slug: "che110", name: "Environmental Sciences", code: "CHE110" },
+        { slug: "mth166", name: "Mathematics", code: "MTH166" }
     ],
     "4": [
         { slug: "data-structures", name: "Data Structures", code: "CSE201" },

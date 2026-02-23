@@ -65,24 +65,18 @@ export class MaterialsService {
 
         // Add sorting and pagination
         sql += ` ORDER BY m.created_at DESC LIMIT $${paramIndex} OFFSET $${paramIndex + 1}`;
-
-        const countValues = [...values];
         values.push(safeLimit, offset);
 
-        const [materialsResult, countResult] = await Promise.all([
-            pool.query(sql, values),
-            pool.query(college || semester ? countSqlBase + ` AND c.code = $1` /* Pseudo logic, using count values */ : countSqlBase, countValues),
-        ]);
+        const materialsResult = await pool.query(sql, values);
 
-        // Fast count logic fallback handling (Count query rebuilt for simplicity in execute)
-        // To ensure perfect counts with precise parameters, we re-run parameter conditions:
         let finalCountSql = countSqlBase;
+        const countValues: any[] = [];
         let cnIdx = 1;
-        if (college) { finalCountSql += ` AND c.code = $${cnIdx++}`; }
-        if (semester) { finalCountSql += ` AND sem.number = $${cnIdx++}`; }
-        if (subject) { finalCountSql += ` AND s.name = $${cnIdx++}`; }
-        if (category) { finalCountSql += ` AND m.category = $${cnIdx++}`; }
-        if (unit) { finalCountSql += ` AND m.unit = $${cnIdx++}`; }
+        if (college) { finalCountSql += ` AND c.code = $${cnIdx++}`; countValues.push(college); }
+        if (semester) { finalCountSql += ` AND sem.number = $${cnIdx++}`; countValues.push(semester); }
+        if (subject) { finalCountSql += ` AND s.name = $${cnIdx++}`; countValues.push(subject.replace(/-/g, ' ')); }
+        if (category) { finalCountSql += ` AND m.category = $${cnIdx++}`; countValues.push(category); }
+        if (unit) { finalCountSql += ` AND m.unit = $${cnIdx++}`; countValues.push(unit); }
 
         const actualCount = await pool.query(finalCountSql, countValues);
 
