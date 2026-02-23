@@ -13,7 +13,7 @@ const accessLimiter = rateLimit({
     message: { success: false, error: { message: 'Signed URL rate limit exceeded' } }
 });
 
-router.get('/access', requireAuth, accessLimiter, userAccessLimiter, async (req: Request, res: Response, next: NextFunction) => {
+router.get('/:slug/access', requireAuth, accessLimiter, userAccessLimiter, async (req: Request, res: Response, next: NextFunction) => {
     try {
         const slug = req.params.slug as string;
         const userId = req.user!.userId;
