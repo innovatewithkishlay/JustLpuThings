@@ -108,20 +108,6 @@ export function TopNavbar() {
                     </span>
                 </Link>
 
-                {/* Global Search Input (Header) */}
-                {pathname !== '/search' && !pathname?.startsWith('/login') && !pathname?.startsWith('/register') && (
-                    <div className="flex-1 flex max-w-sm mx-12">
-                        <Link href="/search" className="w-full">
-                            <div className="relative group w-full">
-                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
-                                <div className="w-full h-10 bg-muted/20 hover:bg-muted/40 border border-white/5 transition-all flex items-center pl-12 pr-4 rounded-2xl text-[13px] text-muted-foreground/50 cursor-text">
-                                    Quick Search... <span className="ml-auto hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 bg-background/40 rounded-lg border border-white/10 opacity-60">⌘K</span>
-                                </div>
-                            </div>
-                        </Link>
-                    </div>
-                )}
-
                 <div className="flex-1" />
 
                 <div className="flex items-center gap-6">
