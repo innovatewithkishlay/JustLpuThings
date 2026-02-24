@@ -194,19 +194,52 @@ export function TeachingImpact() {
 export function AboutCreator() {
     const playlists = [
         {
-            title: "Web Designing",
-            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gRYhS4PsN87h2kdNAZmjqSr",
-            desc: "Clear explanations for INT306. No fluff."
+            title: "Operating Systems",
+            code: "CSE316",
+            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gQhcGUkd4DuA3cS51FIn7vt&si=MM9H5XWU1eQ4sSJN",
+            desc: "Processes, scheduling, deadlocks — all the things that actually show up in exams.",
+            color: "bg-violet-500/10 text-violet-500 border-violet-500/20",
+            dot: "bg-violet-400"
         },
         {
-            title: "Physics Fundamentals",
-            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gQB9lpojFRj2H89n4043nwD",
-            desc: "The stuff that actually comes in exams."
+            title: "Internet Programming Lab",
+            code: "INT315",
+            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gRVC4nnhPewqm_3MkPOzyE4&si=wOhRACMS5uTdJMJC",
+            desc: "HTML, CSS, JS, PHP walkthroughs built for the lab practicals.",
+            color: "bg-blue-500/10 text-blue-500 border-blue-500/20",
+            dot: "bg-blue-400"
         },
         {
-            title: "Object Oriented Programming",
-            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gTHyybvYIa9zr6FfqsifXzs",
-            desc: "CSE121 made surprisingly easy."
+            title: "Design & Analysis of Algorithms",
+            code: "CSE325",
+            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gQB9lpojFRj2H89n4043nwD&si=g_Dr-CGQrh15-cPm",
+            desc: "Greedy, DP, divide & conquer — demystified without the jargon.",
+            color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20",
+            dot: "bg-emerald-400"
+        },
+        {
+            title: "Electronics",
+            code: "ECE201",
+            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gTHyybvYIa9zr6FfqsifXzs&si=5_9nLBFQQra7VBNj",
+            desc: "Diodes, transistors, op-amps — explained from scratch for CS students.",
+            color: "bg-amber-500/10 text-amber-500 border-amber-500/20",
+            dot: "bg-amber-400"
+        },
+        {
+            title: "Chemistry",
+            code: "CHE110",
+            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gQYYygobq6619WBZmpq_zZe&si=BsltHDUuWcUErOb9",
+            desc: "Chemical bonding, thermodynamics, and everything the syllabus demands.",
+            color: "bg-rose-500/10 text-rose-500 border-rose-500/20",
+            dot: "bg-rose-400"
+        },
+        {
+            title: "Mathematics",
+            code: "MTH166",
+            link: "https://youtube.com/playlist?list=PLZKnAKf7S_gSUTCVWPyRNgjWCJIUjzsbs&si=KPX4iDbugV568SQi",
+            desc: "Matrices, integration, Fourier series — no skipping the hard parts.",
+            color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",
+            dot: "bg-cyan-400"
         }
     ]
 
@@ -245,30 +278,43 @@ export function AboutCreator() {
                                 <Award className="w-4 h-4" /> Recent Milestone
                             </div>
                             <p className="text-sm font-medium text-foreground leading-relaxed">
-                                Our admin was recently selected as a **Peer Tutor at LPU**, and that same teaching-first mindset is what drives every unit we upload here.
+                                Our admin was recently selected as a Peer Tutor at LPU, and that same teaching-first mindset is what drives every unit we upload here.
                             </p>
                         </div>
                     </motion.div>
 
                     <div className="lg:col-span-3 space-y-6">
-                        <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50 mb-8">Curated Playlists</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between mb-2">
+                            <h3 className="text-xs font-bold uppercase tracking-widest text-muted-foreground/50">Curated Playlists</h3>
+                            <span className="text-[10px] font-bold text-muted-foreground/30 uppercase tracking-widest">{playlists.length} subjects</span>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                             {playlists.map((pl, i) => (
                                 <Link
                                     key={i}
                                     href={pl.link}
                                     target="_blank"
-                                    className="group p-6 rounded-3xl bg-surface border border-border/50 hover:border-primary/30 transition-all flex flex-col justify-between"
+                                    className="group relative p-5 rounded-2xl bg-background border border-border/40 hover:border-border hover:shadow-lg transition-all duration-300 flex flex-col gap-3 overflow-hidden"
                                 >
-                                    <div className="space-y-2">
-                                        <div className="flex items-center justify-between">
-                                            <h4 className="font-heading font-semibold text-lg">{pl.title}</h4>
-                                            <ExternalLink className="w-4 h-4 opacity-0 group-hover:opacity-100 -translate-y-1 group-hover:translate-y-0 transition-all" />
+                                    {/* Subtle hover glow */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
+
+                                    <div className="flex items-start justify-between relative z-10">
+                                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold border ${pl.color}`}>
+                                            <div className={`w-1.5 h-1.5 rounded-full ${pl.dot}`} />
+                                            {pl.code}
                                         </div>
-                                        <p className="text-sm text-muted-foreground font-medium leading-snug">{pl.desc}</p>
+                                        <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/30 group-hover:text-muted-foreground transition-colors" />
                                     </div>
-                                    <div className="mt-8 flex items-center text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Watch Playlist <ArrowRight className="ml-1 w-3 h-3" />
+
+                                    <div className="relative z-10">
+                                        <h4 className="font-heading font-semibold text-base leading-tight mb-1.5 group-hover:text-primary transition-colors">{pl.title}</h4>
+                                        <p className="text-xs text-muted-foreground font-medium leading-relaxed line-clamp-2">{pl.desc}</p>
+                                    </div>
+
+                                    <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary/60 group-hover:text-primary transition-colors relative z-10">
+                                        <Play className="w-3 h-3 fill-current" />
+                                        Watch Playlist <ArrowRight className="ml-0.5 w-3 h-3 translate-x-0 group-hover:translate-x-0.5 transition-transform" />
                                     </div>
                                 </Link>
                             ))}
