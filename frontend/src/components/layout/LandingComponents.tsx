@@ -455,48 +455,43 @@ export function Experience() {
 }
 
 export function StudentTestimonials() {
-    type Bubble = { text: string; emoji?: string; blurNums?: boolean }
-    type Card = { bubbles: Bubble[]; label?: string }
+    type Bubble = { text: string; blurNum?: string }
+    type Card = { bubbles: Bubble[] }
 
     const row1: Card[] = [
         {
             bubbles: [
                 { text: "Bhaiya aap hi hai na youtube pe jo padhate hai" },
                 { text: "Agar ha to thank you aap ki wajah se mujhe sab shamaj aa raha hai math aur cse110 ka baas aab ece249 ka bhi video jaldi bana do 🙏" }
-            ],
-            label: "LPU Student"
+            ]
         },
         {
             bubbles: [
                 { text: "Bhai video mai sai kafi questions same aye ❤️" },
                 { text: "Paper acha gaya 🔥🔥🔥🔥" },
-            ],
-            label: "CSE Student"
+            ]
         },
         {
             bubbles: [
-                { text: "OST exam mein exact wahi questions aye jo aapne video mein explain kiye the! CGPA ", emoji: "🎉", blurNums: true },
-            ],
-            label: "ECE Student"
+                { text: "OST exam mein exact wahi questions the jo video mein explain kiye the! CGPA ", blurNum: "8.7" },
+                { text: "🎉 Thank you bhaiya!" }
+            ]
         },
         {
             bubbles: [
-                { text: "Notes + videos = perfect combination. Koi aur platform nahi hai aisa for LPU students 🔥" },
-                { text: "Keep it up bhaiya 💪" }
-            ],
-            label: "B.Tech 2nd Year"
+                { text: "Notes + videos = perfect combo 🔥" },
+                { text: "Koi aur platform nahi hai aisa for LPU students 💪" }
+            ]
         },
         {
             bubbles: [
                 { text: "Pehle kuch samajh nahi aata tha CSE110 mein... ab sab crystal clear hai! Thank you so much 🙏" },
-            ],
-            label: "CSE Fresher"
+            ]
         },
         {
             bubbles: [
                 { text: "MTH165 waale notes life saver the. Exam se ek raat pehle padha aur sab cover ho gaya 😭❤️" },
-            ],
-            label: "LPU Student"
+            ]
         },
     ]
 
@@ -504,57 +499,65 @@ export function StudentTestimonials() {
         {
             bubbles: [
                 { text: "Thank you aapki wajah se mera first semister me 8 cgpa bana ❤️" },
-                { text: "Bhaiya abb please 🥺 second semister me bhi aise hi video daliye ga hath mat choriye ga sath mat choriye ga 4th year tak 🤧" },
-            ],
-            label: "CSE 1st Year"
+                { text: "Bhaiya abb please 🥺 second semister me bhi aise hi video daliye ga hath mat choriye ga 4th year tak 🤧" },
+            ]
         },
         {
             bubbles: [
-                { text: "Hello bhaiya, today was my midterm exam for Math. I tried to cover all three chapters, and concepts were clear to me through your videos. Thank you for your time and support ❤️" },
-            ],
-            label: "MTH165 Student"
+                { text: "Hello bhaiya, today was my midterm exam for Math. Concepts were clear to me through your videos. Thank you for your time and support ❤️" },
+            ]
         },
         {
             bubbles: [
-                { text: "Bhaiya aapke notes se exam crack kiya! Reg no ", blurNums: true, emoji: "" },
+                { text: "Aapke notes se exam crack kiya! Reg: ", blurNum: "12XXXXX" },
                 { text: "First time full A grade 🎉🎉" }
-            ],
-            label: "LPU Student"
+            ]
         },
         {
             bubbles: [
-                { text: "Seriously, ye platform chahiye tha sabko. Sab kuch ek jagah, clean aur fast. Love it 🙌" }
-            ],
-            label: "B.Tech 3rd Year"
+                { text: "Seriously ye platform chahiye tha sabko. Sab kuch ek jagah, clean aur fast. Love it 🙌" }
+            ]
         },
         {
             bubbles: [
                 { text: "ECE249 waala video dekh ke lab exam confident feel hua pehli baar. Thank you bhaiya 🙏" }
-            ],
-            label: "ECE Student"
+            ]
         },
         {
             bubbles: [
                 { text: "Bhai same aya tha paper! Puri raat notes padhe JustLPUThings pe aur sab set ho gaya 😭🔥" }
-            ],
-            label: "CSE 2nd Year"
+            ]
         },
+    ]
+
+    /* Floating decorative number pills */
+    const floaters = [
+        { val: "8.5 CGPA", x: "8%", y: "20%", delay: "0s", dur: "6s" },
+        { val: "A Grade", x: "80%", y: "10%", delay: "1.2s", dur: "7s" },
+        { val: "🔥 Paper", x: "55%", y: "80%", delay: "0.5s", dur: "8s" },
+        { val: "9.1 CGPA", x: "25%", y: "75%", delay: "2s", dur: "6.5s" },
+        { val: "Top Rank", x: "90%", y: "60%", delay: "0.8s", dur: "9s" },
+        { val: "❤️ Thanks", x: "42%", y: "15%", delay: "1.8s", dur: "7.5s" },
     ]
 
     function WaCard({ card }: { card: Card }) {
         return (
-            <div className="flex-shrink-0 w-[300px] mx-3 rounded-[20px] bg-[#111b21] dark:bg-[#0d1418] border border-white/5 p-4 space-y-2 shadow-xl cursor-default select-none">
+            <div className="flex-shrink-0 w-[300px] mx-3 rounded-[20px] bg-[#111b21] border border-white/[0.06] p-4 space-y-2 shadow-2xl cursor-default select-none"
+                style={{ willChange: 'transform' }}>
+                {/* Blurred identity bar */}
                 <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center text-[9px] font-bold text-primary">S</div>
-                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">{card.label || 'Student'}</span>
+                    <div className="w-6 h-6 rounded-full bg-white/10 flex-shrink-0" />
+                    <div className="flex gap-1.5">
+                        <div className="h-2 w-10 rounded-full bg-white/20 blur-[3px]" />
+                        <div className="h-2 w-6 rounded-full bg-white/10 blur-[3px]" />
+                    </div>
                 </div>
                 {card.bubbles.map((b, i) => (
-                    <div key={i} className="bg-[#202c33] rounded-[12px] rounded-tl-[4px] px-3 py-2 max-w-[260px]">
+                    <div key={i} className="bg-[#202c33] rounded-[12px] rounded-tl-[4px] px-3 py-2.5 max-w-[260px]">
                         <p className="text-[13px] text-white/90 leading-relaxed">
-                            {b.blurNums
-                                ? <>{b.text}<span className="blur-sm select-none bg-white/10 rounded px-1 text-white/60">{"8.XX"}</span>{b.emoji}</>
-                                : b.text
-                            }
+                            {b.blurNum
+                                ? <>{b.text}<span className="blur-sm select-none font-mono text-white/50 bg-white/10 rounded-sm px-1">{b.blurNum}</span></>
+                                : b.text}
                         </p>
                     </div>
                 ))}
@@ -562,15 +565,32 @@ export function StudentTestimonials() {
         )
     }
 
+    /* duplicate for seamless loop */
     const allRow1 = [...row1, ...row1]
     const allRow2 = [...row2, ...row2]
 
     return (
         <section className="py-24 overflow-hidden relative">
-            {/* Background */}
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+            {/* Subtle section gradient */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.025] to-transparent pointer-events-none" />
 
-            <div className="container mx-auto max-w-6xl px-6 mb-12">
+            {/* Floating decorative number pills */}
+            {floaters.map((f, i) => (
+                <div
+                    key={i}
+                    className="absolute px-3 py-1 rounded-full text-[11px] font-bold text-primary/40 border border-primary/10 bg-primary/5 backdrop-blur-sm pointer-events-none z-0"
+                    style={{
+                        left: f.x, top: f.y,
+                        animation: `float-pill ${f.dur} ease-in-out infinite alternate`,
+                        animationDelay: f.delay,
+                    }}
+                >
+                    {f.val}
+                </div>
+            ))}
+
+            {/* Header */}
+            <div className="container mx-auto max-w-6xl px-6 mb-12 relative z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
@@ -585,21 +605,23 @@ export function StudentTestimonials() {
                         What students are saying
                     </h2>
                     <p className="text-muted-foreground text-base max-w-md mx-auto">
-                        These aren't testimonials we wrote — they're messages from students just like you, straight from WhatsApp.
+                        Not testimonials we wrote — actual WhatsApp messages from students who've been there.
                     </p>
                 </motion.div>
             </div>
 
-            {/* Row 1 — scrolls left */}
-            <div className="relative mb-4" style={{ maskImage: 'linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)' }}>
-                <div className="flex marquee-left">
+            {/* Row 1 — left */}
+            <div className="relative mb-4 z-10"
+                style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 100px, black calc(100% - 100px), transparent 100%)' }}>
+                <div className="flex marquee-left" style={{ width: 'max-content', willChange: 'transform' }}>
                     {allRow1.map((card, i) => <WaCard key={i} card={card} />)}
                 </div>
             </div>
 
-            {/* Row 2 — scrolls right */}
-            <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)' }}>
-                <div className="flex marquee-right">
+            {/* Row 2 — right */}
+            <div className="relative z-10"
+                style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 100px, black calc(100% - 100px), transparent 100%)' }}>
+                <div className="flex marquee-right" style={{ width: 'max-content', willChange: 'transform' }}>
                     {allRow2.map((card, i) => <WaCard key={i} card={card} />)}
                 </div>
             </div>

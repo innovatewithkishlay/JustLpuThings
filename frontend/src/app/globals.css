@@ -148,6 +148,19 @@
   animation-play-state: paused;
 }
 
+/* Floating pill bob animation for testimonials section */
+@keyframes float-pill {
+  0% {
+    transform: translateY(0px);
+    opacity: 0.5;
+  }
+
+  100% {
+    transform: translateY(-12px);
+    opacity: 0.9;
+  }
+}
+
 
 /* Generic container padding targeting SaaS width specs */
 .page-container {
