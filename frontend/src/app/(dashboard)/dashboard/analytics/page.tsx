@@ -74,7 +74,8 @@ export default function AnalyticsPage() {
     const { data, isLoading, isError } = useQuery({
         queryKey: ["user", "analytics"],
         queryFn: () => apiClient<AnalyticsData>('/users/me/analytics'),
-        staleTime: 30000,
+        staleTime: 10000,
+        refetchInterval: 30000, // 30s pulse for personal metrics
         refetchOnWindowFocus: true
     })
 

@@ -61,16 +61,25 @@ export function useReadingProgress(slug: string, initialPage: number = 1, totalP
         setCurrentPage(newPage);
     }, []);
 
-    // Debounce watcher for page changes
+    // 1. Debounce watcher for page changes
     useEffect(() => {
         if (currentPage === lastSyncedPage.current) return;
 
         const timeoutId = setTimeout(() => {
             syncProgress(currentPage);
-        }, 15000); // 15s pulse as per architectural requirement
+        }, 15000); // 15s pulse for page changes
 
         return () => clearTimeout(timeoutId);
     }, [currentPage, syncProgress]);
+
+    // 2. Periodic heartbeat for "Time Spent" (Real-time accuracy)
+    useEffect(() => {
+        const heartbeatId = setInterval(() => {
+            syncProgress();
+        }, 30000); // 30s stable heartbeat
+
+        return () => clearInterval(heartbeatId);
+    }, [syncProgress]);
 
     // Sync on unmount
     useEffect(() => {

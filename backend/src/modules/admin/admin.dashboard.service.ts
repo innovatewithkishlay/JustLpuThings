@@ -6,8 +6,12 @@ export class AdminDashboardService {
             WITH 
             user_count AS (SELECT COUNT(*) as total FROM users),
             material_count AS (SELECT COUNT(*) as total FROM materials WHERE status = 'ACTIVE'),
-            view_sum AS (SELECT SUM(total_views) as total FROM material_stats),
-            active_sessions AS (SELECT total_active_users as total FROM daily_platform_stats WHERE date = CURRENT_DATE),
+            view_sum AS (SELECT COALESCE(SUM(total_views), 0) as total FROM material_stats),
+            active_sessions AS (
+                SELECT COUNT(DISTINCT user_id) as total 
+                FROM material_progress 
+                WHERE updated_at > now() - interval '5 minutes'
+            ),
             abuse_count AS (SELECT COUNT(DISTINCT user_id) as total FROM abuse_events),
             top_mats AS (
                 SELECT m.id, m.title, s.total_views 
@@ -23,6 +27,7 @@ export class AdminDashboardService {
                 (SELECT total FROM active_sessions) as active_sessions,
                 (SELECT total FROM abuse_count) as flagged_users,
                 (SELECT json_agg(top_mats) FROM top_mats) as top_materials;
+
         `;
 
         const result = await pool.query(query);

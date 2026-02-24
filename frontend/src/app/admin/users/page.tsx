@@ -50,7 +50,8 @@ export default function AdminUsersPage() {
     const { data: users, isLoading, isError } = useQuery({
         queryKey: ["admin", "users", debouncedSearch],
         queryFn: () => apiClient<UserAnalyticsOverview[]>(`/admin/users${debouncedSearch ? `?search=${encodeURIComponent(debouncedSearch)}` : ''}`),
-        staleTime: 30000,
+        staleTime: 10000,
+        refetchInterval: 30000, // 30s pulse for user grid
         refetchOnWindowFocus: true
     })
 
