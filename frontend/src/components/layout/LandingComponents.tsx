@@ -33,12 +33,21 @@ const slideUp = {
         }
     })
 }
-
 export function Hero() {
     return (
-        <section className="pt-40 pb-24 px-6 text-center">
-            <div className="container mx-auto max-w-6xl flex flex-col items-center">
-                <div className="space-y-2 mb-10">
+        <section className="pt-40 pb-24 px-6 text-center relative overflow-hidden">
+            <div className="container mx-auto max-w-6xl flex flex-col items-center relative">
+                <div className="relative space-y-2 mb-10 z-10">
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 1, duration: 0.5 }}
+                        className="absolute -top-12 left-1/2 -translate-x-1/2 flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 backdrop-blur-sm shadow-sm whitespace-nowrap"
+                    >
+                        <Award className="w-3.5 h-3.5 text-primary" />
+                        <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Certified Peer Tutor</span>
+                    </motion.div>
+
                     <div className="overflow-hidden py-1">
                         <motion.h1
                             custom={0}
@@ -67,7 +76,7 @@ export function Hero() {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.6, duration: 0.8 }}
-                    className="flex flex-col items-center"
+                    className="flex flex-col items-center relative z-10"
                 >
                     <p className="text-lg md:text-xl text-muted-foreground font-medium mb-12 leading-relaxed max-w-xl mx-auto">
                         We built this because we struggled through the same semester as you. No drama, no scattered links, just your materials in one place.
@@ -75,7 +84,7 @@ export function Hero() {
 
                     <div className="flex flex-wrap justify-center gap-4">
                         <Link href="/register">
-                            <Button size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl shadow-none hover:bg-primary/90 transition-all">
+                            <Button size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl shadow-xl shadow-primary/10 hover:bg-primary/90 hover:scale-105 transition-all">
                                 Start Reading
                             </Button>
                         </Link>
@@ -86,11 +95,97 @@ export function Hero() {
                         </Link>
                     </div>
 
-                    <div className="mt-20 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
+                    <div className="mt-24 flex items-center justify-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">
                         <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/20" />
                         Built for students by students
                     </div>
                 </motion.div>
+
+                {/* Subtle Hero Background Blob */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none opacity-50" />
+            </div>
+        </section>
+    )
+}
+
+export function TeachingImpact() {
+    return (
+        <section className="py-32 px-6 overflow-hidden">
+            <div className="container mx-auto max-w-6xl">
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center">
+                    <motion.div
+                        initial="hidden"
+                        whileInView="visible"
+                        viewport={{ once: true }}
+                        variants={fadeIn}
+                        className="lg:col-span-5 space-y-8"
+                    >
+                        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[10px] font-bold uppercase tracking-widest">
+                            <Award className="w-3 h-3" /> Teaching with Impact
+                        </div>
+                        <h2 className="text-3xl md:text-5xl font-heading font-semibold tracking-tight leading-tight">
+                            Beyond just notes. <br />
+                            <span className="text-muted-foreground/40 italic">Real classroom experience.</span>
+                        </h2>
+                        <p className="text-lg text-muted-foreground font-medium leading-relaxed">
+                            We don't just dump PDFs. Our materials are structured based on hours of actual peer-to-peer tutoring and classroom discussions at LPU.
+                        </p>
+                        <div className="space-y-4 pt-4">
+                            <div className="flex items-start gap-4">
+                                <div className="w-10 h-10 rounded-xl bg-surface border border-border/50 flex items-center justify-center shrink-0">
+                                    <ChevronRight className="w-5 h-5 text-primary" />
+                                </div>
+                                <div>
+                                    <h4 className="font-semibold">Academic Excellence</h4>
+                                    <p className="text-sm text-muted-foreground">Awarded by the Division of Student Relationship for tutoring excellence.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    <div className="lg:col-span-7 relative">
+                        <div className="grid grid-cols-2 gap-4">
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.2 }}
+                                className="space-y-4"
+                            >
+                                <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border border-border/10 rotate-[-2deg]">
+                                    <Image
+                                        src="/assets/classroom.jpg"
+                                        alt="Teaching in classroom"
+                                        fill
+                                        className="object-cover"
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
+                                        <p className="text-white text-[10px] font-bold uppercase tracking-widest">In Action</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.4 }}
+                                className="pt-12"
+                            >
+                                <div className="relative aspect-[4/5] rounded-[2.5rem] overflow-hidden shadow-2xl border-white/10 dark:border-black/50 rotate-[2deg]">
+                                    <Image
+                                        src="/assets/certificate.jpg"
+                                        alt="Excellence Certificate"
+                                        fill
+                                        className="object-cover"
+                                    />
+                                    <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/60 to-transparent">
+                                        <p className="text-white text-[10px] font-bold uppercase tracking-widest">Certified</p>
+                                    </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                        {/* Decorative Background Element */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-primary/5 rounded-full blur-[100px] pointer-events-none -z-10" />
+                    </div>
+                </div>
             </div>
         </section>
     )

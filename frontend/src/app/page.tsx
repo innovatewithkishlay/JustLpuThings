@@ -3,6 +3,7 @@ import {
   Hero,
   AboutCreator,
   Experience,
+  TeachingImpact,
   ClosingCTA,
   Footer
 } from '@/components/layout/LandingComponents'
@@ -24,6 +25,7 @@ export default function LandingPage() {
       <Hero />
       <AboutCreator />
       <Experience />
+      <TeachingImpact />
       <ClosingCTA />
       <Footer />
     </main>
