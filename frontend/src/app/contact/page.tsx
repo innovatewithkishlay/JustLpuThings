@@ -35,7 +35,7 @@ export default function ContactPage() {
                                 </div>
                             </Link>
 
-                            <Link href="https://youtube.com/@JustLpuThings" target="_blank" className="flex items-center gap-4 group cursor-pointer">
+                            <Link href="https://www.youtube.com/@JustLPUThings2.0" target="_blank" className="flex items-center gap-4 group cursor-pointer">
                                 <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
                                     <Youtube className="w-5 h-5" />
                                 </div>

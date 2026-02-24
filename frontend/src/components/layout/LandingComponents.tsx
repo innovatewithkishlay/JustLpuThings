@@ -88,7 +88,7 @@ export function Hero() {
                                 Start Reading
                             </Button>
                         </Link>
-                        <Link href="https://youtube.com/@JustLpuThings" target="_blank">
+                        <Link href="https://www.youtube.com/@JustLPUThings2.0" target="_blank">
                             <Button variant="ghost" size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
                                 <Play className="mr-2 w-4 h-4 fill-current" /> Watch Videos
                             </Button>
@@ -516,7 +516,7 @@ export function Footer() {
                             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/30">Resources</h4>
                             <div className="flex flex-col gap-3">
                                 <Link href="/about" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">About Our Story</Link>
-                                <Link href="https://youtube.com/@JustLpuThings" target="_blank" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">Watch Lectures</Link>
+                                <Link href="https://www.youtube.com/@JustLPUThings2.0" target="_blank" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">Watch Lectures</Link>
                                 <Link href="/contact" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">Say Hello</Link>
                             </div>
                         </div>
