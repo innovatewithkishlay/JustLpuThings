@@ -4,6 +4,8 @@ import rateLimit from 'express-rate-limit';
 import { env } from '../../config/env';
 import { requireAuth, requireAdmin } from '../auth/auth.middleware';
 import { AdminController } from './admin.controller';
+import { MessagesController } from '../messages/messages.controller';
+import { NotificationsController } from '../notifications/notifications.controller';
 
 const router = Router();
 
@@ -46,5 +48,13 @@ router.get('/users/:id', AdminController.getUserDetailAnalytics);
 router.patch('/users/:id/block', AdminController.blockUser);
 router.patch('/users/:id/unblock', AdminController.unblockUser);
 router.delete('/users/:id', AdminController.deleteUser);
+
+// --- Messages Inbox (User Requests) ---
+router.get('/messages', MessagesController.getAll);
+router.post('/messages/:id/reply', MessagesController.reply);
+
+// --- Notifications (Broadcast / Targeted) ---
+router.get('/notifications', NotificationsController.getAll);
+router.post('/notifications', NotificationsController.send);
 
 export default router;

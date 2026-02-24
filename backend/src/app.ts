@@ -15,6 +15,8 @@ import adminRouter from './modules/admin/admin.routes';
 import searchRouter from './modules/search/search.routes';
 import discoveryRouter from './modules/discovery/discovery.routes';
 import usersRouter from './modules/users/users.routes';
+import messagesRouter from './modules/messages/messages.routes';
+import notificationsRouter from './modules/notifications/notifications.routes';
 // import { AnalyticsWorker } from './modules/analytics/analytics.worker';
 import { requestMetrics } from './middlewares/requestMetrics';
 
@@ -72,6 +74,8 @@ app.use('/api/v1/admin', adminRouter);
 app.use('/api/v1/search', searchRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1', discoveryRouter);
+app.use('/api/v1/messages', messagesRouter);
+app.use('/api/v1/notifications', notificationsRouter);
 
 // Materials & Dependent Routes
 app.use('/api/v1/materials', materialsRouter);

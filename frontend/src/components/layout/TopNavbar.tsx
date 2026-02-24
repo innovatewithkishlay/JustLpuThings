@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
 import { Moon, Sun, Search, User, BookOpen } from "lucide-react"
+import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -127,6 +128,9 @@ export function TopNavbar() {
                         </DropdownMenuContent>
                     </DropdownMenu>
 
+                    {/* Notification Bell */}
+                    {isAuthenticated && <NotificationBell />}
+
                     {/* Profile / Avatar */}
                     {isAuthenticated ? (
                         <DropdownMenu>
@@ -158,6 +162,9 @@ export function TopNavbar() {
                                         <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer font-semibold text-primary rounded-xl px-4 py-3 m-1">
                                             Admin Panel
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem onClick={() => router.push('/admin/inbox')} className="cursor-pointer font-semibold text-primary/80 rounded-xl px-4 py-3 m-1">
+                                            Inbox & Notifications
+                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator className="bg-white/5" />
                                     </>
                                 )}
@@ -167,6 +174,9 @@ export function TopNavbar() {
                                 </DropdownMenuItem>
                                 <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
                                     Analytics
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/requests')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
+                                    My Requests
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-white/5" />
                                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 rounded-xl px-4 py-3 m-1 text-sm">
