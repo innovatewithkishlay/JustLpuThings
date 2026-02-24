@@ -188,19 +188,22 @@ export function AboutCreator() {
 export function Experience() {
     const items = [
         {
-            title: "You won’t lose your place.",
-            desc: "The reader syncs your page automatically. Open it on your phone late at night or your laptop in the morning. It just works.",
-            icon: Clock
+            title: "It remembers where you stopped.",
+            desc: "Whether it's 2 AM on your phone or 8 AM on your laptop, the reader keeps your page synced. No more scrolling back to find Unit 3, slide 42.",
+            icon: Clock,
+            detail: "Works even on patchy library Wi-Fi."
         },
         {
-            title: "Everything’s sorted.",
-            desc: "By semester, by subject, by unit. No more scrolling through random files to find that one specific diagram.",
-            icon: Layout
+            title: "Finally, some actual order.",
+            desc: "Sorted by semester, subject, and unit. No more digging through 'New Folder (4)' or 500-message Telegram chats just to find a single diagram.",
+            icon: Layout,
+            detail: "CA and Mid-term PYQs included."
         },
         {
-            title: "No downloads flying around.",
-            desc: "Read directly in the browser. It's clean, fast, and doesn't clutter your desktop with 'Unit1_Final_v2.pdf'.",
-            icon: CloudOff
+            title: "Stop hoarding messy PDFs.",
+            desc: "Read everything directly in the browser. It's fast, clean, and zero 'Unit1_Final_v3_REAL.pdf' files cluttering your downloads folder.",
+            icon: CloudOff,
+            detail: "Zero ads. Zero distractions."
         }
     ]
 
@@ -230,6 +233,10 @@ export function Experience() {
                                 <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-md">
                                     {item.desc}
                                 </p>
+                                <div className="pt-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/40">
+                                    <span className="w-1 h-1 rounded-full bg-primary/40" />
+                                    {item.detail}
+                                </div>
                             </div>
                             <div className="flex-1 w-full aspect-video rounded-3xl bg-muted/30 border border-border/40 overflow-hidden relative flex items-center justify-center group">
                                 <div className="p-8 w-full h-full border border-border/50 rounded-2xl bg-surface/50 scale-90 group-hover:scale-95 transition-transform duration-700 opacity-60">
