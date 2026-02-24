@@ -53,33 +53,37 @@ export function TopNavbar() {
     if (pathname?.startsWith('/viewer/')) return null;
 
     return (
-        <div className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-500 py-4 ${isScrolled ? 'px-4' : 'px-0'}`}>
+        <div className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-700 py-6 ${isScrolled ? 'px-4' : 'px-0'}`}>
             <motion.div
                 animate={{
-                    width: isScrolled ? '85%' : '100%',
-                    borderRadius: isScrolled ? '24px' : '0px',
-                    maxWidth: isScrolled ? '1200px' : '100%'
+                    width: isScrolled ? '90%' : '100%',
+                    borderRadius: isScrolled ? '32px' : '0px',
+                    maxWidth: isScrolled ? '1100px' : '100%',
+                    y: isScrolled ? 0 : -10
                 }}
-                className={`flex items-center h-16 transition-all duration-500 border border-border/40 bg-background/70 backdrop-blur-2xl shadow-2xl shadow-black/5 dark:shadow-primary/5 ${isScrolled ? 'px-6 border-white/10' : 'px-10 border-transparent bg-transparent backdrop-blur-0 shadow-none'}`}
+                className={`flex items-center h-16 transition-all duration-700 relative ${isScrolled
+                        ? 'px-8 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] after:absolute after:inset-0 after:rounded-[32px] after:border after:border-white/20 after:pointer-events-none'
+                        : 'px-12 border-transparent bg-transparent backdrop-blur-0'
+                    }`}
             >
                 {/* Logo / Brand */}
-                <Link href="/" className="flex items-center gap-2 group">
-                    <div className="w-8 h-8 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                <Link href="/" className="flex items-center gap-3 group">
+                    <div className="w-9 h-9 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
                         <BookOpen className="h-4 w-4 text-primary" />
                     </div>
-                    <span className="text-xl font-heading font-bold tracking-tight text-foreground bg-clip-text">
-                        JustLPU<span className="text-primary">Things</span>
+                    <span className="text-xl font-heading font-bold tracking-tight text-foreground">
+                        JustLPU<span className="text-primary/80">Things</span>
                     </span>
                 </Link>
 
                 {/* Global Search Input (Header) */}
                 {pathname !== '/search' && !pathname?.startsWith('/login') && !pathname?.startsWith('/register') && (
-                    <div className="flex-1 flex max-w-md mx-8">
+                    <div className="flex-1 flex max-w-sm mx-12">
                         <Link href="/search" className="w-full">
                             <div className="relative group w-full">
-                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                                <div className="w-full h-9 bg-muted/30 hover:bg-muted/50 border border-border/20 transition-all flex items-center pl-10 pr-4 rounded-xl text-[13px] text-muted-foreground cursor-text">
-                                    Search... <span className="ml-auto hidden sm:inline-block text-[10px] font-mono px-1.5 py-0.5 bg-background/50 rounded border border-border/50">⌘K</span>
+                                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40 group-hover:text-primary transition-colors" />
+                                <div className="w-full h-10 bg-muted/20 hover:bg-muted/40 border border-white/5 transition-all flex items-center pl-12 pr-4 rounded-2xl text-[13px] text-muted-foreground/50 cursor-text">
+                                    Quick Search... <span className="ml-auto hidden sm:inline-block text-[10px] font-mono px-2 py-0.5 bg-background/40 rounded-lg border border-white/10 opacity-60">⌘K</span>
                                 </div>
                             </div>
                         </Link>
@@ -88,20 +92,20 @@ export function TopNavbar() {
 
                 <div className="flex-1" />
 
-                <div className="flex items-center gap-4">
+                <div className="flex items-center gap-6">
                     {/* Dark Mode Toggle */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="w-9 h-9 px-0 rounded-xl hover:bg-muted/50">
-                                <Sun className="h-[1.1rem] w-[1.1rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-foreground" />
-                                <Moon className="absolute h-[1.1rem] w-[1.1rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-foreground" />
+                            <Button variant="ghost" className="w-10 h-10 px-0 rounded-2xl hover:bg-white/10 transition-colors">
+                                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-foreground/70" />
+                                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-foreground/70" />
                                 <span className="sr-only">Toggle theme</span>
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-xl soft-shadow font-medium border-border/40 backdrop-blur-xl">
-                            <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-lg">Light</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-lg">Dark</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-lg">System</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className="rounded-2xl soft-shadow border-white/10 backdrop-blur-3xl bg-white/10 dark:bg-black/40">
+                            <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-xl m-1">Light</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-xl m-1">Dark</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-xl m-1">System</DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
 
@@ -112,42 +116,42 @@ export function TopNavbar() {
                                 <Button
                                     variant="ghost"
                                     size="icon"
-                                    className="relative rounded-xl w-9 h-9 bg-primary/10 hover:bg-primary/20 border border-primary/20 text-primary font-bold text-xs uppercase transition-all"
+                                    className="relative rounded-2xl w-10 h-10 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-primary font-bold text-xs transition-all hover:scale-105"
                                 >
                                     {user?.name?.[0] || user?.email?.[0] || 'U'}
                                 </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-56 rounded-2xl soft-shadow border-border/40 backdrop-blur-xl p-2">
-                                <DropdownMenuLabel className="font-normal px-2 py-3">
-                                    <div className="flex flex-col space-y-1">
+                            <DropdownMenuContent align="end" className="w-64 rounded-3xl soft-shadow border-white/10 backdrop-blur-3xl bg-white/10 dark:bg-black/60 p-2">
+                                <DropdownMenuLabel className="font-normal px-4 py-4">
+                                    <div className="flex flex-col space-y-2">
                                         <p className="text-sm font-semibold leading-none">{user?.name || 'Student'}</p>
-                                        <p className="text-[11px] leading-none text-muted-foreground">{user?.email}</p>
+                                        <p className="text-[11px] leading-none text-muted-foreground/60">{user?.email}</p>
                                         <div className="pt-2">
-                                            <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold tracking-widest uppercase ${isAdmin ? 'bg-rose-500/10 text-rose-500' : 'bg-primary/10 text-primary'}`}>
+                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase ${isAdmin ? 'bg-rose-500/20 text-rose-500' : 'bg-primary/20 text-primary'}`}>
                                                 {user?.role}
                                             </span>
                                         </div>
                                     </div>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="opacity-50" />
+                                <DropdownMenuSeparator className="bg-white/5" />
 
                                 {isAdmin && (
                                     <>
-                                        <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer font-semibold text-primary rounded-lg">
+                                        <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer font-semibold text-primary rounded-xl px-4 py-3 m-1">
                                             Admin Panel
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator className="opacity-50" />
+                                        <DropdownMenuSeparator className="bg-white/5" />
                                     </>
                                 )}
 
-                                <DropdownMenuItem onClick={() => router.push('/dashboard')} className="cursor-pointer rounded-lg px-2 py-2 text-sm">
+                                <DropdownMenuItem onClick={() => router.push('/dashboard')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
                                     Dashboard
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer rounded-lg px-2 py-2 text-sm">
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
                                     Analytics
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="opacity-50" />
-                                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 rounded-lg px-2 py-2 text-sm">
+                                <DropdownMenuSeparator className="bg-white/5" />
+                                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 rounded-xl px-4 py-3 m-1 text-sm">
                                     Log out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
@@ -155,7 +159,7 @@ export function TopNavbar() {
                     ) : (
                         <Button
                             variant="default"
-                            className="rounded-xl h-9 px-5 text-xs font-bold shadow-lg shadow-primary/10 hover:scale-105 transition-all"
+                            className="rounded-2xl h-11 px-8 text-xs font-bold bg-primary hover:bg-primary/90 shadow-[0_10px_30px_rgba(var(--primary),0.2)] hover:scale-105 transition-all"
                             onClick={() => openAuthModal('login')}
                         >
                             Sign In
@@ -163,7 +167,6 @@ export function TopNavbar() {
                     )}
                 </div>
             </motion.div>
-
             {/* Horizontal Modular Tabs (Shown only on Dashboard routing) */}
             {pathname?.startsWith('/dashboard') && isScrolled && (
                 <motion.div
