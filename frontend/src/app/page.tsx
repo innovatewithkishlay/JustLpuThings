@@ -4,6 +4,7 @@ import {
   AboutCreator,
   Experience,
   TeachingImpact,
+  StudentTestimonials,
   ClosingCTA,
   Footer
 } from '@/components/layout/LandingComponents'
@@ -26,6 +27,7 @@ export default function LandingPage() {
       <AboutCreator />
       <Experience />
       <TeachingImpact />
+      <StudentTestimonials />
       <ClosingCTA />
       <Footer />
     </main>

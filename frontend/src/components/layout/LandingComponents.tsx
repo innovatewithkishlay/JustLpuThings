@@ -454,6 +454,159 @@ export function Experience() {
     )
 }
 
+export function StudentTestimonials() {
+    type Bubble = { text: string; emoji?: string; blurNums?: boolean }
+    type Card = { bubbles: Bubble[]; label?: string }
+
+    const row1: Card[] = [
+        {
+            bubbles: [
+                { text: "Bhaiya aap hi hai na youtube pe jo padhate hai" },
+                { text: "Agar ha to thank you aap ki wajah se mujhe sab shamaj aa raha hai math aur cse110 ka baas aab ece249 ka bhi video jaldi bana do 🙏" }
+            ],
+            label: "LPU Student"
+        },
+        {
+            bubbles: [
+                { text: "Bhai video mai sai kafi questions same aye ❤️" },
+                { text: "Paper acha gaya 🔥🔥🔥🔥" },
+            ],
+            label: "CSE Student"
+        },
+        {
+            bubbles: [
+                { text: "OST exam mein exact wahi questions aye jo aapne video mein explain kiye the! CGPA ", emoji: "🎉", blurNums: true },
+            ],
+            label: "ECE Student"
+        },
+        {
+            bubbles: [
+                { text: "Notes + videos = perfect combination. Koi aur platform nahi hai aisa for LPU students 🔥" },
+                { text: "Keep it up bhaiya 💪" }
+            ],
+            label: "B.Tech 2nd Year"
+        },
+        {
+            bubbles: [
+                { text: "Pehle kuch samajh nahi aata tha CSE110 mein... ab sab crystal clear hai! Thank you so much 🙏" },
+            ],
+            label: "CSE Fresher"
+        },
+        {
+            bubbles: [
+                { text: "MTH165 waale notes life saver the. Exam se ek raat pehle padha aur sab cover ho gaya 😭❤️" },
+            ],
+            label: "LPU Student"
+        },
+    ]
+
+    const row2: Card[] = [
+        {
+            bubbles: [
+                { text: "Thank you aapki wajah se mera first semister me 8 cgpa bana ❤️" },
+                { text: "Bhaiya abb please 🥺 second semister me bhi aise hi video daliye ga hath mat choriye ga sath mat choriye ga 4th year tak 🤧" },
+            ],
+            label: "CSE 1st Year"
+        },
+        {
+            bubbles: [
+                { text: "Hello bhaiya, today was my midterm exam for Math. I tried to cover all three chapters, and concepts were clear to me through your videos. Thank you for your time and support ❤️" },
+            ],
+            label: "MTH165 Student"
+        },
+        {
+            bubbles: [
+                { text: "Bhaiya aapke notes se exam crack kiya! Reg no ", blurNums: true, emoji: "" },
+                { text: "First time full A grade 🎉🎉" }
+            ],
+            label: "LPU Student"
+        },
+        {
+            bubbles: [
+                { text: "Seriously, ye platform chahiye tha sabko. Sab kuch ek jagah, clean aur fast. Love it 🙌" }
+            ],
+            label: "B.Tech 3rd Year"
+        },
+        {
+            bubbles: [
+                { text: "ECE249 waala video dekh ke lab exam confident feel hua pehli baar. Thank you bhaiya 🙏" }
+            ],
+            label: "ECE Student"
+        },
+        {
+            bubbles: [
+                { text: "Bhai same aya tha paper! Puri raat notes padhe JustLPUThings pe aur sab set ho gaya 😭🔥" }
+            ],
+            label: "CSE 2nd Year"
+        },
+    ]
+
+    function WaCard({ card }: { card: Card }) {
+        return (
+            <div className="flex-shrink-0 w-[300px] mx-3 rounded-[20px] bg-[#111b21] dark:bg-[#0d1418] border border-white/5 p-4 space-y-2 shadow-xl cursor-default select-none">
+                <div className="flex items-center gap-2 mb-3">
+                    <div className="w-6 h-6 rounded-full bg-primary/30 flex items-center justify-center text-[9px] font-bold text-primary">S</div>
+                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-wider">{card.label || 'Student'}</span>
+                </div>
+                {card.bubbles.map((b, i) => (
+                    <div key={i} className="bg-[#202c33] rounded-[12px] rounded-tl-[4px] px-3 py-2 max-w-[260px]">
+                        <p className="text-[13px] text-white/90 leading-relaxed">
+                            {b.blurNums
+                                ? <>{b.text}<span className="blur-sm select-none bg-white/10 rounded px-1 text-white/60">{"8.XX"}</span>{b.emoji}</>
+                                : b.text
+                            }
+                        </p>
+                    </div>
+                ))}
+            </div>
+        )
+    }
+
+    const allRow1 = [...row1, ...row1]
+    const allRow2 = [...row2, ...row2]
+
+    return (
+        <section className="py-24 overflow-hidden relative">
+            {/* Background */}
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.02] to-transparent pointer-events-none" />
+
+            <div className="container mx-auto max-w-6xl px-6 mb-12">
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.7 }}
+                    className="text-center space-y-3"
+                >
+                    <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
+                        <Heart className="w-3 h-3 fill-current" /> Real Messages from Real Students
+                    </div>
+                    <h2 className="text-3xl md:text-4xl font-heading font-semibold tracking-tight">
+                        What students are saying
+                    </h2>
+                    <p className="text-muted-foreground text-base max-w-md mx-auto">
+                        These aren't testimonials we wrote — they're messages from students just like you, straight from WhatsApp.
+                    </p>
+                </motion.div>
+            </div>
+
+            {/* Row 1 — scrolls left */}
+            <div className="relative mb-4" style={{ maskImage: 'linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)' }}>
+                <div className="flex marquee-left">
+                    {allRow1.map((card, i) => <WaCard key={i} card={card} />)}
+                </div>
+            </div>
+
+            {/* Row 2 — scrolls right */}
+            <div className="relative" style={{ maskImage: 'linear-gradient(to right, transparent, black 80px, black calc(100% - 80px), transparent)' }}>
+                <div className="flex marquee-right">
+                    {allRow2.map((card, i) => <WaCard key={i} card={card} />)}
+                </div>
+            </div>
+        </section>
+    )
+}
+
 export function ClosingCTA() {
     return (
         <section className="py-40 px-6 text-center border-t border-border/5">
