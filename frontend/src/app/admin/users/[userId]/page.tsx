@@ -104,7 +104,7 @@ export default function AdminUserDetailPage() {
     }
 
     if (isLoading) {
-        return <div className="page-container pt-8"><DashboardSkeleton /></div>
+        return <div className="page-container"><DashboardSkeleton /></div>
     }
 
     if (isError || !data) {

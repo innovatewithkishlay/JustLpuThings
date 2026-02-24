@@ -46,7 +46,7 @@ export default function RequestsPage() {
     }
 
     return (
-        <div className="min-h-screen bg-background page-container max-w-3xl mx-auto py-10 px-4">
+        <div className="min-h-screen bg-background page-container max-w-3xl mx-auto pb-10 px-4">
             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}>
                 <div className="mb-8">
                     <h1 className="text-2xl font-heading font-bold">Send a Request</h1>
@@ -120,8 +120,8 @@ export default function RequestsPage() {
                                             </p>
                                         </div>
                                         <div className={`flex items-center gap-1 text-[10px] font-bold px-2.5 py-1 rounded-full ${msg.status === 'resolved'
-                                                ? 'bg-emerald-500/10 text-emerald-500'
-                                                : 'bg-amber-500/10 text-amber-500'
+                                            ? 'bg-emerald-500/10 text-emerald-500'
+                                            : 'bg-amber-500/10 text-amber-500'
                                             }`}>
                                             {msg.status === 'resolved'
                                                 ? <><CheckCircle2 className="w-3 h-3" /> Resolved</>

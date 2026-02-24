@@ -69,7 +69,7 @@ function SearchContent() {
     }, [debouncedQuery, searchParams])
 
     return (
-        <div className="min-h-screen bg-background pb-20 pt-8 page-container max-w-4xl mx-auto">
+        <div className="min-h-screen bg-background pb-20 page-container max-w-4xl mx-auto">
 
             {/* Massive Search Input Structure */}
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-12 group">

@@ -89,7 +89,7 @@ export default function AnalyticsPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-[calc(100vh-4rem)] pb-24 pt-10 page-container max-w-6xl mx-auto space-y-12">
+            <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-6xl mx-auto space-y-12">
                 <div className="space-y-4">
                     <Skeleton className="h-8 w-48" />
                     <Skeleton className="h-4 w-96" />
@@ -115,7 +115,7 @@ export default function AnalyticsPage() {
     }
 
     return (
-        <div className="min-h-[calc(100vh-4rem)] pb-24 pt-10 page-container max-w-6xl mx-auto selection:bg-primary/20">
+        <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-6xl mx-auto selection:bg-primary/20">
             <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-12">
 
                 {/* Header Section */}

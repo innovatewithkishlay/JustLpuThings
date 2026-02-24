@@ -172,7 +172,7 @@ export default function AdminDashboard() {
     }
 
     if (statsLoading || materialsLoading) {
-        return <div className="page-container pt-8"><DashboardSkeleton /></div>
+        return <div className="page-container"><DashboardSkeleton /></div>
     }
 
     const materialsArray = Array.isArray(allMaterials) ? allMaterials : []

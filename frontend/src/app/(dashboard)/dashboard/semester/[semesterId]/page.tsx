@@ -69,7 +69,7 @@ export default function SemesterPage() {
     }
 
     return (
-        <div className="min-h-[calc(100vh-4rem)] pb-24 pt-8 page-container max-w-5xl mx-auto">
+        <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-5xl mx-auto">
             <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-10">
 
                 <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-6">
