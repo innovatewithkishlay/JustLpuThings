@@ -25,7 +25,7 @@ export default function ContactPage() {
                         </div>
 
                         <div className="space-y-6">
-                            <div className="flex items-center gap-4 group cursor-pointer">
+                            <Link href="mailto:bhavishyakumar4344@gmail.com" className="flex items-center gap-4 group cursor-pointer">
                                 <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
                                     <Mail className="w-5 h-5" />
                                 </div>
@@ -33,7 +33,7 @@ export default function ContactPage() {
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Email Us</p>
                                     <p className="text-sm font-semibold">bhavishyakumar4344@gmail.com</p>
                                 </div>
-                            </div>
+                            </Link>
 
                             <Link href="https://youtube.com/@JustLpuThings" target="_blank" className="flex items-center gap-4 group cursor-pointer">
                                 <div className="w-12 h-12 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform">
@@ -45,15 +45,15 @@ export default function ContactPage() {
                                 </div>
                             </Link>
 
-                            <div className="flex items-center gap-4 group cursor-pointer">
+                            <Link href="https://whatsapp.com/channel/0029Vartrkr2P59gGzeM7E1B" target="_blank" className="flex items-center gap-4 group cursor-pointer">
                                 <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                                     <MessageCircle className="w-5 h-5" />
                                 </div>
                                 <div>
                                     <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">Community</p>
-                                    <p className="text-sm font-semibold">Join the WhatsApp Group</p>
+                                    <p className="text-sm font-semibold">Join the WhatsApp Channel</p>
                                 </div>
-                            </div>
+                            </Link>
                         </div>
                     </div>
 
