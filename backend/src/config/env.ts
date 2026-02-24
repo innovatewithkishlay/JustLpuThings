@@ -33,8 +33,14 @@ const envSchema = z.object({
     R2_ACCOUNT_ID: z.string().optional(),
     R2_ACCESS_KEY_ID: z.string().optional(),
     R2_SECRET_ACCESS_KEY: z.string().optional(),
-    R2_BUCKET_NAME: z.string().optional()
+    R2_BUCKET_NAME: z.string().optional(),
+
+    // Google OAuth
+    GOOGLE_CLIENT_ID: z.string(),
+    GOOGLE_CLIENT_SECRET: z.string(),
+    GOOGLE_CALLBACK_URL: z.string().url(),
 });
+
 
 const _env = envSchema.safeParse(process.env);
 

@@ -19,6 +19,7 @@ import messagesRouter from './modules/messages/messages.routes';
 import notificationsRouter from './modules/notifications/notifications.routes';
 // import { AnalyticsWorker } from './modules/analytics/analytics.worker';
 import { requestMetrics } from './middlewares/requestMetrics';
+import passport from './modules/auth/google.strategy';
 
 const app: Express = express();
 
@@ -50,6 +51,7 @@ app.use(cors({
 
 app.use(express.json());
 app.use(cookieParser());
+app.use(passport.initialize()); // Google OAuth
 app.use(requestIdMiddleware);
 app.use(requestMetrics);
 

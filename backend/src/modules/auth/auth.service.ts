@@ -156,7 +156,7 @@ export class AuthService {
 
     // --- INTERNAL HELPER ---
 
-    private static async generateTokens(userId: string, role: string) {
+    public static async generateTokens(userId: string, role: string) {
         const accessJti = uuidv4();
         const refreshFamilyId = uuidv4(); // Maps to the postgres ID primary key
 
