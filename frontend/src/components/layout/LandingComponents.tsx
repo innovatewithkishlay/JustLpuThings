@@ -1,6 +1,7 @@
 "use client"
 
-import { motion } from 'framer-motion'
+import { motion, useInView } from 'framer-motion'
+import { useState, useEffect, useRef } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
@@ -35,6 +36,73 @@ const slideUp = {
         }
     })
 }
+
+/* ── Animation Primitives ──────────────────────────────── */
+
+/** Typewriter: characters appear one at a time with a blinking cursor */
+function TypewriterText({ text, delay = 0, speed = 38, className = '' }: { text: string; delay?: number; speed?: number; className?: string }) {
+    const [displayed, setDisplayed] = useState('')
+    const [done, setDone] = useState(false)
+    useEffect(() => {
+        let i = 0
+        const start = setTimeout(() => {
+            const timer = setInterval(() => {
+                i++
+                setDisplayed(text.slice(0, i))
+                if (i >= text.length) { clearInterval(timer); setDone(true) }
+            }, speed)
+            return () => clearInterval(timer)
+        }, delay)
+        return () => clearTimeout(start)
+    }, [text, delay, speed])
+    return (
+        <span className={className}>
+            {displayed}
+            {!done && <span className="inline-block w-[3px] h-[0.9em] bg-primary ml-0.5 align-middle animate-pulse" />}
+        </span>
+    )
+}
+
+/** BlurWords: each word blurs in one-at-a-time on scroll */
+function BlurWords({ text, className = '', once = true, stagger = 0.07 }: { text: string; className?: string; once?: boolean; stagger?: number }) {
+    const ref = useRef<HTMLSpanElement>(null)
+    const inView = useInView(ref, { once, margin: '-80px' })
+    const words = text.split(' ')
+    return (
+        <span ref={ref} className={className}>
+            {words.map((w, i) => (
+                <motion.span
+                    key={i}
+                    className="inline-block mr-[0.28em]"
+                    initial={{ opacity: 0, y: 18, filter: 'blur(10px)' }}
+                    animate={inView ? { opacity: 1, y: 0, filter: 'blur(0px)' } : {}}
+                    transition={{ duration: 0.55, delay: i * stagger, ease: [0.22, 1, 0.36, 1] }}
+                >
+                    {w}
+                </motion.span>
+            ))}
+        </span>
+    )
+}
+
+/** FadeUp: single element fades up on scroll */
+function FadeUp({ children, delay = 0, className = '' }: { children: React.ReactNode; delay?: number; className?: string }) {
+    const ref = useRef<HTMLDivElement>(null)
+    const inView = useInView(ref, { once: true, margin: '-60px' })
+    return (
+        <motion.div
+            ref={ref}
+            className={className}
+            initial={{ opacity: 0, y: 24 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay, ease: [0.22, 1, 0.36, 1] }}
+        >
+            {children}
+        </motion.div>
+    )
+}
+
+
 export function Hero() {
     const { isAuthenticated, openAuthModal } = useAuth()
     const router = useRouter()
@@ -69,19 +137,13 @@ export function Hero() {
                             variants={slideUp}
                             className="text-4xl md:text-7xl font-heading font-semibold tracking-tight text-foreground leading-[1.1]"
                         >
-                            Notes that actually help.
+                            <TypewriterText text="Notes that actually help." delay={400} speed={35} />
                         </motion.h1>
                     </div>
                     <div className="overflow-hidden py-1">
-                        <motion.h2
-                            custom={1}
-                            initial="hidden"
-                            animate="visible"
-                            variants={slideUp}
-                            className="text-4xl md:text-7xl font-heading font-semibold tracking-tight text-muted-foreground/60 italic leading-[1.1]"
-                        >
-                            Study without the chaos.
-                        </motion.h2>
+                        <h2 className="text-4xl md:text-7xl font-heading font-semibold tracking-tight text-muted-foreground/60 italic leading-[1.1]">
+                            <BlurWords text="Study without the chaos." stagger={0.11} />
+                        </h2>
                     </div>
                 </div>
 
@@ -139,8 +201,11 @@ export function TeachingImpact() {
                             <Award className="w-3 h-3" /> Teaching with Impact
                         </div>
                         <h2 className="text-3xl md:text-5xl font-heading font-semibold tracking-tight leading-tight">
-                            Beyond just notes. <br />
-                            <span className="text-muted-foreground/40 italic">Real classroom experience.</span>
+                            <BlurWords text="Beyond just notes." stagger={0.09} />
+                            <br />
+                            <span className="text-muted-foreground/40 italic">
+                                <BlurWords text="Real classroom experience." stagger={0.09} />
+                            </span>
                         </h2>
                         <p className="text-lg text-muted-foreground font-medium leading-relaxed">
                             We don't just dump PDFs. Our materials are structured based on hours of actual peer-to-peer tutoring and classroom discussions at LPU.
@@ -270,7 +335,9 @@ export function AboutCreator() {
                         className="lg:col-span-2 space-y-8"
                     >
                         <div className="space-y-4">
-                            <h2 className="text-3xl font-heading font-semibold tracking-tight">Why We Built This</h2>
+                            <h2 className="text-3xl font-heading font-semibold tracking-tight">
+                                <BlurWords text="Why We Built This" stagger={0.09} />
+                            </h2>
                             <p className="text-base text-muted-foreground font-medium leading-relaxed">
                                 We were tired of searching for notes everywhere. WhatsApp groups are a mess, and Drive links always seem to die right before submittals.
                             </p>
@@ -655,7 +722,9 @@ export function ClosingCTA() {
                 className="max-w-3xl mx-auto space-y-12"
             >
                 <div className="space-y-4">
-                    <h2 className="text-3xl md:text-5xl font-heading font-semibold italic leading-tight">Let’s make this semester lighter.</h2>
+                    <h2 className="text-3xl md:text-5xl font-heading font-semibold italic leading-tight">
+                        <BlurWords text="Let's make this semester lighter." stagger={0.08} />
+                    </h2>
                     <p className="text-lg text-muted-foreground font-medium max-w-xl mx-auto">
                         No more chasing PDFs in group chats or worrying about outdated materials. We’ve kept it simple so you can just focus on learning.
                     </p>
