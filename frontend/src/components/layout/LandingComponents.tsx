@@ -2,16 +2,19 @@
 
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
+import Image from 'next/image'
 import {
-    ArrowRight,
     Play,
     ExternalLink,
+    ArrowRight,
     Clock,
     Layout,
     CloudOff,
-    Heart
+    Heart,
+    Award,
+    ChevronRight
 } from 'lucide-react'
-import Link from 'next/link'
 
 const fadeIn = {
     hidden: { opacity: 0 },
@@ -121,15 +124,35 @@ export function AboutCreator() {
                         whileInView="visible"
                         viewport={{ once: true }}
                         variants={fadeIn}
-                        className="lg:col-span-2 space-y-6"
+                        className="lg:col-span-2 space-y-8"
                     >
-                        <h2 className="text-3xl font-heading font-semibold tracking-tight">Why We Built This</h2>
-                        <p className="text-base text-muted-foreground font-medium leading-relaxed">
-                            We were tired of searching for notes everywhere. WhatsApp groups are a mess, and Drive links always seem to die right before submittals.
-                        </p>
-                        <p className="text-base text-muted-foreground font-medium leading-relaxed">
-                            No boring lectures here. Just clear explanations, real talk, and notes that actually help you get through your units.
-                        </p>
+                        <div className="space-y-4">
+                            <h2 className="text-3xl font-heading font-semibold tracking-tight">Why We Built This</h2>
+                            <p className="text-base text-muted-foreground font-medium leading-relaxed">
+                                We were tired of searching for notes everywhere. WhatsApp groups are a mess, and Drive links always seem to die right before submittals.
+                            </p>
+                        </div>
+
+                        <div className="relative aspect-[4/5] rounded-[2rem] overflow-hidden bg-muted group leading-none">
+                            <Image
+                                src="/assets/peer-tutor.jpg"
+                                alt="Admin Recognition"
+                                fill
+                                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                            />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex flex-col justify-end p-8">
+                                <p className="text-white text-sm font-semibold italic">"The recognition is great, but helping you guys get through the semester is why we're here."</p>
+                            </div>
+                        </div>
+
+                        <div className="p-6 rounded-3xl bg-primary/5 border border-primary/10 space-y-3">
+                            <div className="flex items-center gap-2 text-primary font-bold text-[10px] uppercase tracking-widest">
+                                <Award className="w-4 h-4" /> Recent Milestone
+                            </div>
+                            <p className="text-sm font-medium text-foreground leading-relaxed">
+                                Our admin was recently selected as a **Peer Tutor at LPU**, and that same teaching-first mindset is what drives every unit we upload here.
+                            </p>
+                        </div>
                     </motion.div>
 
                     <div className="lg:col-span-3 space-y-6">
@@ -199,7 +222,7 @@ export function Experience() {
                             whileInView="visible"
                             viewport={{ once: true, margin: "-100px" }}
                             variants={fadeIn}
-                            className={`flex flex-col md:flex-row gap-12 items-start ${i % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
+                            className={`flex flex - col md: flex - row gap - 12 items - start ${i % 2 === 1 ? 'md:flex-row-reverse' : ''} `}
                         >
                             <div className="flex-1 space-y-4">
                                 <item.icon className="w-8 h-8 text-primary/40 mb-2" />
