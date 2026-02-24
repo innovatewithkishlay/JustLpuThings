@@ -4,6 +4,6 @@ import { requireAuth } from '../auth/auth.middleware';
 
 const router = Router({ mergeParams: true });
 
-router.post('/progress', requireAuth, ProgressController.update);
+router.post('/:slug/progress', requireAuth, ProgressController.update);
 
 export default router;

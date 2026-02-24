@@ -15,6 +15,12 @@ const handleGlobalError = (error: any, query?: any) => {
         return;
     }
 
+    // Suppress background heartbeat noise
+    // @ts-ignore
+    if (query?.options?.mutationKey?.[0] === 'progress') {
+        return;
+    }
+
     // For network errors when offline
     if (error instanceof TypeError && error.message.includes('fetch')) {
         toast.error('Network offline. Please check your connection.');

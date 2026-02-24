@@ -19,6 +19,7 @@ export function useReadingProgress(slug: string, initialPage: number = 1, totalP
     const queryClient = useQueryClient();
 
     const progressMutation = useMutation({
+        mutationKey: ["progress", slug],
         mutationFn: async (payload: ProgressPayload) => {
             return await apiClient(`/materials/${slug}/progress`, {
                 method: 'POST',
