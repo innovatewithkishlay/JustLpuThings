@@ -2,33 +2,42 @@ import { pool } from '../../config/db';
 
 export class AdminDashboardService {
     static async getOverview() {
-        const queries = [
-            pool.query('SELECT COUNT(*) as total FROM users'),
-            pool.query("SELECT COUNT(*) as total FROM materials WHERE status = 'ACTIVE'"),
-            pool.query('SELECT SUM(total_views) as total FROM material_stats'),
-            pool.query(`SELECT total_active_users as total FROM daily_platform_stats WHERE date = CURRENT_DATE`),
-            pool.query(`
+        const query = `
+            WITH 
+            user_count AS (SELECT COUNT(*) as total FROM users),
+            material_count AS (SELECT COUNT(*) as total FROM materials WHERE status = 'ACTIVE'),
+            view_sum AS (SELECT SUM(total_views) as total FROM material_stats),
+            active_sessions AS (SELECT total_active_users as total FROM daily_platform_stats WHERE date = CURRENT_DATE),
+            abuse_count AS (SELECT COUNT(DISTINCT user_id) as total FROM abuse_events),
+            top_mats AS (
                 SELECT m.id, m.title, s.total_views 
                 FROM materials m 
                 JOIN material_stats s ON m.id = s.material_id 
                 ORDER BY s.total_views DESC 
                 LIMIT 5
-            `),
-            pool.query('SELECT COUNT(DISTINCT user_id) as total FROM abuse_events')
-        ];
+            )
+            SELECT 
+                (SELECT total FROM user_count) as total_users,
+                (SELECT total FROM material_count) as total_materials,
+                (SELECT total FROM view_sum) as total_views,
+                (SELECT total FROM active_sessions) as active_sessions,
+                (SELECT total FROM abuse_count) as flagged_users,
+                (SELECT json_agg(top_mats) FROM top_mats) as top_materials;
+        `;
 
-        const [users, materials, views, activeUsers, topMaterials, abuse] = await Promise.all(queries);
+        const result = await pool.query(query);
+        const row = result.rows[0];
 
         return {
-            totalUsers: parseInt(users.rows[0].total, 10),
-            totalMaterials: parseInt(materials.rows[0].total, 10),
-            totalViews: parseInt(views.rows[0]?.total || 0, 10),
-            activeUsers: parseInt(activeUsers.rows[0]?.total || 0, 10),
-            flaggedUsers: parseInt(abuse.rows[0].total, 10),
-            top5Materials: topMaterials.rows.map(row => ({
-                materialId: row.id,
-                title: row.title,
-                totalViews: parseInt(row.total_views, 10)
+            totalUsers: parseInt(row.total_users || 0, 10),
+            totalMaterials: parseInt(row.total_materials || 0, 10),
+            totalViews: parseInt(row.total_views || 0, 10),
+            activeUsers: parseInt(row.active_sessions || 0, 10),
+            flaggedUsers: parseInt(row.flagged_users || 0, 10),
+            top5Materials: (row.top_materials || []).map((m: any) => ({
+                materialId: m.id,
+                title: m.title,
+                totalViews: parseInt(m.total_views, 10)
             }))
         };
     }

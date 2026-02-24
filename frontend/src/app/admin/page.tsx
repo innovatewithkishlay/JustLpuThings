@@ -10,6 +10,7 @@ import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2 } fro
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 
 const containerVariants = {
@@ -71,6 +72,7 @@ interface Material {
 
 export default function AdminDashboard() {
     const queryClient = useQueryClient()
+    const router = useRouter()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
     const [uploadForm, setUploadForm] = useState({
@@ -166,22 +168,35 @@ export default function AdminDashboard() {
                         <h1 className="text-3xl font-heading font-bold tracking-tight mb-2">Command Center</h1>
                         <p className="text-muted-foreground font-medium">Aggregated platform health, metrics, and data operations pipeline.</p>
                     </div>
-                    <div className="mt-4 md:mt-0 flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20 text-primary text-sm font-bold">
-                        <Activity className="w-4 h-4 animate-pulse" /> Live Telemetry Linked
+                    <div className="mt-4 md:mt-0 flex items-center gap-3">
+                        <Button
+                            onClick={() => router.push('/admin/users')}
+                            variant="outline"
+                            className="bg-surface border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all font-bold text-xs uppercase tracking-widest gap-2"
+                        >
+                            <Users className="w-4 h-4" />
+                            User Analytics
+                        </Button>
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg border border-primary/20 text-primary text-sm font-bold">
+                            <Activity className="w-4 h-4 animate-pulse" /> Live Telemetry Linked
+                        </div>
                     </div>
                 </div>
 
                 {/* Core Metrics Row */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
                     {[
-                        { tag: 'Total Users', val: stats?.totalUsers || 0, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20' },
+                        { tag: 'Total Users', val: stats?.totalUsers || 0, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10 border-blue-500/20', path: '/admin/users' },
                         { tag: 'Active Materials', val: stats?.totalMaterials || 0, icon: BookOpen, color: 'text-indigo-500', bg: 'bg-indigo-500/10 border-indigo-500/20' },
                         { tag: 'Global Views', val: stats?.totalViews || 0, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10 border-emerald-500/20' },
                         { tag: 'Active Sessions', val: stats?.activeUsers || 0, icon: Activity, color: 'text-amber-500', bg: 'bg-amber-500/10 border-amber-500/20' },
-                        { tag: 'Flagged IPs', val: stats?.flaggedUsers || 0, icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/20' }
+                        { tag: 'Flagged IPs', val: stats?.flaggedUsers || 0, icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-500/10 border-red-500/20', path: '/admin/users?filter=flagged' }
                     ].map((stat, i) => (
                         <motion.div key={i} variants={itemVariants}>
-                            <Card className="h-full bg-surface border-border/50 soft-shadow transition-all hover:border-border hover:shadow-md rounded-[20px]">
+                            <Card
+                                onClick={() => stat.path && router.push(stat.path)}
+                                className={`h-full bg-surface border-border/50 soft-shadow transition-all rounded-[20px] ${stat.path ? 'cursor-pointer hover:border-primary/50 hover:shadow-lg hover:-translate-y-1' : 'hover:border-border hover:shadow-md'}`}
+                            >
                                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                                     <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">{stat.tag}</CardTitle>
                                     <div className={`w-8 h-8 rounded-xl flex items-center justify-center border ${stat.bg} ${stat.color}`}>
@@ -190,6 +205,11 @@ export default function AdminDashboard() {
                                 </CardHeader>
                                 <CardContent>
                                     <div className="text-4xl font-heading font-black">{stat.val}</div>
+                                    {stat.path && (
+                                        <div className="mt-2 text-[10px] font-bold text-primary uppercase tracking-widest flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                            View Details
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </motion.div>

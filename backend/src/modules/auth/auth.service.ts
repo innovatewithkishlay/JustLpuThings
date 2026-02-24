@@ -44,11 +44,18 @@ export class AuthService {
     static async login(data: LoginInput) {
         const { email, password } = data;
 
-        const userResult = await pool.query('SELECT id, password_hash, role FROM users WHERE email = $1', [email]);
+        const userResult = await pool.query('SELECT id, password_hash, role, is_blocked FROM users WHERE email = $1', [email]);
         const user = userResult.rows[0];
 
         if (!user || !(await bcrypt.compare(password, user.password_hash))) {
             throw { statusCode: 401, message: 'Invalid credentials' };
+        }
+
+        if (user.is_blocked) {
+            throw {
+                statusCode: 403,
+                message: 'Account suspended. Please contact admin at kkishlay502@gmail.com for restoration.'
+            };
         }
 
         // Strict role enforcement matching GUI intention
@@ -130,9 +137,14 @@ export class AuthService {
             // ROTATION: Revoke the old token
             await pool.query('UPDATE refresh_tokens SET revoked = true WHERE id = $1', [familyId]);
 
-            // Re-fetch user role dynamically
-            const userResult = await pool.query('SELECT role FROM users WHERE id = $1', [userId]);
-            const role = userResult.rows[0]?.role || 'USER';
+            // Re-fetch user role and block status dynamically
+            const userResult = await pool.query('SELECT role, is_blocked FROM users WHERE id = $1', [userId]);
+            const user = userResult.rows[0];
+            const role = user?.role || 'USER';
+
+            if (user?.is_blocked) {
+                throw new Error('Account suspended');
+            }
 
             // Generate pristine pair
             return await this.generateTokens(userId, role);

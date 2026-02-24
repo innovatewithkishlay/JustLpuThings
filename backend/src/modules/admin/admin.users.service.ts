@@ -12,12 +12,20 @@ export class AdminUsersService {
                 u.role, 
                 u.is_blocked,
                 u.created_at,
-                COUNT(DISTINCT mp.material_id) as total_materials_opened,
-                COALESCE(SUM(mp.time_spent), 0) as total_time_spent,
-                COALESCE(AVG(CAST(mp.last_page AS FLOAT) / NULLIF(mp.total_pages, 0)) * 100, 0) as completion_rate,
-                MAX(mp.updated_at) as last_active
+                stats.total_materials_opened,
+                stats.total_time_spent,
+                stats.completion_rate,
+                stats.last_active
             FROM users u
-            LEFT JOIN material_progress mp ON u.id = mp.user_id
+            LEFT JOIN LATERAL (
+                SELECT 
+                    COUNT(DISTINCT material_id) as total_materials_opened,
+                    COALESCE(SUM(time_spent), 0) as total_time_spent,
+                    COALESCE(AVG(CAST(last_page AS FLOAT) / NULLIF(total_pages, 0)) * 100, 0) as completion_rate,
+                    MAX(updated_at) as last_active
+                FROM material_progress
+                WHERE user_id = u.id
+            ) stats ON true
         `;
 
         const values: any[] = [];
@@ -26,7 +34,7 @@ export class AdminUsersService {
             values.push(`%${searchTerm}%`);
         }
 
-        query += ` GROUP BY u.id ORDER BY last_active DESC NULLS LAST, u.created_at DESC LIMIT 100`;
+        query += ` ORDER BY stats.last_active DESC NULLS LAST, u.created_at DESC LIMIT 100`;
 
         const result = await pool.query(query, values);
         return result.rows;

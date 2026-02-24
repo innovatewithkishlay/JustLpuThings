@@ -7,12 +7,11 @@ const handleGlobalError = (error: any, query?: any) => {
         return;
     }
 
-    if (error?.status === 401) {
+    if (error?.status === 401 || (error?.status === 403 && (error.message?.toLowerCase().includes('suspended') || error.message?.toLowerCase().includes('blocked')))) {
         // Dispatch an event so AuthContext can force a logout/modal
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('auth:unauthorized'));
         }
-        // Optionally toast "Session expired", but usually redirecting is enough
         return;
     }
 

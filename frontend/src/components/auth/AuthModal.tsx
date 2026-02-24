@@ -51,6 +51,9 @@ export function AuthModal() {
             toast.success('Authentication successful')
             await checkAuth()
             closeAuthModal()
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Authentication failed. Please check your credentials.')
         }
     })
 
@@ -67,6 +70,9 @@ export function AuthModal() {
             setRegisterForm({ name: '', email: '', password: '', confirmPassword: '' })
             setShowPassword(false)
             setShowConfirmPassword(false)
+        },
+        onError: (err: any) => {
+            toast.error(err.message || 'Failed to create account. Please try again.')
         }
     })
 

@@ -8,6 +8,7 @@ import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
 import { Users, Search, Clock, BookOpen, ChevronRight, Activity } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
 
 interface UserAnalyticsOverview {
@@ -144,8 +145,8 @@ export default function AdminUsersPage() {
                                                     </td>
                                                     <td className="px-6 py-5">
                                                         <span className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider ${user.role === 'ADMIN' ? 'bg-indigo-500/10 text-indigo-500 border border-indigo-500/20' :
-                                                                user.is_blocked ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
-                                                                    'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
+                                                            user.is_blocked ? 'bg-red-500/10 text-red-500 border border-red-500/20' :
+                                                                'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
                                                             }`}>
                                                             {user.is_blocked ? 'SUSPENDED' : user.role}
                                                         </span>

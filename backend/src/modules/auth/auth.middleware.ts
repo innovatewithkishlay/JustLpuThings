@@ -39,7 +39,10 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         // Check DB level account block
         const dbUser = await pool.query('SELECT is_blocked FROM users WHERE id = $1', [decoded.userId]);
         if (!dbUser.rows.length || dbUser.rows[0].is_blocked) {
-            return res.status(403).json({ success: false, error: { message: 'Account blocked' } });
+            return res.status(403).json({
+                success: false,
+                error: { message: 'Account suspended. Please contact admin at kkishlay502@gmail.com for restoration.' }
+            });
         }
 
         req.user = decoded;
