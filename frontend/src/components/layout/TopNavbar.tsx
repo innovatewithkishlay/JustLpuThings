@@ -195,34 +195,6 @@ export function TopNavbar() {
                     )}
                 </div>
             </motion.div>
-            {/* Horizontal Modular Tabs (Shown only on Dashboard routing) */}
-            {pathname?.startsWith('/dashboard') && isScrolled && (
-                <motion.div
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-[85%] max-w-[1200px] bg-background/70 backdrop-blur-2xl border border-border/40 rounded-2xl p-2 shadow-2xl"
-                >
-                    <nav className="flex space-x-6 text-sm font-medium px-4 h-10 items-center">
-                        {MODULES.map((mod) => (
-                            <div key={mod.name} className="relative flex items-center h-full">
-                                <Link
-                                    href={mod.disabled ? '#' : mod.path}
-                                    className={`transition-colors hover:text-foreground ${mod.disabled ? 'opacity-50 cursor-not-allowed' : ''} ${pathname === mod.path ? 'text-foreground font-semibold' : 'text-muted-foreground'}`}
-                                >
-                                    {mod.name}
-                                </Link>
-                                {pathname === mod.path && (
-                                    <motion.div
-                                        layoutId="activeTab"
-                                        className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-t-full"
-                                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                                    />
-                                )}
-                            </div>
-                        ))}
-                    </nav>
-                </motion.div>
-            )}
         </motion.div>
     )
 }
