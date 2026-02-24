@@ -40,7 +40,7 @@ export default function RootLayout({
           <GlobalErrorBoundary>
             <TopNavbar />
             <AuthModal />
-            <main className="min-h-screen pt-[88px]">
+            <main className="min-h-screen pt-[112px]">
               {children}
             </main>
             <Toaster position="top-center" richColors />
