@@ -303,16 +303,16 @@ export function Experience() {
     ]
 
     return (
-        <section className="py-32 px-6">
+        <section className="py-32 px-6 relative overflow-hidden">
             <div className="container mx-auto max-w-4xl space-y-32">
-                <div className="max-w-2xl">
+                <div className="max-w-2xl relative z-10">
                     <h2 className="text-3xl font-heading font-semibold mb-8">What you'll notice</h2>
                     <p className="text-lg text-muted-foreground font-medium leading-relaxed">
                         It's not about features. It's about less stress.
                     </p>
                 </div>
 
-                <div className="space-y-24">
+                <div className="space-y-48 relative z-10">
                     {items.map((item, i) => (
                         <motion.div
                             key={i}
@@ -320,33 +320,90 @@ export function Experience() {
                             whileInView="visible"
                             viewport={{ once: true, margin: "-100px" }}
                             variants={fadeIn}
-                            className={`flex flex - col md: flex - row gap - 12 items - start ${i % 2 === 1 ? 'md:flex-row-reverse' : ''} `}
+                            className={`flex flex-col md:flex-row gap-16 md:gap-24 items-center ${i % 2 === 1 ? 'md:flex-row-reverse' : ''}`}
                         >
-                            <div className="flex-1 space-y-4">
-                                <item.icon className="w-8 h-8 text-primary/40 mb-2" />
-                                <h3 className="text-2xl font-heading font-semibold leading-tight">{item.title}</h3>
-                                <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-md">
-                                    {item.desc}
-                                </p>
-                                <div className="pt-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-primary/40">
-                                    <span className="w-1 h-1 rounded-full bg-primary/40" />
-                                    {item.detail}
+                            <div className="flex-1 space-y-6">
+                                <div className="w-12 h-12 rounded-2xl bg-primary/5 border border-primary/10 flex items-center justify-center">
+                                    <item.icon className="w-6 h-6 text-primary/60" />
                                 </div>
-                            </div>
-                            <div className="flex-1 w-full aspect-video rounded-3xl bg-muted/30 border border-border/40 overflow-hidden relative flex items-center justify-center group">
-                                <div className="p-8 w-full h-full border border-border/50 rounded-2xl bg-surface/50 scale-90 group-hover:scale-95 transition-transform duration-700 opacity-60">
-                                    <div className="h-2 w-24 bg-muted rounded-full mb-4" />
-                                    <div className="space-y-2">
-                                        <div className="h-2 w-full bg-muted/40 rounded-full" />
-                                        <div className="h-2 w-full bg-muted/40 rounded-full" />
-                                        <div className="h-2 w-2/3 bg-muted/40 rounded-full" />
+                                <div className="space-y-4">
+                                    <h3 className="text-3xl font-heading font-semibold leading-tight">{item.title}</h3>
+                                    <p className="text-base text-muted-foreground font-medium leading-relaxed max-w-md">
+                                        {item.desc}
+                                    </p>
+                                    <div className="pt-4 flex items-center gap-3 text-[10px] font-bold uppercase tracking-widest text-primary/40">
+                                        <div className="flex -space-x-1">
+                                            {[1, 2, 3].map(dot => (
+                                                <div key={dot} className="w-1.5 h-1.5 rounded-full bg-primary/20 border border-background" />
+                                            ))}
+                                        </div>
+                                        {item.detail}
                                     </div>
                                 </div>
+                            </div>
+
+                            <div className="flex-1 w-full relative group">
+                                <div className="aspect-video rounded-[2.5rem] bg-surface border border-border/50 shadow-2xl shadow-primary/5 overflow-hidden relative flex items-center justify-center transition-transform duration-700 group-hover:scale-[1.02]">
+                                    {/* Mockup Content Based on i */}
+                                    {i === 0 && ( // Syncing Mockup
+                                        <div className="w-full h-full p-8 flex items-center justify-center gap-6">
+                                            <div className="w-20 h-32 rounded-xl bg-muted/20 border border-border/40 flex items-center justify-center text-muted-foreground/20">
+                                                <div className="w-1 h-16 bg-primary/10 rounded-full" />
+                                            </div>
+                                            <div className="flex-1 h-32 rounded-xl bg-muted/20 border border-border/40 p-4 space-y-2">
+                                                <div className="h-2 w-12 bg-primary/20 rounded-full" />
+                                                <div className="h-2 w-full bg-muted/30 rounded-full" />
+                                                <div className="h-2 w-full bg-muted/30 rounded-full" />
+                                            </div>
+                                            <motion.div
+                                                animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+                                                transition={{ repeat: Infinity, duration: 2 }}
+                                                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-primary/20 rounded-full blur-sm"
+                                            />
+                                        </div>
+                                    )}
+                                    {i === 1 && ( // Sorting Mockup
+                                        <div className="w-full h-full p-8 grid grid-cols-2 gap-4">
+                                            {[1, 2, 3, 4].map(j => (
+                                                <div key={j} className="rounded-xl border border-border/40 bg-muted/10 p-4 flex items-center gap-3">
+                                                    <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center">
+                                                        <Layout className="w-3 h-3 text-primary/40" />
+                                                    </div>
+                                                    <div className="h-1.5 w-12 bg-muted/40 rounded-full" />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                    {i === 2 && ( // No Download Mockup
+                                        <div className="w-full h-full p-8 flex flex-col items-center justify-center space-y-4">
+                                            <div className="w-48 h-32 rounded-2xl bg-muted/5 border border-border/40 flex items-center justify-center relative overflow-hidden">
+                                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
+                                                <CloudOff className="w-12 h-12 text-primary/10" />
+                                            </div>
+                                            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 border border-primary/20">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                                <span className="text-[9px] font-bold text-primary uppercase tracking-tighter">Instant Preview Active</span>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Glass Overlay */}
+                                    <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-background/80 to-transparent backdrop-blur-[2px]">
+                                        <div className="h-1 w-24 bg-primary/20 rounded-full mx-auto" />
+                                    </div>
+                                </div>
+
+                                {/* Background Glow for Card */}
+                                <div className="absolute -inset-4 bg-primary/5 rounded-[3rem] blur-2xl -z-10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
                             </div>
                         </motion.div>
                     ))}
                 </div>
             </div>
+
+            {/* Global Section Background Glows */}
+            <div className="absolute top-1/4 -left-20 w-64 h-64 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+            <div className="absolute bottom-1/4 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
         </section>
     )
 }
