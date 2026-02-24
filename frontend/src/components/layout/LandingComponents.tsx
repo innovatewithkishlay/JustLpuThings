@@ -1,6 +1,8 @@
 "use client"
 
 import { motion } from 'framer-motion'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -34,6 +36,17 @@ const slideUp = {
     })
 }
 export function Hero() {
+    const { isAuthenticated, openAuthModal } = useAuth()
+    const router = useRouter()
+
+    const handleStartReading = () => {
+        if (isAuthenticated) {
+            router.push('/dashboard')
+        } else {
+            openAuthModal('login')
+        }
+    }
+
     return (
         <section className="pt-40 pb-24 px-6 text-center relative overflow-hidden">
             <div className="container mx-auto max-w-6xl flex flex-col items-center relative">
@@ -83,11 +96,13 @@ export function Hero() {
                     </p>
 
                     <div className="flex flex-wrap justify-center gap-4">
-                        <Link href="/register">
-                            <Button size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl shadow-xl shadow-primary/10 hover:bg-primary/90 hover:scale-105 transition-all">
-                                Start Reading
-                            </Button>
-                        </Link>
+                        <Button
+                            size="lg"
+                            onClick={handleStartReading}
+                            className="h-16 px-10 text-sm font-semibold rounded-2xl shadow-xl shadow-primary/10 hover:bg-primary/90 hover:scale-105 transition-all"
+                        >
+                            Start Reading
+                        </Button>
                         <Link href="https://www.youtube.com/@JustLPUThings2.0" target="_blank">
                             <Button variant="ghost" size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
                                 <Play className="mr-2 w-4 h-4 fill-current" /> Watch Videos
