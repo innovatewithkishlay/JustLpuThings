@@ -28,14 +28,41 @@ export function TopNavbar() {
     const router = require('next/navigation').useRouter() // Required locally as it's not imported at top
 
     const [isScrolled, setIsScrolled] = React.useState(false)
+    const [isVisible, setIsVisible] = React.useState(true)
+    const [lastScrollY, setLastScrollY] = React.useState(0)
+    const scrollTimeout = React.useRef<NodeJS.Timeout | null>(null)
 
     React.useEffect(() => {
         const handleScroll = () => {
-            setIsScrolled(window.scrollY > 20)
+            const currentScrollY = window.scrollY
+
+            // Transform to island
+            setIsScrolled(currentScrollY > 20)
+
+            // Dynamic visibility
+            if (currentScrollY > lastScrollY && currentScrollY > 100) {
+                // Scrolling down - hide
+                setIsVisible(false)
+            } else {
+                // Scrolling up - show
+                setIsVisible(true)
+            }
+
+            setLastScrollY(currentScrollY)
+
+            // Detect scroll stop to bring it back
+            if (scrollTimeout.current) clearTimeout(scrollTimeout.current)
+            scrollTimeout.current = setTimeout(() => {
+                setIsVisible(true)
+            }, 1000) // Bring back after 1s of no scrolling
         }
-        window.addEventListener('scroll', handleScroll)
-        return () => window.removeEventListener('scroll', handleScroll)
-    }, [])
+
+        window.addEventListener('scroll', handleScroll, { passive: true })
+        return () => {
+            window.removeEventListener('scroll', handleScroll)
+            if (scrollTimeout.current) clearTimeout(scrollTimeout.current)
+        }
+    }, [lastScrollY])
 
     const handleLogout = async () => {
         try {
@@ -53,7 +80,12 @@ export function TopNavbar() {
     if (pathname?.startsWith('/viewer/')) return null;
 
     return (
-        <div className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-700 py-6 ${isScrolled ? 'px-4' : 'px-0'}`}>
+        <motion.div
+            initial={{ y: 0 }}
+            animate={{ y: isVisible ? 0 : -120 }}
+            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+            className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-700 py-6 ${isScrolled ? 'px-4' : 'px-0'}`}
+        >
             <motion.div
                 animate={{
                     width: isScrolled ? '90%' : '100%',
@@ -62,8 +94,8 @@ export function TopNavbar() {
                     y: isScrolled ? 0 : -10
                 }}
                 className={`flex items-center h-16 transition-all duration-700 relative ${isScrolled
-                        ? 'px-8 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] after:absolute after:inset-0 after:rounded-[32px] after:border after:border-white/20 after:pointer-events-none'
-                        : 'px-12 border-transparent bg-transparent backdrop-blur-0'
+                    ? 'px-8 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] after:absolute after:inset-0 after:rounded-[32px] after:border after:border-white/20 after:pointer-events-none'
+                    : 'px-12 border-transparent bg-transparent backdrop-blur-0'
                     }`}
             >
                 {/* Logo / Brand */}
@@ -195,6 +227,6 @@ export function TopNavbar() {
                     </nav>
                 </motion.div>
             )}
-        </div>
+        </motion.div>
     )
 }

@@ -38,7 +38,7 @@ export function Hero() {
         <section className="pt-40 pb-24 px-6 text-center relative overflow-hidden">
             <div className="container mx-auto max-w-6xl flex flex-col items-center relative">
                 <div className="relative space-y-2 mb-10 z-10">
-                    <motion.div
+                    {/* <motion.div
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 1, duration: 0.5 }}
@@ -46,7 +46,7 @@ export function Hero() {
                     >
                         <Award className="w-3.5 h-3.5 text-primary" />
                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Certified Peer Tutor</span>
-                    </motion.div>
+                    </motion.div> */}
 
                     <div className="overflow-hidden py-1">
                         <motion.h1
