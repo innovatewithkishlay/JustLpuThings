@@ -35,12 +35,11 @@ const envSchema = z.object({
     R2_SECRET_ACCESS_KEY: z.string().optional(),
     R2_BUCKET_NAME: z.string().optional(),
 
-    // Google OAuth
-    GOOGLE_CLIENT_ID: z.string(),
-    GOOGLE_CLIENT_SECRET: z.string(),
-    GOOGLE_CALLBACK_URL: z.string().url(),
+    // Google OAuth (optional — set before using Google Sign-In)
+    GOOGLE_CLIENT_ID: z.string().default(''),
+    GOOGLE_CLIENT_SECRET: z.string().default(''),
+    GOOGLE_CALLBACK_URL: z.string().default('http://localhost:8000/api/v1/auth/callback/google'),
 });
-
 
 const _env = envSchema.safeParse(process.env);
 

@@ -712,6 +712,9 @@ export function StudentTestimonials() {
 }
 
 export function ClosingCTA() {
+    const { isAuthenticated, openAuthModal } = useAuth()
+    const router = useRouter()
+
     return (
         <section className="py-40 px-6 text-center border-t border-border/5">
             <motion.div
@@ -744,11 +747,23 @@ export function ClosingCTA() {
                 </div>
 
                 <div className="pt-8 space-y-6">
-                    <Link href="/register" className="inline-block">
-                        <Button size="lg" className="h-16 px-12 text-sm font-semibold rounded-2xl shadow-xl shadow-primary/10 hover:translate-y-[-2px] transition-all">
+                    {isAuthenticated ? (
+                        <Button
+                            size="lg"
+                            onClick={() => router.push('/dashboard')}
+                            className="h-16 px-12 text-sm font-semibold rounded-2xl shadow-xl shadow-primary/10 hover:translate-y-[-2px] transition-all"
+                        >
+                            Go to Dashboard
+                        </Button>
+                    ) : (
+                        <Button
+                            size="lg"
+                            onClick={() => openAuthModal('register')}
+                            className="h-16 px-12 text-sm font-semibold rounded-2xl shadow-xl shadow-primary/10 hover:translate-y-[-2px] transition-all"
+                        >
                             Create Account
                         </Button>
-                    </Link>
+                    )}
                     <p className="text-xs font-semibold text-muted-foreground/40 uppercase tracking-[0.2em]">Because we've all been there.</p>
                 </div>
             </motion.div>

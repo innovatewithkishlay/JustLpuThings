@@ -333,7 +333,7 @@ export function AuthModal() {
 
                                     <button
                                         type="button"
-                                        onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/google` }}
+                                        onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/auth/google` }}
                                         className="w-full h-11 flex items-center justify-center gap-3 rounded-[10px] border border-border/60 bg-background hover:bg-muted/30 active:scale-[0.98] transition-all text-sm font-medium text-foreground"
                                     >
                                         {/* Google G logo */}

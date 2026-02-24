@@ -52,6 +52,19 @@ const startServer = async () => {
         logger.error({ err }, '⚠️ Startup migration warning (tables may already exist).');
     }
 
+    // Google OAuth column migration (idempotent)
+    try {
+        await pool.query(`
+            ALTER TABLE users ALTER COLUMN password_hash DROP NOT NULL;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS google_id TEXT;
+            ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_users_google_id_unique ON users(google_id) WHERE google_id IS NOT NULL;
+        `);
+        logger.info('✅ Startup migration applied: Google OAuth columns ready.');
+    } catch (err) {
+        logger.warn({ err }, '⚠️ Google OAuth migration warning (columns may already exist).');
+    }
+
     const server = app.listen(port, () => {
         logger.info(`🚀 Server running in ${env.NODE_ENV} mode on port ${port}`);
         logger.info(`✅ API Version: ${env.APP_VERSION}`);
