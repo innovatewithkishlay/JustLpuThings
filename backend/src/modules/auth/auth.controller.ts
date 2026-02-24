@@ -90,9 +90,17 @@ export class AuthController {
                 await AuthService.logout(accessRaw, refreshFamily);
             }
 
-            res.clearCookie('accessToken');
-            res.clearCookie('refreshToken');
-            res.clearCookie('refreshFamily');
+            const isProd = env.NODE_ENV === 'production';
+            const clearOpts = {
+                httpOnly: true,
+                secure: isProd,
+                sameSite: isProd ? 'none' as const : 'lax' as const,
+                path: '/'
+            };
+
+            res.clearCookie('accessToken', clearOpts);
+            res.clearCookie('refreshToken', clearOpts);
+            res.clearCookie('refreshFamily', clearOpts);
 
             res.json({ success: true, data: { message: 'Logged out securely' } });
         } catch (err) {
