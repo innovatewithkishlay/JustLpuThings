@@ -5,7 +5,7 @@ export class NotificationsController {
     // GET /notifications — user gets their notifications
     static async getForUser(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user.userId;
             const notifications = await NotificationsService.getForUser(userId);
             res.json({ success: true, data: notifications });
         } catch (err) { next(err); }
@@ -14,7 +14,7 @@ export class NotificationsController {
     // GET /notifications/unread-count
     static async getUnreadCount(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user.userId;
             const count = await NotificationsService.getUnreadCount(userId);
             res.json({ success: true, data: { count } });
         } catch (err) { next(err); }
@@ -23,7 +23,7 @@ export class NotificationsController {
     // PATCH /notifications/:id/read
     static async markRead(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user.userId;
             await NotificationsService.markRead(req.params.id as string, userId);
             res.json({ success: true });
         } catch (err) { next(err); }
@@ -32,7 +32,7 @@ export class NotificationsController {
     // PATCH /notifications/read-all
     static async markAllRead(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user.userId;
             await NotificationsService.markAllRead(userId);
             res.json({ success: true });
         } catch (err) { next(err); }

@@ -5,7 +5,7 @@ export class MessagesController {
     // POST /messages — user sends a request
     static async create(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user.userId;
             const { content } = req.body;
             if (!content?.trim()) {
                 return res.status(400).json({ success: false, error: { message: 'Message content is required.' } });
@@ -18,7 +18,7 @@ export class MessagesController {
     // GET /messages/mine — user sees their own messages
     static async getMine(req: Request, res: Response, next: NextFunction) {
         try {
-            const userId = (req as any).user.id;
+            const userId = (req as any).user.userId;
             const messages = await MessagesService.getUserMessages(userId);
             res.json({ success: true, data: messages });
         } catch (err) { next(err); }
