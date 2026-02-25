@@ -377,6 +377,22 @@ export default function AdminDashboard() {
                                                 >
                                                     {subjectMap[uploadForm.semester]?.map(sub => <option key={sub.slug} value={sub.slug}>{sub.name}</option>)}
                                                 </select>
+                                                {uploadForm.category === 'notes' && (
+                                                    <select
+                                                        value={uploadForm.unit}
+                                                        onChange={e => setUploadForm({ ...uploadForm, unit: e.target.value })}
+                                                        className="w-full h-10 px-3 rounded-xl border border-border/50 bg-primary/5 border-primary/30 text-xs font-bold mt-3 focus:ring-1 focus:ring-primary/40 outline-none transition-all"
+                                                    >
+                                                        <option value="">— Select Unit —</option>
+                                                        <option value="overview">Overview (Syllabus / General)</option>
+                                                        <option value="1">Unit 1</option>
+                                                        <option value="2">Unit 2</option>
+                                                        <option value="3">Unit 3</option>
+                                                        <option value="4">Unit 4</option>
+                                                        <option value="5">Unit 5</option>
+                                                        <option value="6">Unit 6</option>
+                                                    </select>
+                                                )}
                                             </div>
 
                                             <div className="space-y-2">

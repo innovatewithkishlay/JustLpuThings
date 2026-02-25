@@ -47,7 +47,7 @@ export default function SubjectMaterialsPage() {
     const subjectName = formatSlug(subjectSlug)
 
     const [activeTab, setActiveTab] = useState('theory') // 'theory', 'ca', 'midterm', 'pyqs'
-    const [activeUnit, setActiveUnit] = useState<string>('all') // 'all' or '1', '2', etc
+    const [activeUnit, setActiveUnit] = useState<string>('overview') // 'overview' or '1'-'6'
 
     const { data: materials = [], isLoading, isError } = useQuery({
         queryKey: ["materials", semesterId, subjectSlug],
@@ -66,7 +66,7 @@ export default function SubjectMaterialsPage() {
 
     const displayedMaterials = filteredByCategory.filter(m => {
         if (activeTab !== 'theory') return true;
-        if (activeUnit === 'all') return true;
+        if (activeUnit === 'overview') return !m.unit || m.unit === 'overview';
         return m.unit === activeUnit;
     })
 
@@ -78,7 +78,7 @@ export default function SubjectMaterialsPage() {
         { id: 'pyqs', label: 'End-Term PYQs', icon: FileImage }
     ]
 
-    const UNIT_TABS = ['all', '1', '2', '3', '4', '5', '6']
+    const UNIT_TABS = ['overview', '1', '2', '3', '4', '5', '6']
 
     return (
         <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-5xl mx-auto">
@@ -107,7 +107,7 @@ export default function SubjectMaterialsPage() {
                     {TABS.map(tab => (
                         <button
                             key={tab.id}
-                            onClick={() => { setActiveTab(tab.id); setActiveUnit('all'); }}
+                            onClick={() => { setActiveTab(tab.id); setActiveUnit('overview'); }}
                             className={`flex items-center gap-2 px-5 py-2.5 rounded-2xl font-bold text-sm transition-all duration-300 soft-shadow
                                 ${activeTab === tab.id
                                     ? 'bg-primary text-primary-foreground scale-[1.02] border-transparent shadow-primary/20'
@@ -139,7 +139,7 @@ export default function SubjectMaterialsPage() {
                                             : 'text-muted-foreground hover:text-foreground hover:bg-background/50'}`
                                     }
                                 >
-                                    {unit === 'all' ? 'Overview' : `Unit ${unit}`}
+                                    {unit === 'overview' ? 'Overview' : `Unit ${unit}`}
                                 </button>
                             ))}
                         </motion.div>
