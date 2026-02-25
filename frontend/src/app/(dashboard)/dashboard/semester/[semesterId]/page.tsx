@@ -18,6 +18,9 @@ const stagger = {
 
 // Subject Mappings explicitly defined for MVP Phase 2
 const subjectMap: Record<string, { slug: string, name: string, code: string }[]> = {
+    "1": [
+        { slug: "mth166", name: "Mathematics", code: "MTH166" }
+    ],
     "2": [
         { slug: "int306", name: "Internet and Web Designing", code: "INT306" },
         { slug: "phy110", name: "Engineering Physics", code: "PHY110" },
@@ -48,7 +51,7 @@ export default function SemesterPage() {
     const semesterId = params.semesterId as string
 
     // Strictly authorize only IDs 2 and 4
-    const validSemesters = ["2", "4"]
+    const validSemesters = ["1", "2", "4"]
     const isValid = validSemesters.includes(semesterId)
     const subjects = subjectMap[semesterId] || []
 

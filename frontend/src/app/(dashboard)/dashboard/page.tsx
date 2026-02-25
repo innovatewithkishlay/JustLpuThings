@@ -17,7 +17,7 @@ const stagger = {
 
 // Static Phase 2 Baseline Configuration
 const semesters = [
-    { id: 1, label: 'Semester 1', active: false },
+    { id: 1, label: 'Semester 1', active: true },
     { id: 2, label: 'Semester 2', active: true },
     { id: 3, label: 'Semester 3', active: false },
     { id: 4, label: 'Semester 4', active: true },

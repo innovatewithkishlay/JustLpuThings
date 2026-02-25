@@ -25,6 +25,9 @@ const itemVariants = {
 
 // Subject Mappings for Admin Upload
 const subjectMap: Record<string, { slug: string, name: string }[]> = {
+    "1": [
+        { slug: "mth166", name: "MTH166 - Mathematics" }
+    ],
     "2": [
         { slug: "int306", name: "INT306 - Internet and Web Designing" },
         { slug: "phy110", name: "PHY110 - Engineering Physics" },
