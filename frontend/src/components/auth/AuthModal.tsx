@@ -199,6 +199,7 @@ export function AuthModal() {
                                                             <Input
                                                                 id="login-password"
                                                                 type={showPassword ? "text" : "password"}
+                                                                placeholder="••••••••"
                                                                 value={loginForm.password}
                                                                 onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
                                                                 disabled={loginMutation.isPending}
@@ -274,6 +275,7 @@ export function AuthModal() {
                                                             <Input
                                                                 id="reg-password"
                                                                 type={showPassword ? "text" : "password"}
+                                                                placeholder="••••••••"
                                                                 value={registerForm.password}
                                                                 onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
                                                                 disabled={registerMutation.isPending}
@@ -297,6 +299,7 @@ export function AuthModal() {
                                                             <Input
                                                                 id="reg-confirm"
                                                                 type={showConfirmPassword ? "text" : "password"}
+                                                                placeholder="••••••••"
                                                                 value={registerForm.confirmPassword}
                                                                 onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
                                                                 disabled={registerMutation.isPending}
