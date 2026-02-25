@@ -381,7 +381,8 @@ export default function AdminDashboard() {
                                                     <select
                                                         value={uploadForm.unit}
                                                         onChange={e => setUploadForm({ ...uploadForm, unit: e.target.value })}
-                                                        className="w-full h-10 px-3 rounded-xl border border-border/50 bg-primary/5 border-primary/30 text-xs font-bold mt-3 focus:ring-1 focus:ring-primary/40 outline-none transition-all"
+                                                        style={{ colorScheme: 'dark' }}
+                                                        className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background/50 text-xs font-bold mt-3 focus:ring-1 focus:ring-primary/40 outline-none transition-all"
                                                     >
                                                         <option value="">— Select Unit —</option>
                                                         <option value="overview">Overview (Syllabus / General)</option>
