@@ -19,7 +19,7 @@ const stagger = {
 // Subject Mappings explicitly defined for MVP Phase 2
 const subjectMap: Record<string, { slug: string, name: string, code: string }[]> = {
     "1": [
-        { slug: "mth166", name: "Mathematics", code: "MTH166" }
+        { slug: "mth165", name: "Mathematics", code: "MTH165" }
     ],
     "2": [
         { slug: "int306", name: "Internet and Web Designing", code: "INT306" },
@@ -33,7 +33,7 @@ const subjectMap: Record<string, { slug: string, name: string, code: string }[]>
         { slug: "pel130", name: "Communication Skills III", code: "PEL130" },
         { slug: "ece249", name: "Basic Electrical & Electronics", code: "ECE249" },
         { slug: "che110", name: "Environmental Sciences", code: "CHE110" },
-        { slug: "mth166", name: "Mathematics", code: "MTH166" }
+        { slug: "mth165", name: "Mathematics", code: "MTH165" }
     ],
     "4": [
         { slug: "data-structures", name: "Data Structures", code: "CSE201" },

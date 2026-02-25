@@ -281,6 +281,11 @@ export default function ViewerPage() {
                         <Document
                             file={url}
                             onLoadSuccess={onDocumentLoadSuccess}
+                            onLoadError={(err) => {
+                                console.error("PDF Load Error Details:", err);
+                                console.log("Failed URL:", url);
+                                toast.error(`Failed to decrypt PDF stream: ${err.message || 'Unknown error'}`);
+                            }}
                             loading={
                                 <div className="py-20 flex flex-col items-center justify-center gap-4">
                                     <Loader2 className="w-8 h-8 animate-spin text-primary" />

@@ -2,7 +2,7 @@ import { pool } from '../src/config/db';
 import process from 'process';
 
 async function seed() {
-    console.log('🌱 Starting seed for Semester 1 and MTH166...');
+    console.log('🌱 Starting seed for Semester 1 and MTH165...');
 
     try {
         const firstCollege = await pool.query('SELECT id FROM colleges LIMIT 1');
@@ -21,12 +21,12 @@ async function seed() {
         const semId = semResult.rows[0].id;
         console.log(`✅ Semester 1 ensures (ID: ${semId})`);
 
-        // Upsert MTH166 for Semester 1
+        // Upsert MTH165 for Semester 1
         await pool.query(
             'INSERT INTO subjects (semester_id, name, slug) VALUES ($1, $2, $3) ON CONFLICT (semester_id, slug) DO UPDATE SET name = EXCLUDED.name',
-            [semId, 'Mathematics', 'mth166']
+            [semId, 'Mathematics', 'mth165']
         );
-        console.log('✅ MTH166 subject ensures for Semester 1');
+        console.log('✅ MTH165 subject ensures for Semester 1');
 
         console.log('🏁 Seeding completed successfully!');
         process.exit(0);
