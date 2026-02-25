@@ -1,4 +1,5 @@
-import { pool } from './src/config/db';
+import { pool } from '../src/config/db';
+import process from 'process';
 
 async function seed() {
     console.log('🌱 Starting seed for Semester 1 and MTH166...');
