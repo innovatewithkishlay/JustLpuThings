@@ -315,7 +315,7 @@ export function AboutCreator() {
         },
         {
             title: "Mathematics",
-            code: "MTH165",
+            code: "MTH165/166",
             link: "https://youtube.com/playlist?list=PLZKnAKf7S_gSUTCVWPyRNgjWCJIUjzsbs&si=KPX4iDbugV568SQi",
             desc: "Matrices, integration, Fourier series — no skipping the hard parts.",
             color: "bg-cyan-500/10 text-cyan-500 border-cyan-500/20",

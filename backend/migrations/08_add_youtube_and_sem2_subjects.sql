@@ -37,7 +37,7 @@ BEGIN
         (sem2_id, 'PEL121', 'pel121'),
         (sem2_id, 'PEL125', 'pel125'),
         (sem2_id, 'PEL130', 'pel130'),
-        (sem2_id, 'ECE249', 'ece249'),
-        (sem2_id, 'CHE110', 'che110')
+        (sem2_id, 'CHE110', 'che110'),
+        (sem2_id, 'MTH166', 'mth166')
     ON CONFLICT (semester_id, slug) DO UPDATE SET name = EXCLUDED.name;
 END $$;
