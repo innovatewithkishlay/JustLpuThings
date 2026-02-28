@@ -24,6 +24,7 @@ export const metadata: Metadata = {
   description: 'A dedicated platform prioritizing academic progression.',
 };
 
+import { MainLayoutWrapper } from '@/components/layout/MainLayoutWrapper';
 import { Toaster } from '@/components/ui/sonner';
 import { TopNavbar } from '@/components/layout/TopNavbar';
 import { AuthModal } from '@/components/auth/AuthModal';
@@ -40,9 +41,9 @@ export default function RootLayout({
           <GlobalErrorBoundary>
             <TopNavbar />
             <AuthModal />
-            <main className="min-h-screen pt-[112px]">
+            <MainLayoutWrapper>
               {children}
-            </main>
+            </MainLayoutWrapper>
             <Toaster position="top-center" richColors />
           </GlobalErrorBoundary>
         </Providers>

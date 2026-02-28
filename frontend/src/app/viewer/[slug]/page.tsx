@@ -43,6 +43,16 @@ export default function ViewerPage() {
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [distractionFree, setDistractionFree] = useState(false)
 
+    // Body Scroll Lock - Forever Fix for Double Scrollbars
+    useEffect(() => {
+        const originalStyle = window.getComputedStyle(document.body).overflow;
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = originalStyle;
+        }
+    }, [])
+
     // PDF specific states
     const [numPages, setNumPages] = useState<number | null>(null)
     const { width: containerWidth, ref: containerRef } = useResizeDetector()
