@@ -240,7 +240,7 @@ export default function ViewerPage() {
                     transition={{ duration: 0.8 }}
                     className={`flex-1 h-full w-full relative z-10 selection:bg-transparent overflow-y-auto custom-scrollbar transition-colors duration-700 ${distractionFree ? 'bg-[#0A0A0A]' : 'bg-muted/30'}`}
                 >
-                    <div ref={containerElRef} className="max-w-4xl mx-auto py-8 px-4 flex flex-col items-center">
+                    <div ref={containerElRef} className="max-w-4xl mx-auto pt-0 pb-8 px-4 flex flex-col items-center">
                         <Document
                             file={pdfData}
                             onLoadSuccess={onDocumentLoadSuccess}
