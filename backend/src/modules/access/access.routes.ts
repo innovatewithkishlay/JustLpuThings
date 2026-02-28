@@ -30,4 +30,26 @@ router.get('/:slug/access', requireAuth, accessLimiter, userAccessLimiter, async
     }
 });
 
+// Forever Fix: PDF Proxy Endpoint
+router.get('/:slug/view', requireAuth, async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const slug = req.params.slug as string;
+        const userId = req.user!.userId;
+        const ip = req.ip || req.socket.remoteAddress;
+        const userAgent = (req.headers['user-agent'] as string) || '';
+
+        const stream = await AccessService.getMaterialStream(slug, userId, ip, userAgent);
+
+        // Security headers for PDF viewing
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', 'inline');
+        res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+
+        // Pipe the R2 Readable stream to Express Response
+        stream.pipe(res);
+    } catch (err) {
+        next(err);
+    }
+});
+
 export default router;

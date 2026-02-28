@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState, useRef, useCallback } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useParams, useRouter } from 'next/navigation'
-import { useQuery, useMutation } from '@tanstack/react-query'
-import { apiClient } from '@/lib/apiClient'
+import { useQuery } from '@tanstack/react-query'
+import { API_BASE_URL, apiClient } from '@/lib/apiClient'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { toast } from 'sonner'
@@ -48,10 +48,6 @@ export default function ViewerPage() {
     const { width: containerWidth, ref: containerRef } = useResizeDetector()
     const containerElRef = useRef<HTMLDivElement>(null)
 
-    // Secure local component state for the file stream
-    const [url, setUrl] = useState<string | null>(null)
-    const [accessError, setAccessError] = useState<{ status: number, message: string } | null>(null)
-
     // 1. Fetch only static non-secure metadata
     const { data: documentData, isLoading: metadataLoading, isError: metadataError } = useQuery({
         queryKey: ["material", slug],
@@ -61,60 +57,27 @@ export default function ViewerPage() {
         retry: 1
     })
 
-    // 2. Fetch Signed URL dynamically bypassing cache (useMutation ONLY for access)
-    // The backend `GET /materials/:slug/access` returns { url: string }
-    const accessMutation = useMutation({
-        mutationFn: async () => {
-            const res = await apiClient<{ url: string }>(`/materials/${slug}/access`, { method: 'GET' })
-            return res.url
-        },
-        onSuccess: (fetchedUrl) => {
-            setUrl(fetchedUrl)
-            setAccessError(null)
-        },
-        onError: (err: any) => {
-            console.error("Access generation failed", err)
-            const status = err?.status || 500
-            const message = err?.message || 'Failed to generate secure access token'
+    // 2. Forever Fix: Secure Proxy URL
+    const pdfProxyUrl = `${API_BASE_URL}/materials/${slug}/view`
 
-            setAccessError({ status, message })
-
-            if (status === 401) {
-                toast.error('Authentication expired. Redirecting...')
-                checkAuth() // will trigger standard auth fail event
-            } else if (status === 403) {
-                toast.error('Access Denied: You do not have permission to view this.')
-            } else if (status === 404) {
-                toast.error('Document not found or unavailable.')
-            } else {
-                toast.error('Secure tunnel failure. Let\'s try again.')
+    // 3. Fetch PDF as ArrayBuffer to ensure credentials and avoid CORS/SignedURL issues
+    const { data: pdfData, isLoading: pdfLoading, isError: pdfFetchError } = useQuery({
+        queryKey: ["pdf-stream", slug],
+        queryFn: async () => {
+            const res = await fetch(pdfProxyUrl, {
+                credentials: 'include'
+            })
+            if (!res.ok) {
+                const error = new Error(`HTTP Error: ${res.status}`)
+                // @ts-ignore
+                error.status = res.status
+                throw error
             }
-        }
+            return await res.arrayBuffer()
+        },
+        enabled: !!documentData,
+        retry: 1
     })
-
-    // Expiration Watcher (Signed URLs expire in 120 seconds on backend)
-    // Refresh at 110 seconds seamlessly
-    const requestAccess = useCallback(() => {
-        if (!accessMutation.isPending) {
-            accessMutation.mutate()
-        }
-    }, [accessMutation])
-
-    useEffect(() => {
-        // Initial fetch directly
-        requestAccess()
-    }, []) // Run once safely
-
-    useEffect(() => {
-        // Expiration auto-renewal
-        if (url) {
-            const renewInterval = setInterval(() => {
-                requestAccess() // Background silent renewal
-            }, 110 * 1000)
-
-            return () => clearInterval(renewInterval)
-        }
-    }, [url, requestAccess])
 
     const { currentPage, handlePageChange } = useReadingProgress(slug, documentData?.last_page || 1, numPages || undefined)
 
@@ -145,8 +108,9 @@ export default function ViewerPage() {
     const handleDragStart = (e: React.DragEvent) => e.preventDefault()
 
     const toggleFullscreen = () => {
+        if (!viewerRef.current) return;
         if (!document.fullscreenElement) {
-            viewerRef.current?.requestFullscreen().catch(err => {
+            viewerRef.current.requestFullscreen().catch(err => {
                 toast.error(`Error attempting to enable full-screen mode: ${err.message}`);
             });
             setIsFullscreen(true)
@@ -158,9 +122,10 @@ export default function ViewerPage() {
         }
     }
 
-    const initialLoading = metadataLoading || (accessMutation.isPending && !url)
+    const isLoading = metadataLoading || pdfLoading;
+    const isError = metadataError || pdfFetchError;
 
-    if (initialLoading && !accessError) {
+    if (isLoading) {
         return (
             <div className="flex flex-col h-screen bg-background">
                 <div className="h-16 border-b border-border bg-surface px-6 flex items-center justify-between">
@@ -175,29 +140,27 @@ export default function ViewerPage() {
         )
     }
 
-    if (metadataError || accessError) {
+    if (isError) {
         return (
             <div className="flex flex-col h-screen bg-background items-center justify-center p-6">
                 <div className="w-full max-w-md p-8 bg-surface border border-border/60 rounded-[24px] soft-shadow flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center mb-6 text-red-500 border border-red-500/20">
                         <AlertTriangle className="w-8 h-8" />
                     </div>
-                    <h2 className="text-xl font-heading font-bold mb-2">
-                        {accessError?.status === 403 ? 'Access Denied' : accessError?.status === 404 ? 'Document Missing' : 'Connection Failed'}
-                    </h2>
+                    <h2 className="text-xl font-heading font-bold mb-2">Connection Failed</h2>
                     <p className="text-sm text-muted-foreground mb-8">
-                        {accessError?.message || 'We could not securely load this document metadata. It might be corrupted or rate-limited.'}
+                        We could not securely load this document. It might be corrupted or you may need to log in again.
                     </p>
                     <div className="flex gap-4 w-full">
                         <Button variant="outline" className="flex-1 h-11 rounded-xl" onClick={() => router.back()}>Go Back</Button>
-                        <Button variant="default" className="flex-1 h-11 rounded-xl" onClick={() => requestAccess()}>Retry Tunnel</Button>
+                        <Button variant="default" className="flex-1 h-11 rounded-xl" onClick={() => window.location.reload()}>Retry</Button>
                     </div>
                 </div>
             </div>
         )
     }
 
-    if (!documentData || !url) return null
+    if (!documentData || !pdfData) return null
 
     return (
         <div
@@ -279,12 +242,11 @@ export default function ViewerPage() {
                 >
                     <div ref={containerElRef} className="max-w-4xl mx-auto py-8 px-4 flex flex-col items-center">
                         <Document
-                            file={url}
+                            file={pdfData}
                             onLoadSuccess={onDocumentLoadSuccess}
                             onLoadError={(err) => {
-                                console.error("PDF Load Error Details:", err);
-                                console.log("Failed URL:", url);
-                                toast.error(`Failed to decrypt PDF stream: ${err.message || 'Unknown error'}`);
+                                console.error("PDF Render Error:", err);
+                                toast.error(`Render Error: ${err.message || 'Failed to display PDF'}`);
                             }}
                             loading={
                                 <div className="py-20 flex flex-col items-center justify-center gap-4">

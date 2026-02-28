@@ -46,4 +46,25 @@ export class AccessService {
 
         return { url: signedUrl };
     }
+
+    static async getMaterialStream(slug: string, userId: string, ip: string | undefined, userAgent: string | undefined) {
+        // 1. Fetch metadata (DB cache-miss logic same as requestAccess)
+        const result = await pool.query(
+            "SELECT id, file_key FROM materials WHERE slug = $1 AND status = 'ACTIVE'",
+            [slug]
+        );
+
+        if (!result.rows.length) {
+            throw { statusCode: 404, message: 'Material not found' };
+        }
+
+        const metadata = result.rows[0];
+
+        // 2. Log telemetry (asynchronously)
+        // Note: In production, this would go to Redis. Logging to console for now as done in requestAccess.
+        console.log(`[ACCESS] User ${userId} viewing material ${slug} (ID: ${metadata.id})`);
+
+        // 3. Return R2 stream
+        return await R2Service.getReadableStream(metadata.file_key);
+    }
 }

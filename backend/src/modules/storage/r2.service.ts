@@ -101,4 +101,23 @@ export class R2Service {
             return false;
         }
     }
+
+    /**
+     * Retrieves a ReadableStream for a given file Key
+     */
+    static async getReadableStream(key: string): Promise<any> {
+        try {
+            return await this.withRetry(async () => {
+                const command = new GetObjectCommand({
+                    Bucket: env.R2_BUCKET_NAME as string,
+                    Key: key,
+                });
+                const response = await this.s3.send(command);
+                return response.Body;
+            }, 10000, 1);
+        } catch (error) {
+            console.error('[R2:ERROR] Failed to get readable stream:', error);
+            throw { statusCode: 503, message: 'Storage layer unreachable' };
+        }
+    }
 }
