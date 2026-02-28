@@ -15,10 +15,10 @@ const envSchema = z.object({
     JWT_ACCESS_EXPIRES: z.string(),
     JWT_REFRESH_EXPIRES: z.string(),
 
-    RATE_LIMIT_PUBLIC: z.string().transform(Number),
-    RATE_LIMIT_AUTH: z.string().transform(Number),
-    RATE_LIMIT_ACCESS: z.string().transform(Number),
-    RATE_LIMIT_ADMIN: z.string().transform(Number),
+    RATE_LIMIT_PUBLIC: z.string().default('150').transform(Number),
+    RATE_LIMIT_AUTH: z.string().default('50').transform(Number),
+    RATE_LIMIT_ACCESS: z.string().default('30').transform(Number),
+    RATE_LIMIT_ADMIN: z.string().default('500').transform(Number),
 
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 

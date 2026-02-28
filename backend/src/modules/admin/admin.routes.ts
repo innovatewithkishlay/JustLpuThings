@@ -25,6 +25,7 @@ const upload = multer({
 const adminLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: env.RATE_LIMIT_ADMIN,
+    keyGenerator: (req) => req.user?.userId || req.ip || 'anonymous',
     message: { success: false, error: { message: 'Too many admin operations, please try again later.' } }
 });
 
