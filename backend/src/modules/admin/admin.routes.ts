@@ -26,7 +26,12 @@ const adminLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: env.RATE_LIMIT_ADMIN,
     keyGenerator: (req) => req.user?.userId || req.ip || 'anonymous',
-    message: { success: false, error: { message: 'Too many admin operations, please try again later.' } }
+    message: { success: false, error: { message: 'Too many admin operations, please try again later.' } },
+    skip: (req) => req.method === 'GET', // RELAX: Background polling/analytics shouldn't trigger lockouts.
+    handler: (req, _res, next) => {
+        console.warn(`[RATE_LIMIT:ADMIN] Triggered by User: ${req.user?.userId} (IP: ${req.ip})`);
+        next(); // Allow next middleware (which will send the rate limit error response)
+    }
 });
 
 // All routes here strictly mandate Auth + Admin + AdminRateLimit
