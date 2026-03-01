@@ -18,7 +18,7 @@ const envSchema = z.object({
     RATE_LIMIT_PUBLIC: z.string().default('150').transform(Number),
     RATE_LIMIT_AUTH: z.string().default('50').transform(Number),
     RATE_LIMIT_ACCESS: z.string().default('30').transform(Number),
-    RATE_LIMIT_ADMIN: z.string().default('1000').transform(Number),
+    RATE_LIMIT_ADMIN: z.string().default('2000').transform(Number),
 
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 
