@@ -264,7 +264,7 @@ export default function ViewerPage() {
                                     <span className="text-sm font-bold tracking-widest text-muted-foreground uppercase">Decrypting Stream...</span>
                                 </div>
                             }
-                            className="flex flex-col items-center gap-6"
+                            className="flex flex-col items-center gap-2"
                         >
                             {numPages && Array.from(new Array(numPages), (el, index) => (
                                 <InView
@@ -277,14 +277,14 @@ export default function ViewerPage() {
                                         }
                                     }}
                                     id={`pdf-page-${index + 1}`}
-                                    className="w-full bg-background rounded-sm shadow-xl flex items-center justify-center min-h-[500px]"
+                                    className="w-full flex items-center justify-center"
                                 >
                                     <Page
                                         pageNumber={index + 1}
                                         width={containerWidth ? Math.min(containerWidth - 32, 1000) : 800}
                                         renderAnnotationLayer={false}
                                         renderTextLayer={true}
-                                        className="pdf-page-render"
+                                        className="pdf-page-render shadow-lg"
                                         loading={<Skeleton className="w-full h-[800px] bg-muted/50" />}
                                     />
                                 </InView>
