@@ -1,11 +1,12 @@
 "use client"
 
+import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
-import { useRouter, useParams } from 'next/navigation'
 import { Card } from '@/components/ui/card'
-import { ChevronLeft, FolderOpen } from 'lucide-react'
+import { ChevronLeft, FolderOpen, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useEffect } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -16,33 +17,11 @@ const stagger = {
     visible: { transition: { staggerChildren: 0.05 } }
 }
 
-// Subject Mappings explicitly defined for MVP Phase 2
-const subjectMap: Record<string, { slug: string, name: string, code: string }[]> = {
-    "1": [
-        { slug: "mth165", name: "Mathematics", code: "MTH165" }
-    ],
-    "2": [
-        { slug: "int306", name: "Internet and Web Designing", code: "INT306" },
-        { slug: "phy110", name: "Engineering Physics", code: "PHY110" },
-        { slug: "cse121", name: "Object Oriented Programming", code: "CSE121" },
-        { slug: "cse101", name: "Computer Programming", code: "CSE101" },
-        { slug: "mec136", name: "Engineering Graphics", code: "MEC136" },
-        { slug: "cse320", name: "Software Engineering", code: "CSE320" },
-        { slug: "pel121", name: "Communication Skills I", code: "PEL121" },
-        { slug: "pel125", name: "Communication Skills II", code: "PEL125" },
-        { slug: "pel130", name: "Communication Skills III", code: "PEL130" },
-        { slug: "ece249", name: "Basic Electrical & Electronics", code: "ECE249" },
-        { slug: "che110", name: "Environmental Sciences", code: "CHE110" },
-        { slug: "mth166", name: "Mathematics", code: "MTH166" }
-    ],
-    "4": [
-        { slug: "data-structures", name: "Data Structures", code: "CSE201" },
-        { slug: "operating-systems", name: "Operating Systems", code: "CSE202" },
-        { slug: "database-management", name: "Database Management", code: "CSE203" },
-        { slug: "computer-networks", name: "Computer Networks", code: "CSE204" },
-        { slug: "software-engineering", name: "Software Engineering", code: "CSE205" },
-        { slug: "theory-of-computation", name: "Theory of Computation", code: "CSE206" }
-    ]
+interface Subject {
+    id: string;
+    name: string;
+    slug: string;
+    semester_number: number;
 }
 
 export default function SemesterPage() {
@@ -50,18 +29,10 @@ export default function SemesterPage() {
     const params = useParams()
     const semesterId = params.semesterId as string
 
-    // Strictly authorize only IDs 2 and 4
-    const validSemesters = ["1", "2", "4"]
-    const isValid = validSemesters.includes(semesterId)
-    const subjects = subjectMap[semesterId] || []
-
-    useEffect(() => {
-        if (!isValid) {
-            router.replace('/dashboard')
-        }
-    }, [isValid, router])
-
-    if (!isValid) return null
+    const { data: subjects = [], isLoading } = useQuery({
+        queryKey: ["subjects", semesterId],
+        queryFn: () => apiClient<Subject[]>(`/materials/subjects?semesterNumber=${semesterId}`)
+    })
 
     const handleBack = () => {
         router.push('/dashboard')
@@ -69,6 +40,14 @@ export default function SemesterPage() {
 
     const handleSubjectClick = (slug: string) => {
         router.push(`/dashboard/semester/${semesterId}/subject/${slug}`)
+    }
+
+    if (isLoading) {
+        return (
+            <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
+                <Loader2 className="w-8 h-8 animate-spin text-primary/40" />
+            </div>
+        )
     }
 
     return (
@@ -87,27 +66,35 @@ export default function SemesterPage() {
                     </div>
                 </motion.div>
 
-                <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                    {subjects.map((sub) => (
-                        <motion.div key={sub.slug} whileHover={{ y: -4, scale: 1.01 }}>
-                            <Card
-                                onClick={() => handleSubjectClick(sub.slug)}
-                                className="cursor-pointer h-full flex items-center p-5 rounded-[20px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden"
-                            >
-                                <div className="absolute right-0 bottom-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-6 -mb-6 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
+                {subjects.length === 0 ? (
+                    <motion.div variants={fadeUp} className="text-center py-20 bg-muted/10 rounded-[32px] border border-dashed border-border/50">
+                        <FolderOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
+                        <h3 className="text-lg font-bold text-foreground mb-1">No Subjects Found</h3>
+                        <p className="text-muted-foreground text-sm">New subjects will appear here once indexed by admin.</p>
+                    </motion.div>
+                ) : (
+                    <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                        {subjects.map((sub: Subject) => (
+                            <motion.div key={sub.slug} whileHover={{ y: -4, scale: 1.01 }}>
+                                <Card
+                                    onClick={() => handleSubjectClick(sub.slug)}
+                                    className="cursor-pointer h-full flex items-center p-5 rounded-[20px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden"
+                                >
+                                    <div className="absolute right-0 bottom-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-6 -mb-6 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
 
-                                <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary mr-4 group-hover:bg-primary text-primary group-hover:text-primary-foreground transition-colors duration-300">
-                                    <FolderOpen className="w-5 h-5" />
-                                </div>
+                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary mr-4 group-hover:bg-primary text-primary group-hover:text-primary-foreground transition-colors duration-300">
+                                        <FolderOpen className="w-5 h-5" />
+                                    </div>
 
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-heading font-bold text-base truncate group-hover:text-primary transition-colors">{sub.name}</h3>
-                                    <p className="text-xs font-mono font-bold tracking-wider text-muted-foreground uppercase mt-0.5">{sub.code}</p>
-                                </div>
-                            </Card>
-                        </motion.div>
-                    ))}
-                </motion.div>
+                                    <div className="flex-1 min-w-0">
+                                        <h3 className="font-heading font-bold text-base truncate group-hover:text-primary transition-colors">{sub.name}</h3>
+                                        <p className="text-[10px] font-mono font-bold tracking-widest text-muted-foreground uppercase mt-0.5 italic">/{sub.slug}</p>
+                                    </div>
+                                </Card>
+                            </motion.div>
+                        ))}
+                    </motion.div>
+                )}
 
             </motion.div>
         </div>

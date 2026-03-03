@@ -113,4 +113,23 @@ export class MaterialsService {
 
         return data;
     }
+
+    static async getSubjects(semesterNumber?: number) {
+        let sql = `
+            SELECT s.id, s.name, s.slug, sem.number as semester_number
+            FROM subjects s
+            JOIN semesters sem ON s.semester_id = sem.id
+        `;
+        const values: any[] = [];
+
+        if (semesterNumber) {
+            sql += ` WHERE sem.number = $1`;
+            values.push(semesterNumber);
+        }
+
+        sql += ` ORDER BY sem.number ASC, s.name ASC`;
+
+        const result = await pool.query(sql, values);
+        return result.rows;
+    }
 }

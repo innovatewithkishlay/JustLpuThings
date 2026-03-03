@@ -23,33 +23,12 @@ const itemVariants = {
     visible: { y: 0, opacity: 1 }
 }
 
-// Subject Mappings for Admin Upload
-const subjectMap: Record<string, { slug: string, name: string }[]> = {
-    "1": [
-        { slug: "mth165", name: "MTH165 - Mathematics" }
-    ],
-    "2": [
-        { slug: "int306", name: "INT306 - Internet and Web Designing" },
-        { slug: "phy110", name: "PHY110 - Engineering Physics" },
-        { slug: "cse121", name: "CSE121 - Object Oriented Programming" },
-        { slug: "cse101", name: "CSE101 - Computer Programming" },
-        { slug: "mec136", name: "MEC136 - Engineering Graphics" },
-        { slug: "cse320", name: "CSE320 - Software Engineering" },
-        { slug: "pel121", name: "PEL121 - Communication Skills I" },
-        { slug: "pel125", name: "PEL125 - Communication Skills II" },
-        { slug: "pel130", name: "PEL130 - Communication Skills III" },
-        { slug: "ece249", name: "ECE249 - Basic Electrical & Electronics" },
-        { slug: "che110", name: "CHE110 - Environmental Sciences" },
-        { slug: "mth166", name: "MTH166 - Mathematics" }
-    ],
-    "4": [
-        { slug: "data-structures", name: "Data Structures" },
-        { slug: "operating-systems", name: "Operating Systems" },
-        { slug: "database-management", name: "Database Management" },
-        { slug: "computer-networks", name: "Computer Networks" },
-        { slug: "software-engineering", name: "Software Engineering" },
-        { slug: "theory-of-computation", name: "Theory of Computation" }
-    ]
+interface TelemetryStats {
+    totalUsers: number;
+    totalMaterials: number;
+    totalViews: number;
+    activeUsers: number;
+    flaggedUsers: number;
 }
 
 interface TelemetryStats {
@@ -61,6 +40,27 @@ interface TelemetryStats {
 }
 
 
+interface Material {
+    id: string;
+    semester_number?: number;
+    subject_name?: string;
+    category?: string;
+    unit?: string;
+    title: string;
+    description?: string;
+    total_views?: string | number;
+    viewCount?: number;
+    created_at?: string;
+    createdAt?: string;
+}
+
+interface Subject {
+    id: string;
+    name: string;
+    slug: string;
+    semester_number: number;
+}
+
 export default function AdminDashboard() {
     const queryClient = useQueryClient()
     const router = useRouter()
@@ -71,11 +71,16 @@ export default function AdminDashboard() {
         description: '',
         youtube_url: '',
         semester: '2',
-        subject: 'int306',
+        subject: '',
         category: 'notes',
         unit: ''
     })
     const [file, setFile] = useState<File | null>(null)
+
+    // Subject Management State
+    const [newSubjectName, setNewSubjectName] = useState('')
+    const [newSubjectSem, setNewSubjectSem] = useState('1')
+    const [isAddingSubject, setIsAddingSubject] = useState(false)
 
     // Edit state
     const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)
@@ -96,6 +101,39 @@ export default function AdminDashboard() {
         queryFn: () => apiClient<Material[]>('/materials?admin=true')
     })
 
+    const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
+        queryKey: ["admin", "subjects"],
+        queryFn: () => apiClient<Subject[]>('/admin/subjects').then(res => res || [])
+    })
+
+    const createSubjectMutation = useMutation({
+        mutationFn: async (data: { name: string, semesterNumber: number }) => {
+            return await apiClient('/admin/subjects', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            })
+        },
+        onSuccess: () => {
+            toast.success('Subject added to semester')
+            queryClient.invalidateQueries({ queryKey: ["admin", "subjects"] })
+            setNewSubjectName('')
+            setIsAddingSubject(false)
+        },
+        onError: (err: any) => toast.error(err.message || 'Failed to add subject')
+    })
+
+    const deleteSubjectMutation = useMutation({
+        mutationFn: async (id: string) => {
+            return await apiClient(`/admin/subjects/${id}`, { method: 'DELETE' })
+        },
+        onSuccess: () => {
+            toast.success('Subject removed')
+            queryClient.invalidateQueries({ queryKey: ["admin", "subjects"] })
+            queryClient.invalidateQueries({ queryKey: ["admin", "materials", "all"] })
+        },
+        onError: (err: any) => toast.error(err.message || 'Failed to remove subject')
+    })
+
     const uploadMutation = useMutation({
         mutationFn: async (formData: FormData) => {
             return await apiClient('/admin/materials', {
@@ -107,7 +145,7 @@ export default function AdminDashboard() {
             toast.success('Material deployed successfully')
             queryClient.invalidateQueries({ queryKey: ["admin", "materials", "all"] })
             queryClient.invalidateQueries({ queryKey: ["admin", "analytics"] })
-            setUploadForm({ title: '', description: '', youtube_url: '', semester: '2', subject: 'int306', category: 'notes', unit: '' })
+            setUploadForm(prev => ({ ...prev, title: '', description: '', youtube_url: '', unit: '' }))
             setFile(null)
             if (fileInputRef.current) fileInputRef.current.value = ''
         }
@@ -334,9 +372,100 @@ export default function AdminDashboard() {
                         </div>
                     </div>
 
-                    {/* Right: Upload Pipeline */}
-                    <div className="lg:col-span-12 xl:col-span-4">
-                        <div className="sticky top-8">
+                    {/* Right: Upload Pipeline & Subject Management */}
+                    <div className="lg:col-span-12 xl:col-span-4 space-y-8">
+                        {/* Subject Management Card */}
+                        <div className="sticky top-8 space-y-8">
+                            <Card className="border-none shadow-xl bg-surface rounded-[32px] overflow-hidden">
+                                <CardHeader className="p-8 pb-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20">
+                                            <BookOpen className="w-6 h-6" />
+                                        </div>
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            onClick={() => setIsAddingSubject(!isAddingSubject)}
+                                            className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10"
+                                        >
+                                            {isAddingSubject ? 'Cancel' : 'Add Subject'}
+                                        </Button>
+                                    </div>
+                                    <CardTitle className="text-2xl font-black font-heading leading-tight italic mt-6">Academic Subjects</CardTitle>
+                                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground pt-1">DYNAMIC MAPPINGS</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-8 pt-4">
+                                    <AnimatePresence mode="wait">
+                                        {isAddingSubject ? (
+                                            <motion.div
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                exit={{ opacity: 0, y: -10 }}
+                                                className="space-y-4"
+                                            >
+                                                <div className="p-4 rounded-2xl bg-muted/20 border border-border/50 space-y-4">
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Semester</Label>
+                                                        <select
+                                                            value={newSubjectSem}
+                                                            onChange={e => setNewSubjectSem(e.target.value)}
+                                                            className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background/50 text-xs font-bold focus:ring-1 focus:ring-primary/40 outline-none transition-all"
+                                                        >
+                                                            {[1, 2, 3, 4, 5, 6, 7, 8].map((s: number) => <option key={s} value={s.toString()}>Semester {s}</option>)}
+                                                        </select>
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Subject Name</Label>
+                                                        <Input
+                                                            placeholder="e.g. Mathematics III"
+                                                            value={newSubjectName}
+                                                            onChange={e => setNewSubjectName(e.target.value)}
+                                                            className="h-10 bg-background/50 border-border/40 rounded-xl px-4 text-xs font-bold"
+                                                        />
+                                                    </div>
+                                                    <Button
+                                                        onClick={() => createSubjectMutation.mutate({ name: newSubjectName, semesterNumber: parseInt(newSubjectSem) })}
+                                                        disabled={!newSubjectName || createSubjectMutation.isPending}
+                                                        className="w-full h-10 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-500/20"
+                                                    >
+                                                        {createSubjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Subject'}
+                                                    </Button>
+                                                </div>
+                                            </motion.div>
+                                        ) : (
+                                            <motion.div
+                                                initial={{ opacity: 0 }}
+                                                animate={{ opacity: 1 }}
+                                                className="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar"
+                                            >
+                                                {subjects.length === 0 ? (
+                                                    <div className="text-center py-6 text-muted-foreground text-[10px] font-bold uppercase tracking-widest opacity-50 italic">No Subjects Defined</div>
+                                                ) : (
+                                                    subjects
+                                                        .filter((s: Subject) => s.semester_number.toString() === uploadForm.semester)
+                                                        .map((sub: Subject) => (
+                                                            <div key={sub.id} className="group flex items-center justify-between p-3 rounded-xl bg-muted/10 hover:bg-muted/30 transition-all border border-transparent hover:border-border/50">
+                                                                <div>
+                                                                    <div className="text-[11px] font-black text-foreground tracking-tight">{sub.name}</div>
+                                                                    <div className="text-[9px] font-mono text-muted-foreground opacity-60">/{sub.slug}</div>
+                                                                </div>
+                                                                <Button
+                                                                    variant="ghost"
+                                                                    size="icon"
+                                                                    onClick={() => deleteSubjectMutation.mutate(sub.id)}
+                                                                    className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+                                                                >
+                                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                                </Button>
+                                                            </div>
+                                                        ))
+                                                )}
+                                            </motion.div>
+                                        )}
+                                    </AnimatePresence>
+                                </CardContent>
+                            </Card>
+
                             <Card className="border-none shadow-xl bg-surface rounded-[32px] overflow-hidden">
                                 <CardHeader className="p-8 pb-4">
                                     <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-6 text-primary border border-primary/20">
@@ -355,12 +484,11 @@ export default function AdminDashboard() {
                                                         value={uploadForm.semester}
                                                         onChange={e => {
                                                             const semester = e.target.value;
-                                                            const subject = subjectMap[semester] ? subjectMap[semester][0].slug : 'generic';
-                                                            setUploadForm({ ...uploadForm, semester, subject });
+                                                            setUploadForm({ ...uploadForm, semester, subject: '' });
                                                         }}
                                                         className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background/50 text-xs font-bold focus:ring-1 focus:ring-primary/40 outline-none transition-all"
                                                     >
-                                                        {[1, 2, 3, 4, 5, 6, 7, 8].map(s => <option key={s} value={s.toString()}>SEM {s}</option>)}
+                                                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s: number) => <option key={s} value={s.toString()}>SEM {s}</option>)}
                                                     </select>
                                                     <select
                                                         value={uploadForm.category}
@@ -378,7 +506,11 @@ export default function AdminDashboard() {
                                                     onChange={e => setUploadForm({ ...uploadForm, subject: e.target.value })}
                                                     className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background/50 text-[10px] font-black tracking-tighter uppercase mt-3 focus:ring-1 focus:ring-primary/40 outline-none transition-all"
                                                 >
-                                                    {subjectMap[uploadForm.semester]?.map(sub => <option key={sub.slug} value={sub.slug}>{sub.name}</option>)}
+                                                    <option value="">— Select Subject —</option>
+                                                    {subjects
+                                                        .filter((s: Subject) => s.semester_number.toString() === uploadForm.semester)
+                                                        .map((sub: Subject) => <option key={sub.id} value={sub.slug}>{sub.name}</option>)
+                                                    }
                                                 </select>
                                                 {uploadForm.category === 'notes' && (
                                                     <select
@@ -571,19 +703,5 @@ export default function AdminDashboard() {
             </motion.div>
         </div>
     )
-}
-
-interface Material {
-    id: string;
-    semester_number?: number;
-    subject_name?: string;
-    category?: string;
-    unit?: string;
-    title: string;
-    description?: string;
-    total_views?: string | number;
-    viewCount?: number;
-    created_at?: string;
-    createdAt?: string;
 }
 

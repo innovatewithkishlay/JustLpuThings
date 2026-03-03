@@ -6,6 +6,7 @@ import { requireAuth, requireAdmin } from '../auth/auth.middleware';
 import { AdminController } from './admin.controller';
 import { MessagesController } from '../messages/messages.controller';
 import { NotificationsController } from '../notifications/notifications.controller';
+import subjectsRouter from './subjects.routes';
 
 const router = Router();
 
@@ -62,5 +63,8 @@ router.post('/messages/:id/reply', MessagesController.reply);
 // --- Notifications (Broadcast / Targeted) ---
 router.get('/notifications', NotificationsController.getAll);
 router.post('/notifications', NotificationsController.send);
+
+// --- Subject Management ---
+router.use('/subjects', subjectsRouter);
 
 export default router;

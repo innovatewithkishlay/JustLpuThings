@@ -35,4 +35,14 @@ export class MaterialsController {
             next(err);
         }
     }
+
+    static async listSubjects(req: Request, res: Response, next: NextFunction) {
+        try {
+            const semesterNumber = req.query.semesterNumber ? parseInt(req.query.semesterNumber as string, 10) : undefined;
+            const subjects = await MaterialsService.getSubjects(semesterNumber);
+            res.json({ success: true, data: subjects });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
