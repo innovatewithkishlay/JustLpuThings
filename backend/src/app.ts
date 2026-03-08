@@ -19,10 +19,13 @@ import messagesRouter from './modules/messages/messages.routes';
 import notificationsRouter from './modules/notifications/notifications.routes';
 // import { AnalyticsWorker } from './modules/analytics/analytics.worker';
 import { requestMetrics } from './middlewares/requestMetrics';
+import { visitorTracker } from './middlewares/visitorTracker';
 import passport from './modules/auth/google.strategy';
 
 const app: Express = express();
 app.set('trust proxy', 1); // Trust first-hop proxy (Render/Cloudflare)
+
+app.use(visitorTracker);
 
 app.use((req, _res, next) => {
     console.log(`[DEBUG] Request: ${req.method} ${req.url}`);

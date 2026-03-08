@@ -277,22 +277,42 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Metrics Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6 mb-12">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-12">
                     {[
                         { label: 'Platform Users', val: stats?.totalUsers || 0, icon: Users, color: 'text-blue-500', bg: 'bg-blue-500/10' },
                         { label: 'Active Materials', val: stats?.totalMaterials || 0, icon: BookOpen, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-                        { label: 'Knowledge Throughput', val: stats?.totalViews || 0, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-                        { label: 'Real-time Sessions', val: stats?.activeUsers || 0, icon: Activity, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+                        { label: 'Global Knowledge', val: stats?.totalViews || 0, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
+                        {
+                            label: 'Today Visitors',
+                            val: stats?.visitsToday || 0,
+                            icon: Activity,
+                            color: 'text-amber-500',
+                            bg: 'bg-amber-500/10',
+                            sub: `Yesterday: ${stats?.visitsYesterday || 0}`
+                        },
+                        {
+                            label: 'Total Unique',
+                            val: stats?.totalUniqueVisitors || 0,
+                            icon: Users,
+                            color: 'text-purple-500',
+                            bg: 'bg-purple-500/10',
+                            sub: 'Lifetime Reach'
+                        },
                         { label: 'Risk Telemetry', val: stats?.flaggedUsers || 0, icon: ShieldAlert, color: 'text-rose-500', bg: 'bg-rose-500/10' },
                     ].map((stat, i) => (
                         <motion.div key={i} variants={itemVariants}>
-                            <Card className="border-none shadow-sm dark:shadow-none bg-surface/50 backdrop-blur-xl rounded-[28px] overflow-hidden group hover:ring-1 ring-primary/20 transition-all">
+                            <Card className="border-none shadow-sm dark:shadow-none bg-surface/50 backdrop-blur-xl rounded-[28px] overflow-hidden group hover:ring-1 ring-primary/20 transition-all h-full">
                                 <CardContent className="p-6">
                                     <div className={`w-10 h-10 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center mb-4 transition-transform group-hover:scale-110`}>
                                         <stat.icon className="w-5 h-5" />
                                     </div>
                                     <div className="text-3xl font-heading font-black tracking-tighter mb-1">{stat.val.toLocaleString()}</div>
                                     <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
+                                    {'sub' in stat && (
+                                        <div className="text-[9px] font-medium text-muted-foreground mt-2 flex items-center gap-1 opacity-70 italic">
+                                            {stat.sub}
+                                        </div>
+                                    )}
                                 </CardContent>
                             </Card>
                         </motion.div>
