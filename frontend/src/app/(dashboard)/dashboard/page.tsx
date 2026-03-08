@@ -51,7 +51,7 @@ export default function DashboardPage() {
                             Academic Progress
                         </h1>
                         <p className="text-muted-foreground font-medium text-base md:text-lg max-w-2xl mt-1">
-                            Select your active semester to access curated materials, subjective notes, and official syllabus distributions.
+                            Select your active semester to access curated materials. <span className="text-primary/70 italic">Asha karte hai maze kar rahe honge! ✨</span>
                         </p>
                     </div>
 

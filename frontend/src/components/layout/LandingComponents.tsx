@@ -131,6 +131,17 @@ export function Hero() {
                         <span className="text-[10px] font-bold uppercase tracking-widest text-primary">Certified Peer Tutor</span>
                     </motion.div> */}
 
+                    <div className="overflow-hidden py-1 mb-2">
+                        <motion.p
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.2, duration: 0.8 }}
+                            className="text-primary font-heading font-medium italic text-lg md:text-xl tracking-tight"
+                        >
+                            "Jai Hind Doston! Kaise hai aap log? 💫"
+                        </motion.p>
+                    </div>
+
                     <div className="overflow-hidden py-1">
                         <motion.h1
                             custom={0}
