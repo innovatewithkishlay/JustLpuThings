@@ -2,27 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AuthService } from './auth.service';
 import { loginSchema, registerSchema } from './auth.schema';
 import { env } from '../../config/env';
-import ms from 'ms';
-
-// Utility for applying unified cookie config
-const setAuthCookies = (res: Response, access: string, refresh: string, refreshId: string) => {
-    const isProd = env.NODE_ENV === 'production';
-    const cookieOptions = {
-        httpOnly: true,
-        secure: isProd, // Must be false for local HTTP
-        sameSite: isProd ? 'none' as const : 'lax' as const,
-        path: '/'
-    };
-
-    // Convert env strings to ms for MaxAge
-    const accessMaxAge = Number(ms(env.JWT_ACCESS_EXPIRES as any));
-    const refreshMaxAge = Number(ms(env.JWT_REFRESH_EXPIRES as any));
-
-    res.cookie('accessToken', access, { ...cookieOptions, maxAge: accessMaxAge });
-    res.cookie('refreshToken', refresh, { ...cookieOptions, maxAge: refreshMaxAge });
-    // Store familyId to easily identify DB record
-    res.cookie('refreshFamily', refreshId, { ...cookieOptions, maxAge: refreshMaxAge });
-};
+import { setAuthCookies } from './auth.utils';
 
 export class AuthController {
 
