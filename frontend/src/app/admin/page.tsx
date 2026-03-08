@@ -305,12 +305,12 @@ export default function AdminDashboard() {
 
     return (
         <TooltipProvider>
-            <div className="flex h-screen bg-[#FBFCFE] dark:bg-[#06080C] overflow-hidden selection:bg-primary/20">
+            <div className="flex bg-[#FBFCFE] dark:bg-[#06080C] selection:bg-primary/20 min-h-[calc(100vh-112px)]">
                 {/* Desktop Sidebar Rail */}
                 <motion.aside
                     initial={false}
                     animate={{ width: isNavCollapsed ? 80 : 280 }}
-                    className="hidden lg:flex flex-col border-r border-border/40 bg-white/50 dark:bg-black/20 backdrop-blur-xl relative z-50 overflow-hidden"
+                    className="hidden lg:flex flex-col border-r border-border/40 bg-white/50 dark:bg-black/20 backdrop-blur-xl sticky top-[112px] h-[calc(100vh-112px)] z-40 overflow-hidden"
                 >
                     <div className="p-6 flex items-center justify-between">
                         <AnimatePresence mode="wait">
@@ -392,21 +392,21 @@ export default function AdminDashboard() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
                                 transition={{ duration: 0.2 }}
-                                className="space-y-12"
+                                className="space-y-10"
                             >
                                 {activeView === 'OVERVIEW' && (
-                                    <div className="space-y-12">
+                                    <div className="space-y-10">
                                         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
                                             <div>
-                                                <Badge className="mb-4 px-3 py-1 rounded-full bg-primary/10 text-primary border-primary/20 space-x-2">
-                                                    <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                                                    <span className="font-mono text-[10px] font-black uppercase tracking-widest">System Monitor v4.2</span>
+                                                <Badge className="mb-3 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-primary/20 space-x-2">
+                                                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                                                    <span className="font-mono text-[9px] font-black uppercase tracking-widest">System Monitor v4.2</span>
                                                 </Badge>
-                                                <h1 className="text-4xl md:text-5xl font-heading font-black tracking-tight italic">Global Telemetry</h1>
-                                                <p className="text-muted-foreground font-medium mt-2 max-w-xl text-lg">Real-time platform intelligence and audience engagement vectors.</p>
+                                                <h1 className="text-2xl md:text-3xl font-heading font-black tracking-tight italic">Global Telemetry</h1>
+                                                <p className="text-muted-foreground font-medium mt-1.5 max-w-xl text-sm opacity-80">Real-time platform intelligence and audience engagement vectors.</p>
                                             </div>
                                             <div className="flex gap-4">
-                                                <Button variant="outline" className="h-14 px-8 rounded-2xl bg-surface border-border/40 font-black text-[11px] uppercase tracking-widest flex items-center gap-2 group">
+                                                <Button variant="outline" className="h-12 px-6 rounded-2xl bg-surface border-border/40 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group">
                                                     <Fingerprint className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" /> Access Logs
                                                 </Button>
                                             </div>
@@ -421,11 +421,11 @@ export default function AdminDashboard() {
                                             ].map((stat, i) => (
                                                 <Card key={i} className="border-none shadow-premium bg-surface/50 backdrop-blur-xl rounded-[32px] overflow-hidden group hover:ring-1 ring-primary/20 transition-all">
                                                     <CardContent className="p-8">
-                                                        <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center mb-6 transition-transform group-hover:scale-110`}>
-                                                            <stat.icon className="w-6 h-6" />
+                                                        <div className={`w-10 h-10 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center mb-5 transition-transform group-hover:scale-110`}>
+                                                            <stat.icon className="w-5 h-5" />
                                                         </div>
-                                                        <div className="text-4xl font-heading font-black tracking-tighter mb-1">{stat.val.toLocaleString()}</div>
-                                                        <div className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
+                                                        <div className="text-3xl font-heading font-black tracking-tighter mb-0.5">{stat.val.toLocaleString()}</div>
+                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
                                                         {stat.sub && (
                                                             <div className="flex items-center gap-1.5 mt-4 text-[10px] font-bold text-muted-foreground/60 italic">
                                                                 <ArrowUpRight className="w-3.5 h-3.5" /> {stat.sub}
@@ -439,11 +439,11 @@ export default function AdminDashboard() {
                                 )}
 
                                 {activeView === 'LIBRARY' && (
-                                    <div className="space-y-8">
+                                    <div className="space-y-6">
                                         <div className="flex items-center justify-between">
                                             <div>
-                                                <h2 className="text-3xl font-heading font-black italic">Architecture Tree</h2>
-                                                <p className="text-muted-foreground font-bold text-[10px] uppercase tracking-widest mt-1">{materialsArray.length} Nodes Indexed</p>
+                                                <h2 className="text-2xl font-heading font-black italic">Architecture Tree</h2>
+                                                <p className="text-muted-foreground font-bold text-[9px] uppercase tracking-widest mt-0.5 opacity-60">{materialsArray.length} Nodes Indexed</p>
                                             </div>
                                         </div>
 
@@ -469,22 +469,22 @@ export default function AdminDashboard() {
                                                             {Object.keys(groupedMaterials[sem]).sort().map(subject => (
                                                                 <div key={subject} className="space-y-4">
                                                                     <div className="flex items-center gap-3">
-                                                                        <div className="w-2 h-2 rounded-full bg-primary" />
-                                                                        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">{subject}</h4>
+                                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-80">{subject}</h4>
                                                                     </div>
 
                                                                     <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
                                                                         {Object.keys(groupedMaterials[sem][subject]).map(cat => (
                                                                             groupedMaterials[sem][subject][cat].map((mat: Material) => (
-                                                                                <Card key={mat.id} className="group border-[0.5px] border-border/40 bg-surface/30 backdrop-blur-md rounded-[24px] overflow-hidden hover:border-primary/40 hover:bg-surface transition-all duration-300 shadow-sm hover:shadow-xl">
-                                                                                    <div className="p-5">
-                                                                                        <div className="flex items-start justify-between gap-4 mb-3">
+                                                                                <Card key={mat.id} className="group border-[0.5px] border-border/40 bg-surface/30 backdrop-blur-md rounded-[20px] overflow-hidden hover:border-primary/40 hover:bg-surface transition-all duration-300 shadow-sm hover:shadow-xl">
+                                                                                    <div className="p-4">
+                                                                                        <div className="flex items-start justify-between gap-4 mb-2">
                                                                                             <div className="space-y-1 overflow-hidden">
-                                                                                                <div className="flex items-center gap-2 mb-1.5">
-                                                                                                    <span className="px-2 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 text-[10px] font-black uppercase tracking-tighter border border-indigo-500/20">{mat.category}</span>
-                                                                                                    {mat.unit && <span className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[10px] font-black tracking-tighter border border-emerald-500/20">U{mat.unit}</span>}
+                                                                                                <div className="flex items-center gap-2 mb-1">
+                                                                                                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 text-[9px] font-black uppercase tracking-tighter border border-indigo-500/20">{mat.category}</span>
+                                                                                                    {mat.unit && <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[9px] font-black tracking-tighter border border-emerald-500/20">U{mat.unit}</span>}
                                                                                                 </div>
-                                                                                                <h5 className="font-bold text-[15px] text-foreground leading-tight truncate px-1 group-hover:text-primary transition-colors">{mat.title}</h5>
+                                                                                                <h5 className="font-bold text-sm text-foreground leading-tight truncate px-0.5 group-hover:text-primary transition-colors">{mat.title}</h5>
                                                                                             </div>
                                                                                             <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
                                                                                                 <Button
@@ -668,16 +668,16 @@ export default function AdminDashboard() {
                                 )}
 
                                 {activeView === 'DEPLOYMENT' && (
-                                    <div className="max-w-4xl mx-auto">
-                                        <Card className="border-none shadow-premium bg-surface rounded-[40px] overflow-hidden">
-                                            <CardHeader className="p-10 pb-4">
-                                                <div className="w-16 h-16 rounded-[24px] bg-primary/10 flex items-center justify-center mb-8 text-primary border border-primary/20 shadow-inner">
-                                                    <Upload className="w-8 h-8" />
+                                    <div className="max-w-3xl mx-auto">
+                                        <Card className="border-none shadow-premium bg-surface rounded-[32px] overflow-hidden">
+                                            <CardHeader className="p-8 pb-4">
+                                                <div className="w-12 h-12 rounded-[18px] bg-primary/10 flex items-center justify-center mb-6 text-primary border border-primary/20 shadow-inner">
+                                                    <Upload className="w-6 h-6" />
                                                 </div>
-                                                <CardTitle className="text-4xl font-black font-heading leading-tight italic">Resource Deployment</CardTitle>
-                                                <CardDescription className="text-[11px] font-bold uppercase tracking-[0.3em] text-muted-foreground pt-1">Cloudflare R2 Encapsulation Pipeline</CardDescription>
+                                                <CardTitle className="text-2xl font-black font-heading leading-tight italic">Resource Deployment</CardTitle>
+                                                <CardDescription className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground pt-1 opacity-60">Cloudflare R2 Encapsulation Pipeline</CardDescription>
                                             </CardHeader>
-                                            <CardContent className="p-10 pt-6">
+                                            <CardContent className="p-8 pt-4">
                                                 <form onSubmit={handleUploadSubmit} className="space-y-10">
                                                     <div className="space-y-8">
                                                         <div className="p-6 rounded-[28px] bg-muted/20 border border-border/50 space-y-6">
