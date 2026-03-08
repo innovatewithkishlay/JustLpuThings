@@ -45,4 +45,13 @@ export class MaterialsController {
             next(err);
         }
     }
+
+    static async listSemesters(req: Request, res: Response, next: NextFunction) {
+        try {
+            const semesters = await MaterialsService.getSemesters();
+            res.json({ success: true, data: semesters });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

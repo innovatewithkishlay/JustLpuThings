@@ -61,6 +61,11 @@ interface Subject {
     semester_number: number;
 }
 
+interface Semester {
+    number: number;
+    is_active: boolean;
+}
+
 export default function AdminDashboard() {
     const queryClient = useQueryClient()
     const router = useRouter()
@@ -81,6 +86,7 @@ export default function AdminDashboard() {
     const [newSubjectName, setNewSubjectName] = useState('')
     const [newSubjectSem, setNewSubjectSem] = useState('1')
     const [isAddingSubject, setIsAddingSubject] = useState(false)
+    const [showSubjectConfirm, setShowSubjectConfirm] = useState(false)
 
     // Edit state
     const [editingMaterial, setEditingMaterial] = useState<Material | null>(null)
@@ -104,6 +110,25 @@ export default function AdminDashboard() {
     const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
         queryKey: ["admin", "subjects"],
         queryFn: () => apiClient<Subject[]>('/admin/subjects').then(res => res || [])
+    })
+
+    const { data: semesters = [], isLoading: semestersLoading } = useQuery({
+        queryKey: ["admin", "semesters"],
+        queryFn: () => apiClient<Semester[]>('/admin/subjects/semesters').then(res => res || [])
+    })
+
+    const toggleSemesterMutation = useMutation({
+        mutationFn: async ({ number, isActive }: { number: number, isActive: boolean }) => {
+            return await apiClient(`/admin/subjects/semesters/${number}/status`, {
+                method: 'PATCH',
+                body: JSON.stringify({ isActive })
+            })
+        },
+        onSuccess: () => {
+            toast.success('Semester status updated')
+            queryClient.invalidateQueries({ queryKey: ["admin", "semesters"] })
+        },
+        onError: (err: any) => toast.error(err.message || 'Failed to update semester')
     })
 
     const createSubjectMutation = useMutation({
@@ -374,8 +399,37 @@ export default function AdminDashboard() {
 
                     {/* Right: Upload Pipeline & Subject Management */}
                     <div className="lg:col-span-12 xl:col-span-4 space-y-8">
-                        {/* Subject Management Card */}
+                        {/* Semester Intelligence Card */}
                         <div className="sticky top-8 space-y-8">
+                            <Card className="border-none shadow-xl bg-surface rounded-[32px] overflow-hidden">
+                                <CardHeader className="p-8 pb-4">
+                                    <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
+                                        <Activity className="w-6 h-6" />
+                                    </div>
+                                    <CardTitle className="text-2xl font-black font-heading leading-tight italic mt-6">Semester Control</CardTitle>
+                                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground pt-1">INDEX VISIBILITY</CardDescription>
+                                </CardHeader>
+                                <CardContent className="p-8 pt-4">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {semesters.map((s: Semester) => (
+                                            <button
+                                                key={s.number}
+                                                onClick={() => toggleSemesterMutation.mutate({ number: s.number, isActive: !s.is_active })}
+                                                disabled={toggleSemesterMutation.isPending}
+                                                className={`flex items-center justify-between p-3 rounded-xl border transition-all ${s.is_active
+                                                    ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600'
+                                                    : 'bg-muted/30 border-border/50 text-muted-foreground grayscale-[0.5]'
+                                                    }`}
+                                            >
+                                                <span className="text-[10px] font-black uppercase">Sem {s.number}</span>
+                                                <div className={`w-2 h-2 rounded-full ${s.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
+                                            </button>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+
+                            {/* Subject Management Card */}
                             <Card className="border-none shadow-xl bg-surface rounded-[32px] overflow-hidden">
                                 <CardHeader className="p-8 pb-4">
                                     <div className="flex items-center justify-between">
@@ -405,13 +459,18 @@ export default function AdminDashboard() {
                                             >
                                                 <div className="p-4 rounded-2xl bg-muted/20 border border-border/50 space-y-4">
                                                     <div className="space-y-2">
-                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Semester</Label>
+                                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Select Active Semester</Label>
                                                         <select
                                                             value={newSubjectSem}
                                                             onChange={e => setNewSubjectSem(e.target.value)}
                                                             className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background/50 text-xs font-bold focus:ring-1 focus:ring-primary/40 outline-none transition-all"
                                                         >
-                                                            {[1, 2, 3, 4, 5, 6, 7, 8].map((s: number) => <option key={s} value={s.toString()}>Semester {s}</option>)}
+                                                            {semesters
+                                                                .filter((s: Semester) => s.is_active)
+                                                                .map((s: Semester) => <option key={s.number} value={s.number.toString()}>Semester {s.number}</option>)}
+                                                            {semesters.filter((s: Semester) => s.is_active).length === 0 && (
+                                                                <option value="" disabled>No active semesters</option>
+                                                            )}
                                                         </select>
                                                     </div>
                                                     <div className="space-y-2">
@@ -424,8 +483,8 @@ export default function AdminDashboard() {
                                                         />
                                                     </div>
                                                     <Button
-                                                        onClick={() => createSubjectMutation.mutate({ name: newSubjectName, semesterNumber: parseInt(newSubjectSem) })}
-                                                        disabled={!newSubjectName || createSubjectMutation.isPending}
+                                                        onClick={() => setShowSubjectConfirm(true)}
+                                                        disabled={!newSubjectName || !newSubjectSem || createSubjectMutation.isPending}
                                                         className="w-full h-10 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-500/20"
                                                     >
                                                         {createSubjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Subject'}
@@ -640,6 +699,44 @@ export default function AdminDashboard() {
                                             {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'CONFIRM PURGE'}
                                         </Button>
                                     </div>
+                                </div>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
+
+                {/* Subject Confirmation Modal */}
+                <AnimatePresence>
+                    {showSubjectConfirm && (
+                        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                onClick={() => setShowSubjectConfirm(false)}
+                                className="absolute inset-0 bg-background/60 backdrop-blur-md"
+                            />
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                className="w-full max-w-sm bg-surface border border-primary/20 rounded-[32px] overflow-hidden shadow-2xl relative z-10 p-8 text-center"
+                            >
+                                <div className="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-6">
+                                    <BookOpen className="w-8 h-8" />
+                                </div>
+                                <h3 className="text-2xl font-black font-heading tracking-tight mb-2 italic">Confirm Subject?</h3>
+                                <p className="text-muted-foreground text-sm leading-relaxed mb-6">
+                                    You are about to add <span className="text-foreground font-bold italic">"{newSubjectName}"</span> to <span className="text-primary font-bold">Semester {newSubjectSem}</span>.
+                                    This will create a new academic node instantly.
+                                </p>
+                                <div className="flex gap-3">
+                                    <Button variant="ghost" onClick={() => setShowSubjectConfirm(false)} className="flex-1 h-12 rounded-2xl font-bold">Cancel</Button>
+                                    <Button
+                                        onClick={() => {
+                                            createSubjectMutation.mutate({ name: newSubjectName, semesterNumber: parseInt(newSubjectSem) });
+                                            setShowSubjectConfirm(false);
+                                        }}
+                                        className="flex-1 h-12 rounded-2xl bg-primary text-primary-foreground font-black text-xs tracking-widest"
+                                    >
+                                        CONFIRM
+                                    </Button>
                                 </div>
                             </motion.div>
                         </div>

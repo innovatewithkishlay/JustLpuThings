@@ -43,4 +43,26 @@ export class AdminSubjectsController {
             next(err);
         }
     }
+
+    static async listSemesters(req: Request, res: Response, next: NextFunction) {
+        try {
+            const semesters = await AdminSubjectsService.getSemesters();
+            res.json({ success: true, data: semesters });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+    static async toggleStatus(req: Request, res: Response, next: NextFunction) {
+        try {
+            const adminId = req.user!.userId;
+            const number = parseInt(req.params.number as string, 10);
+            const { isActive } = req.body;
+
+            const result = await AdminSubjectsService.toggleSemesterStatus(adminId, number, isActive);
+            res.json({ success: true, data: result });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
