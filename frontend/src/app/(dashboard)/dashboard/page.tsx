@@ -3,7 +3,8 @@
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
-import { BookOpen, Lock, Sparkles } from 'lucide-react'
+import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink } from 'lucide-react'
+import { WHATSAPP_COMMUNITY_LINK } from '@/lib/constants'
 import { useAuth } from '@/contexts/AuthContext'
 
 import { useQuery } from '@tanstack/react-query'
@@ -54,6 +55,34 @@ export default function DashboardPage() {
                         </p>
                     </div>
 
+                    {/* WhatsApp Community Invitation Card */}
+                    <motion.div
+                        whileHover={{ y: -4 }}
+                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-[#25D366]/10 via-[#25D366]/5 to-transparent border border-[#25D366]/20 relative overflow-hidden group"
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <MessageCircle className="w-24 h-24 text-[#25D366]" />
+                        </div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-5 text-center md:text-left">
+                                <div className="w-14 h-14 rounded-2xl bg-[#25D366] flex items-center justify-center shadow-lg shadow-[#25D366]/20 shrink-0">
+                                    <MessageCircle className="w-7 h-7 text-white fill-current" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-heading font-bold text-foreground">Just LPU Things Community</h3>
+                                    <p className="text-sm text-muted-foreground font-medium">Join 1000+ students for real-time updates and exam help.</p>
+                                </div>
+                            </div>
+                            <a
+                                href={WHATSAPP_COMMUNITY_LINK}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-2 px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-sm font-bold rounded-xl shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105"
+                            >
+                                <ExternalLink className="w-4 h-4" /> Join WhatsApp Group
+                            </a>
+                        </div>
+                    </motion.div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                         {isLoading ? (
                             Array.from({ length: 8 }).map((_, i) => (

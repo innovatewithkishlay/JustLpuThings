@@ -16,8 +16,10 @@ import {
     CloudOff,
     Heart,
     Award,
-    ChevronRight
+    ChevronRight,
+    MessageCircle
 } from 'lucide-react'
+import { WHATSAPP_COMMUNITY_LINK } from '@/lib/constants'
 
 const fadeIn = {
     hidden: { opacity: 0 },
@@ -165,6 +167,11 @@ export function Hero() {
                         >
                             Start Reading
                         </Button>
+                        <Link href={WHATSAPP_COMMUNITY_LINK} target="_blank">
+                            <Button variant="outline" size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 transition-all">
+                                <MessageCircle className="mr-2 w-4 h-4" /> Join Community
+                            </Button>
+                        </Link>
                         <Link href="https://www.youtube.com/@JustLPUThings2.0" target="_blank">
                             <Button variant="ghost" size="lg" className="h-16 px-10 text-sm font-semibold rounded-2xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all">
                                 <Play className="mr-2 w-4 h-4 fill-current" /> Watch Videos
@@ -707,6 +714,33 @@ export function StudentTestimonials() {
                     {allRow2.map((card, i) => <WaCard key={i} card={card} />)}
                 </div>
             </div>
+
+            {/* Community CTA Banner */}
+            <div className="container mx-auto max-w-4xl px-6 mt-20 relative z-10">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    className="p-8 md:p-12 rounded-[2.5rem] bg-gradient-to-br from-[#25D366]/10 to-transparent border border-[#25D366]/20 backdrop-blur-sm relative overflow-hidden group"
+                >
+                    <div className="absolute top-0 right-0 p-12 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <MessageCircle className="w-32 h-32 text-[#25D366]" />
+                    </div>
+                    <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-8 text-center md:text-left">
+                        <div className="space-y-3">
+                            <h3 className="text-2xl md:text-3xl font-heading font-bold text-foreground">Join the Inner Circle</h3>
+                            <p className="text-muted-foreground font-medium max-w-md">
+                                Get instant updates, shared materials, and exam discussions in our official WhatsApp community.
+                            </p>
+                        </div>
+                        <Link href={WHATSAPP_COMMUNITY_LINK} target="_blank">
+                            <Button className="h-14 px-8 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold shadow-xl shadow-[#25D366]/20 transition-all hover:scale-105">
+                                <MessageCircle className="mr-2 w-5 h-5 fill-current" /> Join 1000+ Students
+                            </Button>
+                        </Link>
+                    </div>
+                </motion.div>
+            </div>
         </section>
     )
 }
@@ -791,6 +825,7 @@ export function Footer() {
                             <div className="flex flex-col gap-3">
                                 <Link href="/about" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">About Our Story</Link>
                                 <Link href="https://www.youtube.com/@JustLPUThings2.0" target="_blank" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">Watch Lectures</Link>
+                                <Link href={WHATSAPP_COMMUNITY_LINK} target="_blank" className="text-xs font-semibold text-muted-foreground/60 hover:text-[#25D366] transition-all">WhatsApp Community</Link>
                                 <Link href="/contact" className="text-xs font-semibold text-muted-foreground/60 hover:text-foreground transition-all">Say Hello</Link>
                             </div>
                         </div>
