@@ -132,4 +132,12 @@ export class MaterialsService {
         const result = await pool.query(sql, values);
         return result.rows;
     }
+
+    static async getSemesters() {
+        const sql = `
+            SELECT number, is_active FROM semesters ORDER BY number ASC
+        `;
+        const result = await pool.query(sql);
+        return result.rows;
+    }
 }
