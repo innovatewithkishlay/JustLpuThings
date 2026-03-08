@@ -29,14 +29,9 @@ interface TelemetryStats {
     totalViews: number;
     activeUsers: number;
     flaggedUsers: number;
-}
-
-interface TelemetryStats {
-    totalUsers: number;
-    totalMaterials: number;
-    totalViews: number;
-    activeUsers: number;
-    flaggedUsers: number;
+    visitsToday: number;
+    visitsYesterday: number;
+    totalUniqueVisitors: number;
 }
 
 
