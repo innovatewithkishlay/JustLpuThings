@@ -143,4 +143,16 @@ export class AdminController {
             next(err);
         }
     }
+
+    static async initiateConversation(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = req.params.userId as string;
+            const { message } = req.body;
+            const adminId = req.user!.userId;
+            const result = await AdminUsersService.initiateConversation(adminId, userId, message as string);
+            res.json({ success: true, data: result });
+        } catch (err) {
+            next(err);
+        }
+    }
 }

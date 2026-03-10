@@ -191,11 +191,29 @@ export default function AdminUsersPage() {
                                                                         <Button
                                                                             variant="ghost"
                                                                             size="icon"
-                                                                            disabled={!user.latest_message_id}
-                                                                            onClick={() => router.push(`/admin/inbox?msgId=${user.latest_message_id}`)}
+                                                                            onClick={async () => {
+                                                                                if (user.latest_message_id) {
+                                                                                    router.push(`/admin/inbox?msgId=${user.latest_message_id}`);
+                                                                                } else {
+                                                                                    const msg = window.prompt(`Start conversation with ${user.name || 'this user'}:`);
+                                                                                    if (!msg?.trim()) return;
+                                                                                    try {
+                                                                                        const res = await apiClient<{ success: boolean, data: { id: string } }>(`/admin/users/${user.id}/message`, {
+                                                                                            method: 'POST',
+                                                                                            body: JSON.stringify({ message: msg.trim() })
+                                                                                        });
+                                                                                        toast.success('Message sent! Opening inbox...');
+                                                                                        router.push(`/admin/inbox?msgId=${res.data.id}`);
+                                                                                    } catch (err: any) {
+                                                                                        toast.error(err.message || 'Failed to send message');
+                                                                                    }
+                                                                                }
+                                                                            }}
                                                                             className={`rounded-xl transition-all ${user.message_status === 'open'
                                                                                 ? 'bg-primary/10 text-primary hover:bg-primary/20 animate-pulse'
-                                                                                : 'text-muted-foreground hover:bg-muted opacity-40'
+                                                                                : user.latest_message_id
+                                                                                    ? 'text-muted-foreground hover:bg-muted opacity-60'
+                                                                                    : 'text-primary/40 hover:bg-primary/5 hover:text-primary hover:opacity-100'
                                                                                 }`}
                                                                         >
                                                                             <MessageSquare className="w-4 h-4" />
@@ -203,7 +221,7 @@ export default function AdminUsersPage() {
                                                                     </div>
                                                                 </TooltipTrigger>
                                                                 <TooltipContent side="left" className="bg-surface border-border/50 text-[10px] font-black uppercase tracking-widest p-2 px-3 rounded-lg shadow-xl">
-                                                                    {!user.latest_message_id ? "User must message you first" : user.message_status === 'open' ? "Active Request - Reply Now" : "Conversation History"}
+                                                                    {!user.latest_message_id ? "Start New Conversation" : user.message_status === 'open' ? "Active Request - Reply Now" : "Conversation History"}
                                                                 </TooltipContent>
                                                             </Tooltip>
                                                         </TooltipProvider>

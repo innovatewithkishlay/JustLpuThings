@@ -171,15 +171,31 @@ export default function AdminUserDetailPage() {
 
                                 <Button
                                     variant="outline"
-                                    disabled={!profile.latest_message_id}
-                                    onClick={() => router.push(`/admin/inbox?msgId=${profile.latest_message_id}`)}
+                                    onClick={async () => {
+                                        if (profile.latest_message_id) {
+                                            router.push(`/admin/inbox?msgId=${profile.latest_message_id}`);
+                                        } else {
+                                            const msg = window.prompt(`Start conversation with ${profile.name || 'this user'}:`);
+                                            if (!msg?.trim()) return;
+                                            try {
+                                                const res = await apiClient<{ success: boolean, data: { id: string } }>(`/admin/users/${profile.id}/message`, {
+                                                    method: 'POST',
+                                                    body: JSON.stringify({ message: msg.trim() })
+                                                });
+                                                toast.success('Message sent! Opening inbox...');
+                                                router.push(`/admin/inbox?msgId=${res.data.id}`);
+                                            } catch (err: any) {
+                                                toast.error(err.message || 'Failed to send message');
+                                            }
+                                        }
+                                    }}
                                     className={`w-full font-bold shadow-sm h-11 gap-2 border-primary/20 ${profile.message_status === 'open' ? 'bg-primary/5 text-primary border-primary/30 animate-pulse' : ''}`}
                                 >
                                     <MessageSquare className="w-4 h-4" />
-                                    {profile.message_status === 'open' ? 'Reply to Request' : profile.latest_message_id ? 'Conversation' : 'Initialization Required'}
+                                    {profile.message_status === 'open' ? 'Reply to Request' : profile.latest_message_id ? 'Conversation' : 'Start Conversation'}
                                 </Button>
                                 {!profile.latest_message_id && (
-                                    <p className="text-[9px] text-muted-foreground italic text-center px-2">User must initiate a conversation before you can message them.</p>
+                                    <p className="text-[9px] text-muted-foreground italic text-center px-2">Click "Start Conversation" to send the first message to this user.</p>
                                 )}
                             </div>
                         )}

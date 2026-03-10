@@ -52,6 +52,7 @@ export class AdminUsersService {
     static async getUserDetailAnalytics(userId: string) {
         // 1. Basic Info & Summary
         const summaryQuery = `
+            SELECT
                 u.id, u.email, u.name, u.role, u.is_blocked, u.created_at,
                 COUNT(DISTINCT mp.material_id) as total_materials_opened,
                 COALESCE(SUM(mp.time_spent), 0) as total_time_spent,
@@ -222,6 +223,42 @@ export class AdminUsersService {
 
             await client.query('COMMIT');
             return true;
+        } catch (error) {
+            await client.query('ROLLBACK');
+            throw error;
+        } finally {
+            client.release();
+        }
+    }
+
+    static async initiateConversation(adminId: string, userId: string, message: string) {
+        const client = await pool.connect();
+        try {
+            await client.query('BEGIN');
+
+            const result = await client.query(
+                `INSERT INTO messages (user_id, content, admin_reply, replied_at, status)
+                 VALUES ($1, $2, $3, now(), 'resolved')
+                 RETURNING id`,
+                [userId, '(Conversation initiated by Admin)', message]
+            );
+
+            const messageId = result.rows[0].id;
+
+            await client.query(
+                `INSERT INTO notifications (user_id, title, body, type)
+                 VALUES ($1, $2, $3, 'reply')`,
+                [userId, 'New message from Admin', message]
+            );
+
+            await client.query(
+                `INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, metadata)
+                 VALUES ($1, $2, $3, $4, $5)`,
+                [adminId, 'INITIATE_CONVERSATION', 'message', messageId, JSON.stringify({ message_length: message.length })]
+            );
+
+            await client.query('COMMIT');
+            return { id: messageId };
         } catch (error) {
             await client.query('ROLLBACK');
             throw error;
