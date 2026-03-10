@@ -63,6 +63,9 @@ interface TelemetryStats {
     visitsToday: number;
     visitsYesterday: number;
     totalUniqueVisitors: number;
+    totalTraffic: number;
+    trafficToday: number;
+    totalSessions: number;
 }
 
 
