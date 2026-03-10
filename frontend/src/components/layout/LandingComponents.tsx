@@ -120,7 +120,7 @@ export function Hero() {
     }
 
     return (
-        <section className="pt-40 pb-24 px-6 text-center relative overflow-hidden">
+        <section className="pt-12 pb-24 px-6 text-center relative overflow-hidden">
             <div className="container mx-auto max-w-6xl flex flex-col items-center relative">
                 <div className="relative space-y-2 mb-10 z-10">
                     {/* <motion.div
