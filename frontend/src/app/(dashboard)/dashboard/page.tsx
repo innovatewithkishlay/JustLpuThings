@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
-import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink } from 'lucide-react'
+import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink, MessageSquare, Send } from 'lucide-react'
 import { WHATSAPP_COMMUNITY_LINK } from '@/lib/constants'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -81,6 +81,31 @@ export default function DashboardPage() {
                             >
                                 <ExternalLink className="w-4 h-4" /> Join WhatsApp Group
                             </a>
+                        </div>
+                    </motion.div>
+
+                    {/* Support / Request Card */}
+                    <motion.div
+                        whileHover={{ y: -4 }}
+                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden group cursor-pointer"
+                        onClick={() => router.push('/dashboard/requests')}
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <MessageSquare className="w-24 h-24 text-primary" />
+                        </div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-5 text-center md:text-left">
+                                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                                    <MessageSquare className="w-7 h-7 text-white" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-heading font-bold text-foreground">Talk to Admin</h3>
+                                    <p className="text-sm text-muted-foreground font-medium">Request new materials, report bugs, or give feedback directly to us.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105">
+                                <Send className="w-4 h-4" /> Start Conversation
+                            </div>
                         </div>
                     </motion.div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

@@ -10,6 +10,7 @@ import { ArrowLeft, User, Mail, ShieldAlert, Activity, BookOpen, Clock, AlertTri
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
+import { MessageSquare, Send } from 'lucide-react'
 
 interface UserProfile {
     id: string;
@@ -18,6 +19,8 @@ interface UserProfile {
     role: string;
     is_blocked: boolean;
     created_at: string;
+    latest_message_id?: string;
+    message_status?: 'open' | 'resolved';
 }
 
 interface UserEngagement {
@@ -156,14 +159,29 @@ export default function AdminUserDetailPage() {
                             {profile.is_blocked ? 'ACCOUNT SUSPENDED' : `${profile.role} CLEARANCE`}
                         </div>
                         {profile.role !== 'ADMIN' && (
-                            <Button
-                                variant={profile.is_blocked ? 'default' : 'destructive'}
-                                onClick={() => blockMutation.mutate(!profile.is_blocked)}
-                                disabled={blockMutation.isPending}
-                                className="w-full font-bold shadow-sm"
-                            >
-                                {profile.is_blocked ? 'Restore Access' : 'Suspend Account'}
-                            </Button>
+                            <div className="flex flex-col gap-2">
+                                <Button
+                                    variant={profile.is_blocked ? 'default' : 'destructive'}
+                                    onClick={() => blockMutation.mutate(!profile.is_blocked)}
+                                    disabled={blockMutation.isPending}
+                                    className="w-full font-bold shadow-sm h-11"
+                                >
+                                    {profile.is_blocked ? 'Restore Access' : 'Suspend Account'}
+                                </Button>
+
+                                <Button
+                                    variant="outline"
+                                    disabled={!profile.latest_message_id}
+                                    onClick={() => router.push(`/admin/inbox?msgId=${profile.latest_message_id}`)}
+                                    className={`w-full font-bold shadow-sm h-11 gap-2 border-primary/20 ${profile.message_status === 'open' ? 'bg-primary/5 text-primary border-primary/30 animate-pulse' : ''}`}
+                                >
+                                    <MessageSquare className="w-4 h-4" />
+                                    {profile.message_status === 'open' ? 'Reply to Request' : profile.latest_message_id ? 'Conversation' : 'Initialization Required'}
+                                </Button>
+                                {!profile.latest_message_id && (
+                                    <p className="text-[9px] text-muted-foreground italic text-center px-2">User must initiate a conversation before you can message them.</p>
+                                )}
+                            </div>
                         )}
                     </div>
                 </div>

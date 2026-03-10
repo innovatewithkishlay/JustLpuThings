@@ -6,10 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { Users, Search, Clock, BookOpen, ChevronRight, Activity } from 'lucide-react'
+import { Users, Search, Clock, BookOpen, ChevronRight, Activity, MessageSquare, Send } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { useRouter } from 'next/navigation'
+import { toast } from 'sonner'
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipProvider,
+    TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 interface UserAnalyticsOverview {
     id: string;
@@ -22,6 +29,8 @@ interface UserAnalyticsOverview {
     total_time_spent: string | number;
     completion_rate: string | number;
     last_active: string | null;
+    latest_message_id?: string;
+    message_status?: 'open' | 'resolved';
 }
 
 const containerVariants = {
@@ -128,7 +137,7 @@ export default function AdminUsersPage() {
                                                 <th className="px-6 py-4 whitespace-nowrap"><div className="flex items-center gap-1.5"><Clock className="w-4 h-4" /> Read Time</div></th>
                                                 <th className="px-6 py-4 whitespace-nowrap">Depth</th>
                                                 <th className="px-6 py-4 whitespace-nowrap"><div className="flex items-center gap-1.5"><Activity className="w-4 h-4" /> Last Ping</div></th>
-                                                <th className="px-6 py-4 rounded-tr-xl"></th>
+                                                <th className="px-6 py-4 rounded-tr-xl">Talk</th>
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-border/40">
@@ -174,10 +183,30 @@ export default function AdminUsersPage() {
                                                     <td className="px-6 py-5 font-mono text-xs text-muted-foreground">
                                                         {user.last_active ? new Date(user.last_active).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Never'}
                                                     </td>
-                                                    <td className="px-6 py-5 text-right">
-                                                        <Button variant="ghost" size="icon" className="group-hover:bg-primary/10 group-hover:text-primary rounded-xl transition-all">
-                                                            <ChevronRight className="w-4 h-4" />
-                                                        </Button>
+                                                    <td className="px-6 py-5">
+                                                        <TooltipProvider>
+                                                            <Tooltip>
+                                                                <TooltipTrigger asChild>
+                                                                    <div onClick={(e) => e.stopPropagation()}>
+                                                                        <Button
+                                                                            variant="ghost"
+                                                                            size="icon"
+                                                                            disabled={!user.latest_message_id}
+                                                                            onClick={() => router.push(`/admin/inbox?msgId=${user.latest_message_id}`)}
+                                                                            className={`rounded-xl transition-all ${user.message_status === 'open'
+                                                                                ? 'bg-primary/10 text-primary hover:bg-primary/20 animate-pulse'
+                                                                                : 'text-muted-foreground hover:bg-muted opacity-40'
+                                                                                }`}
+                                                                        >
+                                                                            <MessageSquare className="w-4 h-4" />
+                                                                        </Button>
+                                                                    </div>
+                                                                </TooltipTrigger>
+                                                                <TooltipContent side="left" className="bg-surface border-border/50 text-[10px] font-black uppercase tracking-widest p-2 px-3 rounded-lg shadow-xl">
+                                                                    {!user.latest_message_id ? "User must message you first" : user.message_status === 'open' ? "Active Request - Reply Now" : "Conversation History"}
+                                                                </TooltipContent>
+                                                            </Tooltip>
+                                                        </TooltipProvider>
                                                     </td>
                                                 </tr>
                                             ))}

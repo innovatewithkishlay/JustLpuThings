@@ -15,7 +15,9 @@ export class AdminUsersService {
                 stats.total_materials_opened,
                 stats.total_time_spent,
                 stats.completion_rate,
-                stats.last_active
+                stats.last_active,
+                msg.latest_message_id,
+                msg.message_status
             FROM users u
             LEFT JOIN LATERAL (
                 SELECT 
@@ -26,6 +28,13 @@ export class AdminUsersService {
                 FROM material_progress
                 WHERE user_id = u.id
             ) stats ON true
+            LEFT JOIN LATERAL (
+                SELECT id as latest_message_id, status as message_status
+                FROM messages
+                WHERE user_id = u.id
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) msg ON true
         `;
 
         const values: any[] = [];
@@ -43,16 +52,24 @@ export class AdminUsersService {
     static async getUserDetailAnalytics(userId: string) {
         // 1. Basic Info & Summary
         const summaryQuery = `
-            SELECT 
                 u.id, u.email, u.name, u.role, u.is_blocked, u.created_at,
                 COUNT(DISTINCT mp.material_id) as total_materials_opened,
                 COALESCE(SUM(mp.time_spent), 0) as total_time_spent,
                 COALESCE(AVG(CAST(mp.last_page AS FLOAT) / NULLIF(mp.total_pages, 0)) * 100, 0) as global_completion_rate,
-                MAX(mp.updated_at) as last_active
+                MAX(mp.updated_at) as last_active,
+                msg.latest_message_id,
+                msg.message_status
             FROM users u
             LEFT JOIN material_progress mp ON u.id = mp.user_id
+            LEFT JOIN LATERAL (
+                SELECT id as latest_message_id, status as message_status
+                FROM messages
+                WHERE user_id = u.id
+                ORDER BY created_at DESC
+                LIMIT 1
+            ) msg ON true
             WHERE u.id = $1
-            GROUP BY u.id
+            GROUP BY u.id, msg.latest_message_id, msg.message_status
         `;
 
         // 2. Per Material Breakdown
@@ -107,7 +124,9 @@ export class AdminUsersService {
                 name: summary.name,
                 role: summary.role,
                 is_blocked: summary.is_blocked,
-                created_at: summary.created_at
+                created_at: summary.created_at,
+                latest_message_id: summary.latest_message_id,
+                message_status: summary.message_status
             },
             engagement: {
                 total_time_spent: summary.total_time_spent,

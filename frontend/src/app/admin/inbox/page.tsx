@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSearchParams } from 'next/navigation'
 import { apiClient } from '@/lib/apiClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -34,9 +35,9 @@ interface AdminNotification {
     target_user_email: string | null
 }
 
-function MessageCard({ msg, onReply }: { msg: AdminMessage; onReply: (id: string, reply: string) => void }) {
+function MessageCard({ msg, onReply, initiallyExpanded = false }: { msg: AdminMessage; onReply: (id: string, reply: string) => void, initiallyExpanded?: boolean }) {
     const [reply, setReply] = useState('')
-    const [expanded, setExpanded] = useState(false)
+    const [expanded, setExpanded] = useState(initiallyExpanded)
 
     const handleReply = () => {
         if (!reply.trim()) return
@@ -116,6 +117,9 @@ function MessageCard({ msg, onReply }: { msg: AdminMessage; onReply: (id: string
 
 export default function AdminInboxPage() {
     const queryClient = useQueryClient()
+    const searchParams = useSearchParams()
+    const msgId = searchParams.get('msgId')
+
     const [filter, setFilter] = useState<'all' | 'open' | 'resolved'>('all')
     const [notifTitle, setNotifTitle] = useState('')
     const [notifBody, setNotifBody] = useState('')
@@ -208,6 +212,7 @@ export default function AdminInboxPage() {
                                         key={msg.id}
                                         msg={msg}
                                         onReply={(id, reply) => replyMutation.mutate({ id, reply })}
+                                        initiallyExpanded={msg.id === msgId}
                                     />
                                 ))}
                             </AnimatePresence>
