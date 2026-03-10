@@ -53,169 +53,155 @@ export default function DashboardPage() {
                         <h1 className="text-3xl md:text-4xl font-heading font-black tracking-tight leading-tight">
                             Academic Progress
                         </h1>
-                        <p className="text-muted-foreground font-medium text-base md:text-lg max-w-2xl mt-1">
-                            Select your active semester to access curated materials. <span className="text-primary/70 italic">Asha karte hai maze kar rahe honge! ✨</span>
+                        <p className="text-muted-foreground font-medium text-sm md:text-base max-w-2xl mt-1">
+                            Select your active semester to access official notes, pyqs and curated materials.
                         </p>
                     </div>
 
-                    {/* WhatsApp Community Invitation Card */}
-                    <motion.div
-                        whileHover={{ y: -4 }}
-                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-[#25D366]/10 via-[#25D366]/5 to-transparent border border-[#25D366]/20 relative overflow-hidden group"
-                    >
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <MessageCircle className="w-24 h-24 text-[#25D366]" />
-                        </div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-5 text-center md:text-left">
-                                <div className="w-14 h-14 rounded-2xl bg-[#25D366] flex items-center justify-center shadow-lg shadow-[#25D366]/20 shrink-0">
-                                    <MessageCircle className="w-7 h-7 text-white fill-current" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-heading font-bold text-foreground">Just LPU Things Community</h3>
-                                    <p className="text-sm text-muted-foreground font-medium">Join 1000+ students for real-time updates and exam help.</p>
-                                </div>
-                            </div>
-                            <a
-                                href={WHATSAPP_COMMUNITY_LINK}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center gap-2 px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-sm font-bold rounded-xl shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105"
-                            >
-                                <ExternalLink className="w-4 h-4" /> Follow Channel
-                            </a>
-                        </div>
-                    </motion.div>
-
-                    {/* Support / Request Card */}
-                    <motion.div
-                        whileHover={{ y: -4 }}
-                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20 relative overflow-hidden group cursor-pointer"
-                        onClick={() => router.push('/dashboard/requests')}
-                    >
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <MessageSquare className="w-24 h-24 text-primary" />
-                        </div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-5 text-center md:text-left">
-                                <div className="w-14 h-14 rounded-2xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
-                                    <MessageSquare className="w-7 h-7 text-white" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-heading font-bold text-foreground">Talk to Admin</h3>
-                                    <p className="text-sm text-muted-foreground font-medium">Request new materials, report bugs, or give feedback directly to us.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105">
-                                <Send className="w-4 h-4" /> Start Conversation
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Feedback Card */}
-                    <motion.div
-                        whileHover={{ y: -4 }}
-                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 relative overflow-hidden group cursor-pointer"
-                        onClick={() => setIsFeedbackOpen(true)}
-                    >
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Sparkles className="w-24 h-24 text-amber-500" />
-                        </div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-5 text-center md:text-left">
-                                <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
-                                    <Heart className="w-7 h-7 text-white fill-current" />
-                                </div>
-                                <div>
-                                    <h3 className="text-xl font-heading font-bold text-foreground">Share Your Love</h3>
-                                    <p className="text-sm text-muted-foreground font-medium">Enjoying the platform? Leave a review and help other students find us.</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all hover:scale-105">
-                                <Sparkles className="w-4 h-4" /> Give Feedback
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    {/* Leaderboard Teaser Card */}
-                    <motion.div
-                        whileHover={{ y: -4 }}
-                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 relative overflow-hidden group cursor-not-allowed"
-                    >
-                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                            <Trophy className="w-24 h-24 text-blue-500" />
-                        </div>
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                            <div className="flex items-center gap-5 text-center md:text-left">
-                                <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
-                                    <Trophy className="w-7 h-7 text-white" />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
-                                        <h3 className="text-xl font-heading font-bold text-foreground">Academic Leaderboard</h3>
-                                        <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">Coming Soon</span>
-                                    </div>
-                                    <p className="text-sm text-muted-foreground font-medium">Get ready to compete with fellow scholars. Top contributors and active learners will be rewarded! 🏆</p>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-2 px-6 py-3 bg-muted text-muted-foreground text-sm font-bold rounded-xl border border-border/50 opacity-60">
-                                <Trophy className="w-4 h-4" /> Stay Tuned
-                            </div>
-                        </div>
-                    </motion.div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1">
                         {isLoading ? (
-                            Array.from({ length: 8 }).map((_, i) => (
-                                <div key={i} className="h-48 rounded-[24px] bg-muted/20 animate-pulse" />
+                            Array.from({ length: 4 }).map((_, i) => (
+                                <div key={i} className="h-48 rounded-[2rem] bg-muted/20 animate-pulse" />
                             ))
                         ) : (
                             semesters.map((sem: Semester) => (
-                                <motion.div key={sem.number} whileHover={sem.is_active ? { y: -6, scale: 1.02 } : {}}>
+                                <motion.div key={sem.number} whileHover={sem.is_active ? { y: -6 } : {}}>
                                     <Card
                                         onClick={() => handleSemesterClick(sem.number, sem.is_active)}
-                                        className={`relative h-full flex flex-col p-6 rounded-[24px] border soft-shadow transition-all group overflow-hidden ${sem.is_active
-                                            ? 'cursor-pointer bg-surface border-border/60 hover:border-primary/40 hover:shadow-primary/10'
-                                            : 'cursor-not-allowed bg-muted/20 border-border/30 opacity-70 grayscale-[0.5]'
+                                        className={`relative h-64 flex flex-col p-8 rounded-[2.5rem] border transition-all group overflow-hidden ${sem.is_active
+                                            ? 'cursor-pointer bg-surface border-border/40 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5'
+                                            : 'cursor-not-allowed bg-muted/5 border-border/20 opacity-60 grayscale-[0.8]'
                                             }`}
                                     >
-                                        {sem.is_active && (
-                                            <div className="absolute right-0 bottom-0 w-40 h-40 bg-primary/5 rounded-full blur-3xl -mr-10 -mb-10 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
-                                        )}
-
                                         <div className="flex items-start justify-between mb-8 relative z-10">
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-colors duration-500 ${sem.is_active
-                                                ? 'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary/20'
-                                                : 'bg-muted border-border/50 text-muted-foreground'
+                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 ${sem.is_active
+                                                ? 'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary group-hover:text-white'
+                                                : 'bg-muted/50 border-border/50 text-muted-foreground'
                                                 }`}>
                                                 {sem.is_active ? <BookOpen className="w-7 h-7" /> : <Lock className="w-6 h-6 opacity-60" />}
                                             </div>
 
-                                            {!sem.is_active && (
-                                                <div className="px-3 py-1.5 bg-background/80 backdrop-blur-sm border border-border rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider text-muted-foreground soft-shadow">
-                                                    Coming Soon
+                                            {sem.is_active ? (
+                                                <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-500">
+                                                    Available
                                                 </div>
-                                            )}
-                                            {sem.is_active && (
-                                                <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-500 soft-shadow">
-                                                    Active
+                                            ) : (
+                                                <div className="px-3 py-1 bg-muted/50 border border-border/50 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                                                    Locked
                                                 </div>
                                             )}
                                         </div>
 
                                         <div className="relative z-10 mt-auto">
-                                            <h3 className={`font-heading font-bold text-2xl transition-colors ${sem.is_active ? 'group-hover:text-primary text-foreground' : 'text-muted-foreground'}`}>
-                                                Semester {sem.number}
+                                            <h3 className={`font-heading font-black text-3xl tracking-tight transition-colors ${sem.is_active ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                                Sem {sem.number}
                                             </h3>
-                                            {sem.is_active && (
-                                                <p className="text-sm text-muted-foreground font-medium mt-2">
-                                                    Explore subjects and materials
-                                                </p>
-                                            )}
+                                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
+                                                {sem.is_active ? 'View Modules →' : 'Opening Soon'}
+                                            </p>
                                         </div>
                                     </Card>
                                 </motion.div>
                             ))
                         )}
+                    </div>
+                </motion.section>
+
+                {/* The Student Lounge - Quick Actions */}
+                <motion.section variants={fadeUp} className="pt-12 border-t border-border/10">
+                    <div className="flex flex-col gap-1 mb-8">
+                        <h2 className="text-xl font-heading font-black tracking-tight uppercase opacity-40">The Student Lounge</h2>
+                        <p className="text-sm text-muted-foreground font-medium italic">Everything else you need while studying.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        {/* WhatsApp Card */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="p-8 rounded-[2.5rem] bg-surface/50 border border-border/40 backdrop-blur-sm relative overflow-hidden group hover:border-[#25D366]/40 transition-all cursor-pointer"
+                            onClick={() => window.open(WHATSAPP_COMMUNITY_LINK, '_blank')}
+                        >
+                            <div className="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
+                                <MessageCircle className="w-32 h-32 text-[#25D366]" />
+                            </div>
+                            <div className="relative z-10 space-y-6">
+                                <div className="w-12 h-12 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center text-[#25D366]">
+                                    <MessageCircle className="w-6 h-6 fill-current" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold text-foreground mb-1">Community</h4>
+                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Join 1000+ students for real-time updates and exam help.</p>
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-[#25D366] flex items-center gap-2">
+                                    Follow Channel <ExternalLink className="w-3 h-3" />
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Talk to Admin Card */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="p-8 rounded-[2.5rem] bg-surface/50 border border-border/40 backdrop-blur-sm relative overflow-hidden group hover:border-primary/40 transition-all cursor-pointer"
+                            onClick={() => router.push('/dashboard/requests')}
+                        >
+                            <div className="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity -rotate-12">
+                                <MessageSquare className="w-32 h-32 text-primary" />
+                            </div>
+                            <div className="relative z-10 space-y-6">
+                                <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
+                                    <MessageSquare className="w-6 h-6" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold text-foreground mb-1">Talk to Admin</h4>
+                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Request new materials, report bugs, or give feedback directly.</p>
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                                    Start Chat <Send className="w-3 h-3" />
+                                </div>
+                            </div>
+                        </motion.div>
+
+                        {/* Share Love Card */}
+                        <motion.div
+                            whileHover={{ y: -4 }}
+                            className="p-8 rounded-[2.5rem] bg-surface/50 border border-border/40 backdrop-blur-sm relative overflow-hidden group hover:border-amber-500/40 transition-all cursor-pointer"
+                            onClick={() => setIsFeedbackOpen(true)}
+                        >
+                            <div className="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-45">
+                                <Heart className="w-32 h-32 text-amber-500" />
+                            </div>
+                            <div className="relative z-10 space-y-6">
+                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
+                                    <Heart className="w-6 h-6 fill-current" />
+                                </div>
+                                <div>
+                                    <h4 className="text-lg font-bold text-foreground mb-1">Share Love</h4>
+                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Enjoying the platform? Leave a review and help us grow.</p>
+                                </div>
+                                <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
+                                    Give Feedback <Sparkles className="w-3 h-3" />
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                </motion.section>
+
+                {/* Leaderboard Teaser Banner */}
+                <motion.section variants={fadeUp} className="pt-6 pb-12">
+                    <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-blue-500/5 to-transparent border border-blue-500/10 relative overflow-hidden group">
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 pointer-events-none opacity-60">
+                            <div className="flex items-center gap-6">
+                                <Trophy className="w-10 h-10 text-blue-500" />
+                                <div>
+                                    <div className="flex items-center gap-3 mb-1">
+                                        <h4 className="text-lg font-bold text-foreground">Academic Leaderboard</h4>
+                                        <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest border border-blue-500/20">Coming Soon</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground font-medium">Top contributors and active learners will be rewarded! 🏆</p>
+                                </div>
+                            </div>
+                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500/50">Keep Studying to Rank Up</div>
+                        </div>
                     </div>
                 </motion.section>
 
