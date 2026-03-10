@@ -5,6 +5,7 @@ import { env } from '../../config/env';
 import { requireAuth, requireAdmin } from '../auth/auth.middleware';
 import { AdminController } from './admin.controller';
 import { MessagesController } from '../messages/messages.controller';
+import { FeedbacksController } from '../feedbacks/feedbacks.controller';
 import { NotificationsController } from '../notifications/notifications.controller';
 import subjectsRouter from './subjects.routes';
 
@@ -65,6 +66,11 @@ router.delete('/messages/:id/reply', MessagesController.deleteReply);
 // --- Notifications (Broadcast / Targeted) ---
 router.get('/notifications', NotificationsController.getAll);
 router.post('/notifications', NotificationsController.send);
+
+// --- Feedbacks Moderation ---
+router.get('/feedbacks', FeedbacksController.getAll);
+router.patch('/feedbacks/:id', FeedbacksController.updateStatus);
+router.delete('/feedbacks/:id', FeedbacksController.delete);
 
 // --- Subject Management ---
 router.use('/subjects', subjectsRouter);

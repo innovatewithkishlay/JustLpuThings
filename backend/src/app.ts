@@ -17,6 +17,7 @@ import discoveryRouter from './modules/discovery/discovery.routes';
 import usersRouter from './modules/users/users.routes';
 import messagesRouter from './modules/messages/messages.routes';
 import notificationsRouter from './modules/notifications/notifications.routes';
+import feedbacksRouter from './modules/feedbacks/feedbacks.routes';
 // import { AnalyticsWorker } from './modules/analytics/analytics.worker';
 import { requestMetrics } from './middlewares/requestMetrics';
 import { visitorTracker } from './middlewares/visitorTracker';
@@ -82,6 +83,7 @@ app.use('/api/v1/users', usersRouter);
 app.use('/api/v1', discoveryRouter);
 app.use('/api/v1/messages', messagesRouter);
 app.use('/api/v1/notifications', notificationsRouter);
+app.use('/api/v1/feedbacks', feedbacksRouter);
 
 // Materials & Dependent Routes
 app.use('/api/v1/materials', materialsRouter);
