@@ -14,7 +14,7 @@ export class MessagesService {
     // User fetches their own messages + replies
     static async getUserMessages(userId: string) {
         const result = await pool.query(
-            `SELECT m.id, m.content, m.status, m.admin_reply, m.replied_at, m.created_at
+            `SELECT m.id, m.content, m.status, m.admin_reply, m.replied_at, m.created_at, m.reply_read_at
              FROM messages m
              WHERE m.user_id = $1
              ORDER BY m.created_at DESC`,
@@ -26,7 +26,7 @@ export class MessagesService {
     // Admin fetches all messages
     static async getAllMessages(status?: string) {
         const result = await pool.query(
-            `SELECT m.id, m.content, m.status, m.admin_reply, m.replied_at, m.created_at,
+            `SELECT m.id, m.content, m.status, m.admin_reply, m.replied_at, m.created_at, m.reply_read_at,
                     u.name AS user_name, u.email AS user_email, u.id AS user_id
              FROM messages m
              JOIN users u ON u.id = m.user_id
@@ -70,5 +70,46 @@ export class MessagesService {
         } finally {
             client.release();
         }
+    // Admin updates a reply (only if not seen)
+    static async updateAdminReply(messageId: string, reply: string) {
+        const result = await pool.query(
+            `UPDATE messages
+             SET admin_reply = $1, replied_at = now()
+             WHERE id = $2 AND reply_read_at IS NULL
+             RETURNING id`,
+            [reply, messageId]
+        );
+
+        if (result.rowCount === 0) {
+            throw new Error('Message not found or reply already seen by student.');
+        }
+        return { success: true };
+    }
+
+    // Admin deletes a reply (only if not seen)
+    static async deleteAdminReply(messageId: string) {
+        const result = await pool.query(
+            `UPDATE messages
+             SET admin_reply = NULL, replied_at = NULL, status = 'open'
+             WHERE id = $1 AND reply_read_at IS NULL
+             RETURNING id`,
+            [messageId]
+        );
+
+        if (result.rowCount === 0) {
+            throw new Error('Message not found or reply already seen by student.');
+        }
+        return { success: true };
+    }
+
+    // Mark replies as read for a user
+    static async markRepliesAsRead(userId: string) {
+        await pool.query(
+            `UPDATE messages
+             SET reply_read_at = now()
+             WHERE user_id = $1 AND admin_reply IS NOT NULL AND reply_read_at IS NULL`,
+            [userId]
+        );
+        return { success: true };
     }
 }

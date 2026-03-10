@@ -45,4 +45,35 @@ export class MessagesController {
             res.json({ success: true });
         } catch (err) { next(err); }
     }
+
+    // PATCH /admin/messages/:id/reply — admin updates reply
+    static async updateReply(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            const { reply } = req.body;
+            if (!reply?.trim()) {
+                return res.status(400).json({ success: false, error: { message: 'Reply content is required.' } });
+            }
+            await MessagesService.updateAdminReply(id, reply.trim());
+            res.json({ success: true });
+        } catch (err) { next(err); }
+    }
+
+    // DELETE /admin/messages/:id/reply — admin deletes reply
+    static async deleteReply(req: Request, res: Response, next: NextFunction) {
+        try {
+            const id = req.params.id as string;
+            await MessagesService.deleteAdminReply(id);
+            res.json({ success: true });
+        } catch (err) { next(err); }
+    }
+
+    // POST /messages/mark-read — user marks their replies as seen
+    static async markRead(req: Request, res: Response, next: NextFunction) {
+        try {
+            const userId = (req as any).user.userId;
+            await MessagesService.markRepliesAsRead(userId);
+            res.json({ success: true });
+        } catch (err) { next(err); }
+    }
 }

@@ -59,6 +59,8 @@ router.delete('/users/:id', AdminController.deleteUser);
 // --- Messages Inbox (User Requests) ---
 router.get('/messages', MessagesController.getAll);
 router.post('/messages/:id/reply', MessagesController.reply);
+router.patch('/messages/:id/reply', MessagesController.updateReply);
+router.delete('/messages/:id/reply', MessagesController.deleteReply);
 
 // --- Notifications (Broadcast / Targeted) ---
 router.get('/notifications', NotificationsController.getAll);
