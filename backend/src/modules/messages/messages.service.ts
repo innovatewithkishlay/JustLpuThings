@@ -70,6 +70,8 @@ export class MessagesService {
         } finally {
             client.release();
         }
+    }
+
     // Admin updates a reply (only if not seen)
     static async updateAdminReply(messageId: string, reply: string) {
         const result = await pool.query(
