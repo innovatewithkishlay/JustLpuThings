@@ -412,11 +412,12 @@ export default function AdminDashboard() {
                                             </div>
                                         </div>
 
-                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
                                             {[
                                                 { label: 'Total Nodes', val: stats?.totalMaterials || 0, icon: Library, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-                                                { label: 'Today Visits', val: stats?.visitsToday || 0, icon: BarChart3, color: 'text-amber-500', bg: 'bg-amber-500/10', sub: `Yesterday: ${stats?.visitsYesterday || 0}` },
-                                                { label: 'Unique Reach', val: stats?.totalUniqueVisitors || 0, icon: Fingerprint, color: 'text-purple-500', bg: 'bg-purple-500/10', sub: 'Lifetime' },
+                                                { label: 'Full Visits', val: stats?.totalSessions || 0, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10', sub: 'Lifetime Sessions' },
+                                                { label: 'Today Traffic', val: stats?.trafficToday || 0, icon: BarChart3, color: 'text-amber-500', bg: 'bg-amber-500/10', sub: `Unique: ${stats?.visitsToday || 0}` },
+                                                { label: 'Unique Reach', val: stats?.totalUniqueVisitors || 0, icon: Fingerprint, color: 'text-purple-500', bg: 'bg-purple-500/10', sub: 'Total Individuals' },
                                                 { label: 'Security Alerts', val: stats?.flaggedUsers || 0, icon: ShieldAlert, color: 'text-rose-500', bg: 'bg-rose-500/10' },
                                             ].map((stat, i) => (
                                                 <Card key={i} className="border-none shadow-premium bg-surface/50 backdrop-blur-xl rounded-[32px] overflow-hidden group hover:ring-1 ring-primary/20 transition-all">

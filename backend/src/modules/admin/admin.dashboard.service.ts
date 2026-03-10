@@ -28,6 +28,25 @@ export class AdminDashboardService {
                 SELECT COUNT(DISTINCT ip_hash) as total 
                 FROM visitor_logs
             ),
+            total_traffic AS (
+                SELECT COUNT(*) as total FROM visitor_logs
+            ),
+            traffic_today AS (
+                SELECT COUNT(*) as total FROM visitor_logs WHERE visited_at >= CURRENT_DATE
+            ),
+            sessions AS (
+                -- Identify session starts (gap > 30 minutes)
+                SELECT 
+                    COUNT(*) as total
+                FROM (
+                    SELECT 
+                        ip_hash,
+                        visited_at,
+                        LAG(visited_at) OVER (PARTITION BY ip_hash ORDER BY visited_at) as prev_hit
+                    FROM visitor_logs
+                ) s
+                WHERE prev_hit IS NULL OR visited_at - prev_hit > INTERVAL '30 minutes'
+            ),
             top_mats AS (
                 SELECT m.id, m.title, s.total_views 
                 FROM materials m 
@@ -44,6 +63,9 @@ export class AdminDashboardService {
                 (SELECT total FROM visits_today) as visits_today,
                 (SELECT total FROM visits_yesterday) as visits_yesterday,
                 (SELECT total FROM total_unique_visitors) as total_unique_visitors,
+                (SELECT total FROM total_traffic) as total_traffic,
+                (SELECT total FROM traffic_today) as traffic_today,
+                (SELECT total FROM sessions) as total_sessions,
                 (SELECT json_agg(top_mats) FROM top_mats) as top_materials;
 
         `;
@@ -60,6 +82,9 @@ export class AdminDashboardService {
             visitsToday: parseInt(row.visits_today || 0, 10),
             visitsYesterday: parseInt(row.visits_yesterday || 0, 10),
             totalUniqueVisitors: parseInt(row.total_unique_visitors || 0, 10),
+            totalTraffic: parseInt(row.total_traffic || 0, 10),
+            trafficToday: parseInt(row.traffic_today || 0, 10),
+            totalSessions: parseInt(row.total_sessions || 0, 10),
             top5Materials: (row.top_materials || []).map((m: any) => ({
                 materialId: m.id,
                 title: m.title,
