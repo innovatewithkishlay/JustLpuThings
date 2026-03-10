@@ -3,12 +3,14 @@
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/card'
-import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink, MessageSquare, Send } from 'lucide-react'
+import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink, MessageSquare, Send, Heart, Trophy } from 'lucide-react'
 import { WHATSAPP_COMMUNITY_LINK } from '@/lib/constants'
 import { useAuth } from '@/contexts/AuthContext'
 
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
+import { FeedbackModal } from '@/components/modals/FeedbackModal'
+import { useState } from 'react'
 
 const fadeUp = {
     hidden: { opacity: 0, y: 20 },
@@ -27,6 +29,7 @@ interface Semester {
 export default function DashboardPage() {
     const router = useRouter()
     const { user } = useAuth()
+    const [isFeedbackOpen, setIsFeedbackOpen] = useState(false)
 
     const { data: semesters = [], isLoading } = useQuery({
         queryKey: ["semesters"],
@@ -79,7 +82,7 @@ export default function DashboardPage() {
                                 rel="noopener noreferrer"
                                 className="flex items-center gap-2 px-6 py-3 bg-[#25D366] hover:bg-[#20ba59] text-white text-sm font-bold rounded-xl shadow-lg shadow-[#25D366]/20 transition-all hover:scale-105"
                             >
-                                <ExternalLink className="w-4 h-4" /> Join WhatsApp Group
+                                <ExternalLink className="w-4 h-4" /> Follow Channel
                             </a>
                         </div>
                     </motion.div>
@@ -105,6 +108,58 @@ export default function DashboardPage() {
                             </div>
                             <div className="flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-105">
                                 <Send className="w-4 h-4" /> Start Conversation
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Feedback Card */}
+                    <motion.div
+                        whileHover={{ y: -4 }}
+                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent border border-amber-500/20 relative overflow-hidden group cursor-pointer"
+                        onClick={() => setIsFeedbackOpen(true)}
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Sparkles className="w-24 h-24 text-amber-500" />
+                        </div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-5 text-center md:text-left">
+                                <div className="w-14 h-14 rounded-2xl bg-amber-500 flex items-center justify-center shadow-lg shadow-amber-500/20 shrink-0">
+                                    <Heart className="w-7 h-7 text-white fill-current" />
+                                </div>
+                                <div>
+                                    <h3 className="text-xl font-heading font-bold text-foreground">Share Your Love</h3>
+                                    <p className="text-sm text-muted-foreground font-medium">Enjoying the platform? Leave a review and help other students find us.</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold rounded-xl shadow-lg shadow-amber-500/20 transition-all hover:scale-105">
+                                <Sparkles className="w-4 h-4" /> Give Feedback
+                            </div>
+                        </div>
+                    </motion.div>
+
+                    {/* Leaderboard Teaser Card */}
+                    <motion.div
+                        whileHover={{ y: -4 }}
+                        className="mb-12 p-6 rounded-[2rem] bg-gradient-to-r from-blue-500/10 via-blue-500/5 to-transparent border border-blue-500/20 relative overflow-hidden group cursor-not-allowed"
+                    >
+                        <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                            <Trophy className="w-24 h-24 text-blue-500" />
+                        </div>
+                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                            <div className="flex items-center gap-5 text-center md:text-left">
+                                <div className="w-14 h-14 rounded-2xl bg-blue-500 flex items-center justify-center shadow-lg shadow-blue-500/20 shrink-0">
+                                    <Trophy className="w-7 h-7 text-white" />
+                                </div>
+                                <div>
+                                    <div className="flex items-center gap-2 mb-1 justify-center md:justify-start">
+                                        <h3 className="text-xl font-heading font-bold text-foreground">Academic Leaderboard</h3>
+                                        <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase tracking-widest border border-blue-500/20">Coming Soon</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground font-medium">Get ready to compete with fellow scholars. Top contributors and active learners will be rewarded! 🏆</p>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 px-6 py-3 bg-muted text-muted-foreground text-sm font-bold rounded-xl border border-border/50 opacity-60">
+                                <Trophy className="w-4 h-4" /> Stay Tuned
                             </div>
                         </div>
                     </motion.div>
@@ -165,6 +220,11 @@ export default function DashboardPage() {
                 </motion.section>
 
             </motion.div>
+
+            <FeedbackModal
+                isOpen={isFeedbackOpen}
+                onClose={() => setIsFeedbackOpen(false)}
+            />
         </div>
     )
 }

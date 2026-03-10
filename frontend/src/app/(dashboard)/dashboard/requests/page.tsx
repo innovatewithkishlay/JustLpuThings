@@ -15,6 +15,7 @@ interface Message {
     status: 'open' | 'resolved'
     admin_reply: string | null
     replied_at: string | null
+    reply_read_at: string | null
     created_at: string
 }
 
@@ -24,7 +25,14 @@ export default function RequestsPage() {
 
     const { data: messages = [], isLoading } = useQuery({
         queryKey: ['messages', 'mine'],
-        queryFn: () => apiClient<Message[]>('/messages/mine'),
+        queryFn: async () => {
+            const data = await apiClient<Message[]>('/messages/mine');
+            // If there are unread replies, mark them as read
+            if (data?.some(m => m.admin_reply && !m.reply_read_at)) {
+                apiClient('/messages/mark-read', { method: 'POST' }).catch(console.error);
+            }
+            return data;
+        },
     })
 
     const sendMutation = useMutation({

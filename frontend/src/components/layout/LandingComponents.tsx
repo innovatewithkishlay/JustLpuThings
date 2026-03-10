@@ -7,6 +7,8 @@ import { useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useQuery } from '@tanstack/react-query'
+import { apiClient } from '@/lib/apiClient'
 import {
     Play,
     ExternalLink,
@@ -555,10 +557,15 @@ export function Experience() {
 }
 
 export function StudentTestimonials() {
-    type Bubble = { text: string; blurNum?: string }
-    type Card = { bubbles: Bubble[] }
+    const { data: dynamicFeedbacks = [] } = useQuery({
+        queryKey: ["public-feedbacks"],
+        queryFn: () => apiClient<any[]>('/feedbacks/public').then((res: any) => res || [])
+    })
 
-    const row1: Card[] = [
+    type Bubble = { text: string; blurNum?: string }
+    type CardType = { bubbles: Bubble[]; name?: string }
+
+    const staticRow1: CardType[] = [
         {
             bubbles: [
                 { text: "Bhaiya aap hi hai na youtube pe jo padhate hai" },
@@ -576,26 +583,10 @@ export function StudentTestimonials() {
                 { text: "OST exam mein exact wahi questions the jo video mein explain kiye the! CGPA ", blurNum: "8.7" },
                 { text: "🎉 Thank you bhaiya!" }
             ]
-        },
-        {
-            bubbles: [
-                { text: "Notes + videos = perfect combo 🔥" },
-                { text: "Koi aur platform nahi hai aisa for LPU students 💪" }
-            ]
-        },
-        {
-            bubbles: [
-                { text: "Pehle kuch samajh nahi aata tha CSE110 mein... ab sab crystal clear hai! Thank you so much 🙏" },
-            ]
-        },
-        {
-            bubbles: [
-                { text: "MTH165 waale notes life saver the. Exam se ek raat pehle padha aur sab cover ho gaya 😭❤️" },
-            ]
-        },
+        }
     ]
 
-    const row2: Card[] = [
+    const staticRow2: CardType[] = [
         {
             bubbles: [
                 { text: "Thank you aapki wajah se mera first semister me 8 cgpa bana ❤️" },
@@ -612,23 +603,21 @@ export function StudentTestimonials() {
                 { text: "Aapke notes se exam crack kiya! Reg: ", blurNum: "12XXXXX" },
                 { text: "First time full A grade 🎉🎉" }
             ]
-        },
-        {
-            bubbles: [
-                { text: "Seriously ye platform chahiye tha sabko. Sab kuch ek jagah, clean aur fast. Love it 🙌" }
-            ]
-        },
-        {
-            bubbles: [
-                { text: "ECE249 waala video dekh ke lab exam confident feel hua pehli baar. Thank you bhaiya 🙏" }
-            ]
-        },
-        {
-            bubbles: [
-                { text: "Bhai same aya tha paper! Puri raat notes padhe JustLPUThings pe aur sab set ho gaya 😭🔥" }
-            ]
-        },
+        }
     ]
+
+    // Map dynamic feedbacks to card format
+    const dynamicCards: CardType[] = dynamicFeedbacks.map((f: any) => ({
+        name: f.user_name,
+        bubbles: [
+            { text: f.content }
+        ]
+    }))
+
+    // Combine and distribute
+    const allCards = [...dynamicCards, ...staticRow1, ...staticRow2]
+    const row1 = allCards.filter((_, i) => i % 2 === 0)
+    const row2 = allCards.filter((_, i) => i % 2 !== 0)
 
     /* Floating decorative number pills */
     const floaters = [
@@ -640,16 +629,23 @@ export function StudentTestimonials() {
         { val: "❤️ Thanks", x: "42%", y: "15%", delay: "1.8s", dur: "7.5s" },
     ]
 
-    function WaCard({ card }: { card: Card }) {
+    function WaCard({ card }: { card: CardType }) {
         return (
             <div className="flex-shrink-0 w-[300px] mx-3 rounded-[20px] bg-[#111b21] border border-white/[0.06] p-4 space-y-2 shadow-2xl cursor-default select-none"
                 style={{ willChange: 'transform' }}>
-                {/* Blurred identity bar */}
                 <div className="flex items-center gap-2 mb-3">
-                    <div className="w-6 h-6 rounded-full bg-white/10 flex-shrink-0" />
-                    <div className="flex gap-1.5">
-                        <div className="h-2 w-10 rounded-full bg-white/20 blur-[3px]" />
-                        <div className="h-2 w-6 rounded-full bg-white/10 blur-[3px]" />
+                    <div className="w-6 h-6 rounded-full bg-primary/20 flex-shrink-0 flex items-center justify-center text-[10px] font-bold text-primary">
+                        {card.name ? card.name[0].toUpperCase() : <div className="w-3 h-3 rounded-full bg-white/10" />}
+                    </div>
+                    <div className="flex flex-col gap-0.5">
+                        {card.name ? (
+                            <span className="text-[11px] font-bold text-white/50">{card.name}</span>
+                        ) : (
+                            <div className="flex gap-1.5">
+                                <div className="h-2 w-10 rounded-full bg-white/20 blur-[3px]" />
+                                <div className="h-2 w-6 rounded-full bg-white/10 blur-[3px]" />
+                            </div>
+                        )}
                     </div>
                 </div>
                 {card.bubbles.map((b, i) => (
@@ -665,16 +661,13 @@ export function StudentTestimonials() {
         )
     }
 
-    /* duplicate for seamless loop */
     const allRow1 = [...row1, ...row1]
     const allRow2 = [...row2, ...row2]
 
     return (
         <section className="py-24 overflow-hidden relative">
-            {/* Subtle section gradient */}
             <div className="absolute inset-0 bg-gradient-to-b from-transparent via-primary/[0.025] to-transparent pointer-events-none" />
 
-            {/* Floating decorative number pills */}
             {floaters.map((f, i) => (
                 <div
                     key={i}
@@ -689,7 +682,6 @@ export function StudentTestimonials() {
                 </div>
             ))}
 
-            {/* Header */}
             <div className="container mx-auto max-w-6xl px-6 mb-12 relative z-10">
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
@@ -705,12 +697,11 @@ export function StudentTestimonials() {
                         What students are saying
                     </h2>
                     <p className="text-muted-foreground text-base max-w-md mx-auto">
-                        Not testimonials we wrote — actual WhatsApp messages from students who've been there.
+                        Not testimonials we wrote — actual {dynamicFeedbacks.length > 0 ? 'reviews' : 'WhatsApp messages'} from students who've been there.
                     </p>
                 </motion.div>
             </div>
 
-            {/* Row 1 — left */}
             <div className="relative mb-4 z-10"
                 style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 100px, black calc(100% - 100px), transparent 100%)' }}>
                 <div className="flex marquee-left" style={{ width: 'max-content', willChange: 'transform' }}>
@@ -718,7 +709,6 @@ export function StudentTestimonials() {
                 </div>
             </div>
 
-            {/* Row 2 — right */}
             <div className="relative z-10"
                 style={{ maskImage: 'linear-gradient(to right, transparent 0px, black 100px, black calc(100% - 100px), transparent 100%)' }}>
                 <div className="flex marquee-right" style={{ width: 'max-content', willChange: 'transform' }}>
@@ -746,7 +736,7 @@ export function StudentTestimonials() {
                         </div>
                         <Link href={WHATSAPP_COMMUNITY_LINK} target="_blank">
                             <Button className="h-14 px-8 rounded-2xl bg-[#25D366] hover:bg-[#20ba59] text-white font-bold shadow-xl shadow-[#25D366]/20 transition-all hover:scale-105">
-                                <MessageCircle className="mr-2 w-5 h-5 fill-current" /> Join 1000+ Students
+                                <MessageCircle className="mr-2 w-5 h-5 fill-current" /> Follow WhatsApp Channel 🌍🤳
                             </Button>
                         </Link>
                     </div>

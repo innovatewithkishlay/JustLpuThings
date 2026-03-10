@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2, Trash2, Edit3, ExternalLink, Check, AlertCircle, Info, LayoutDashboard, Library, Settings2, CloudUpload, ChevronRight, Menu, X, ArrowUpRight, BarChart3, Fingerprint } from 'lucide-react'
+import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2, Trash2, Edit3, ExternalLink, Check, AlertCircle, Info, LayoutDashboard, Library, Settings2, CloudUpload, ChevronRight, Menu, X, ArrowUpRight, BarChart3, Fingerprint, Heart } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -374,6 +374,14 @@ export default function AdminDashboard() {
                     </div>
 
                     <div className="p-6 border-t border-border/40 space-y-4">
+                        <Button
+                            onClick={() => router.push('/admin/feedbacks')}
+                            variant="outline"
+                            className={`w-full h-12 rounded-2xl border-border/50 hover:border-amber-500/50 gap-3 font-black text-[10px] uppercase tracking-widest transition-all ${isNavCollapsed ? 'px-0 justify-center' : 'px-4'}`}
+                        >
+                            <Heart className="w-4 h-4 text-amber-500 fill-current" />
+                            {!isNavCollapsed && <span>Feedbacks</span>}
+                        </Button>
                         <Button
                             onClick={() => router.push('/admin/users')}
                             variant="outline"

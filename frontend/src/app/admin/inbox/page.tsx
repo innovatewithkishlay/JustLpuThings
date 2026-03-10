@@ -7,7 +7,7 @@ import { apiClient } from '@/lib/apiClient'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
     Inbox, Loader2, CheckCircle2, Clock, Send,
-    User, MessageSquare, Megaphone, AlertTriangle, X
+    User, MessageSquare, Megaphone, AlertTriangle, X, Edit2, Trash2, Check, CornerDownRight
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
@@ -23,6 +23,7 @@ interface AdminMessage {
     user_name: string
     user_email: string
     user_id: string
+    reply_read_at: string | null
 }
 
 interface AdminNotification {
@@ -39,11 +40,20 @@ function MessageCard({ msg, onReply, initiallyExpanded = false }: { msg: AdminMe
     const [reply, setReply] = useState('')
     const [expanded, setExpanded] = useState(initiallyExpanded)
 
+    const [isEditing, setIsEditing] = useState(false)
+
     const handleReply = () => {
         if (!reply.trim()) return
         onReply(msg.id, reply.trim())
         setReply('')
         setExpanded(false)
+        setIsEditing(false)
+    }
+
+    const startEditing = () => {
+        setReply(msg.admin_reply || '')
+        setIsEditing(true)
+        setExpanded(true)
     }
 
     return (
@@ -77,32 +87,63 @@ function MessageCard({ msg, onReply, initiallyExpanded = false }: { msg: AdminMe
                     {formatDistanceToNow(new Date(msg.created_at), { addSuffix: true })}
                 </p>
 
-                {msg.admin_reply && (
-                    <div className="mt-3 bg-primary/5 border border-primary/10 rounded-xl p-3">
+                {msg.admin_reply && !isEditing && (
+                    <div className="mt-3 bg-primary/5 border border-primary/10 rounded-xl p-3 relative group/reply">
                         <p className="text-[10px] font-bold text-primary/70 uppercase tracking-widest mb-1">Your Reply</p>
                         <p className="text-xs text-foreground/80">{msg.admin_reply}</p>
+
+                        {/* Edit/Delete Actions - Only if not seen */}
+                        {!msg.reply_read_at && (
+                            <div className="absolute top-2 right-2 flex gap-1 opacity-0 group-hover/reply:opacity-100 transition-opacity">
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="w-7 h-7 rounded-lg hover:bg-primary/20 hover:text-primary"
+                                    onClick={startEditing}
+                                >
+                                    <Edit2 className="w-3.5 h-3.5" />
+                                </Button>
+                                <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    className="w-7 h-7 rounded-lg hover:bg-red-500/20 hover:text-red-500"
+                                    onClick={() => onReply(msg.id, 'DELETE_REPLY')}
+                                >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                </Button>
+                            </div>
+                        )}
+                        {msg.reply_read_at && (
+                            <div className="absolute top-2 right-2 flex items-center gap-1.5 text-[9px] font-bold text-emerald-500/40 uppercase tracking-tighter">
+                                <CheckCircle2 className="w-3 h-3" /> Seen
+                            </div>
+                        )}
                     </div>
                 )}
 
-                {msg.status === 'open' && (
+                {(msg.status === 'open' || isEditing) && (
                     <div className="mt-3">
-                        {!expanded ? (
+                        {!expanded && !isEditing ? (
                             <Button size="sm" variant="outline" className="rounded-xl text-xs h-8" onClick={() => setExpanded(true)}>
                                 <MessageSquare className="w-3 h-3 mr-1.5" /> Reply
                             </Button>
                         ) : (
                             <div className="space-y-2">
-                                <textarea
-                                    value={reply}
-                                    onChange={(e) => setReply(e.target.value)}
-                                    placeholder="Type your reply..."
-                                    className="w-full bg-background border border-border/50 rounded-xl p-3 text-sm resize-none h-24 outline-none focus:border-primary/40 transition-colors"
-                                />
+                                <div className="relative">
+                                    <textarea
+                                        value={reply}
+                                        onChange={(e) => setReply(e.target.value)}
+                                        placeholder={isEditing ? "Edit your reply..." : "Type your reply..."}
+                                        className="w-full bg-background border border-border/50 rounded-xl p-3 pr-10 text-sm resize-none h-24 outline-none focus:border-primary/40 transition-colors"
+                                        autoFocus
+                                    />
+                                    {isEditing && <div className="absolute top-3 right-3 text-primary/20"><Edit2 className="w-4 h-4" /></div>}
+                                </div>
                                 <div className="flex gap-2">
-                                    <Button size="sm" className="rounded-xl gap-1.5 text-xs h-8" onClick={handleReply} disabled={!reply.trim()}>
-                                        <Send className="w-3 h-3" /> Send Reply
+                                    <Button size="sm" className="rounded-xl gap-1.5 text-xs h-8" onClick={handleReply} disabled={!reply.trim() || reply.trim() === msg.admin_reply}>
+                                        <Send className="w-3 h-3" /> {isEditing ? 'Update Reply' : 'Send Reply'}
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="rounded-xl text-xs h-8" onClick={() => setExpanded(false)}>
+                                    <Button size="sm" variant="ghost" className="rounded-xl text-xs h-8" onClick={() => { setExpanded(false); setIsEditing(false); }}>
                                         <X className="w-3 h-3" />
                                     </Button>
                                 </div>
@@ -136,13 +177,23 @@ export default function AdminInboxPage() {
     })
 
     const replyMutation = useMutation({
-        mutationFn: ({ id, reply }: { id: string; reply: string }) =>
-            apiClient(`/admin/messages/${id}/reply`, { method: 'POST', body: JSON.stringify({ reply }) }),
-        onSuccess: () => {
-            toast.success('Reply sent! User has been notified.')
+        mutationFn: ({ id, reply }: { id: string; reply: string }) => {
+            if (reply === 'DELETE_REPLY') {
+                return apiClient(`/admin/messages/${id}/reply`, { method: 'DELETE' });
+            }
+            // Use PATCH if there's already a reply (editing)
+            const method = messages.find(m => m.id === id)?.admin_reply ? 'PATCH' : 'POST';
+            return apiClient(`/admin/messages/${id}/reply`, {
+                method,
+                body: JSON.stringify({ reply })
+            });
+        },
+        onSuccess: (_, variables) => {
+            const isDelete = variables.reply === 'DELETE_REPLY';
+            toast.success(isDelete ? 'Reply deleted.' : 'Reply updated!');
             queryClient.invalidateQueries({ queryKey: ['admin', 'messages'] })
         },
-        onError: () => toast.error('Failed to send reply.'),
+        onError: (err: any) => toast.error(err?.message || 'Action failed.'),
     })
 
     const broadcastMutation = useMutation({

@@ -45,7 +45,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
 
                         {/* Tooltip Label */}
                         <span className="absolute right-full mr-4 px-4 py-2 bg-foreground text-background text-[10px] font-bold uppercase tracking-widest rounded-xl opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none shadow-xl border border-border/10">
-                            Join Community
+                            Follow WhatsApp Channel 🌍🤳
                         </span>
 
                         {/* Ring Pulse Effect */}
