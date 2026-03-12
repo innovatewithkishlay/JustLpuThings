@@ -11,7 +11,7 @@ export const setAuthCookies = (res: Response, access: string, refresh: string, r
     const cookieOptions = {
         httpOnly: true,
         secure: isProd,
-        sameSite: isProd ? 'none' as const : 'lax' as const,
+        sameSite: 'lax' as const, // Lax is more compatible with Brave/Safari while staying secure on the same registrable domain
         path: '/'
     };
 

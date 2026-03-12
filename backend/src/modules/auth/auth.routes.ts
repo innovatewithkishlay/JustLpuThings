@@ -4,6 +4,7 @@ import { requireAuth } from './auth.middleware';
 import passport from './google.strategy';
 import { AuthService } from './auth.service';
 import { env } from '../../config/env';
+import { setAuthCookies } from './auth.utils';
 import ms from 'ms';
 
 const router = Router();
@@ -28,24 +29,16 @@ router.get('/callback/google',
     async (req, res: Response) => {
         try {
             // passport sets req.user to the object returned by done() in google.strategy
-            const user = req.user as unknown as { id: string; role: string };
+            const user = req.user as unknown as { id: string; role: 'USER' | 'ADMIN' };
             const tokens = await AuthService.generateTokens(user.id, user.role);
 
-            const isProd = env.NODE_ENV === 'production';
-            const cookieOpts = {
-                httpOnly: true,
-                secure: isProd,
-                sameSite: isProd ? 'none' as const : 'lax' as const,
-                path: '/'
-            };
-
-            res.cookie('accessToken', tokens.accessToken, { ...cookieOpts, maxAge: Number(ms(env.JWT_ACCESS_EXPIRES as Parameters<typeof ms>[0])) });
-            res.cookie('refreshToken', tokens.refreshToken, { ...cookieOpts, maxAge: Number(ms(env.JWT_REFRESH_EXPIRES as Parameters<typeof ms>[0])) });
-            res.cookie('refreshFamily', tokens.refreshFamilyId, { ...cookieOpts, maxAge: Number(ms(env.JWT_REFRESH_EXPIRES as Parameters<typeof ms>[0])) });
+            // Use the standard utility to set cookies consistently
+            setAuthCookies(res, tokens.accessToken, tokens.refreshToken, tokens.refreshFamilyId);
 
             // Redirect browser to the Next.js dashboard
             res.redirect(`${env.FRONTEND_URL}/dashboard`);
-        } catch {
+        } catch (error) {
+            console.error('[AUTH:OAUTH] Callback error:', error);
             res.redirect(`${env.FRONTEND_URL}/?error=oauth_failed`);
         }
     }

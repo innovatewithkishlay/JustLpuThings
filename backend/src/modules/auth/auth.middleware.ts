@@ -24,37 +24,53 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         let token = req.cookies?.accessToken;
         const refreshToken = req.cookies?.refreshToken;
 
-        // If no access token but refresh token exists, attempt silent refresh
-        if (!token && refreshToken) {
+        // Helper to attempt refreshing tokens
+        const tryRefresh = async () => {
+            if (!refreshToken) return null;
             try {
-                const tokens = await AuthService.refresh(refreshToken);
-                setAuthCookies(res, tokens.accessToken, tokens.refreshToken, tokens.refreshFamilyId);
-                token = tokens.accessToken; // Use the new token for this request
-            } catch (refreshError) {
-                // Refresh failed (expired or revoked), proceed to standard unauthorized handling
+                const refreshed = await AuthService.refresh(refreshToken);
+                setAuthCookies(res, refreshed.accessToken, refreshed.refreshToken, refreshed.refreshFamilyId);
+                return refreshed.accessToken;
+            } catch {
+                return null;
             }
+        };
+
+        // Case 1: Token is entirely missing - try refresh immediately
+        if (!token && refreshToken) {
+            token = await tryRefresh();
         }
 
         if (!token) {
             return res.status(401).json({ success: false, error: { message: 'Authentication required' } });
         }
 
-        const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
+        // Case 2: Token is present - verify it
+        try {
+            const decoded = jwt.verify(token, env.JWT_ACCESS_SECRET) as TokenPayload;
 
-        // Check DB level account block
-        const dbUser = await pool.query('SELECT is_blocked FROM users WHERE id = $1', [decoded.userId]);
-        if (!dbUser.rows.length || dbUser.rows[0].is_blocked) {
-            return res.status(403).json({
-                success: false,
-                error: { message: 'Account suspended. Please contact admin at kkishlay502@gmail.com for restoration.' }
-            });
+            // Check DB level account block
+            const dbUser = await pool.query('SELECT is_blocked FROM users WHERE id = $1', [decoded.userId]);
+            if (!dbUser.rows.length || dbUser.rows[0].is_blocked) {
+                return res.status(403).json({
+                    success: false,
+                    error: { message: 'Account suspended. Please contact admin at kkishlay502@gmail.com for restoration.' }
+                });
+            }
+
+            req.user = decoded;
+            return next();
+        } catch (jwtError) {
+            // Token was present but invalid/expired - try one last refresh
+            const refreshedToken = await tryRefresh();
+            if (refreshedToken) {
+                const decoded = jwt.verify(refreshedToken, env.JWT_ACCESS_SECRET) as TokenPayload;
+                req.user = decoded;
+                return next();
+            }
+            throw jwtError; // If refresh also fails, fall through to 401
         }
-
-        req.user = decoded;
-        next();
     } catch (error) {
-        // If JWT verify fails (e.g. expired), but we have a refresh token, we technically already tried above
-        // but if the token was present but invalid/expired, we still want to clear it and try refresh if potential.
         res.status(401).json({ success: false, error: { message: 'Invalid or expired token' } });
     }
 };
