@@ -54,8 +54,30 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
     const queryClient = useQueryClient();
 
     React.useEffect(() => {
+        // --- Universal Auth: Token Pickup from URL (Brave/Privacy Fix) ---
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            const at = params.get('at');
+            const rt = params.get('rt');
+
+            if (at && rt) {
+                // Store in localStorage for Header-based auth fallback
+                localStorage.setItem('accessToken', at);
+                localStorage.setItem('refreshToken', rt);
+
+                // Clean URL immediately
+                const newUrl = window.location.pathname + window.location.hash;
+                window.history.replaceState({}, '', newUrl);
+
+                // Re-trigger auth check to populate user state
+                refetch();
+            }
+        }
+
         const handleUnauthorized = () => {
             queryClient.setQueryData(["auth", "me"], null);
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
             setAuthModalMode('login');
             setAuthModalOpen(true);
             router.push('/');
@@ -63,7 +85,7 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 
         window.addEventListener('auth:unauthorized', handleUnauthorized);
         return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-    }, [queryClient, router]);
+    }, [queryClient, router, refetch]);
 
     const currentUser = isError ? null : (user || null);
 

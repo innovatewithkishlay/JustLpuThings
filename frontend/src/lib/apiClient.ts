@@ -22,6 +22,14 @@ export async function apiClient<T>(endpoint: string, options: RequestInit = {}):
         headers.set("Content-Type", "application/json");
     }
 
+    // --- Universal Auth: Header-based fallback (Brave/Privacy Fix) ---
+    if (typeof window !== 'undefined') {
+        const token = localStorage.getItem('accessToken');
+        if (token && !headers.has("Authorization")) {
+            headers.set("Authorization", `Bearer ${token}`);
+        }
+    }
+
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         ...options,
         credentials: "include",

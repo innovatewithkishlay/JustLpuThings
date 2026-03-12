@@ -42,12 +42,17 @@ export function AuthModal() {
 
     const loginMutation = useMutation({
         mutationFn: async (credentials: typeof loginForm) => {
-            return await apiClient<{ token: string }>('/auth/login', {
+            return await apiClient<{ accessToken: string; refreshToken: string }>('/auth/login', {
                 method: 'POST',
                 body: JSON.stringify(credentials)
             })
         },
-        onSuccess: async () => {
+        onSuccess: async (data) => {
+            // --- Universal Auth: Save for Header-based fallback ---
+            if (data.accessToken && data.refreshToken) {
+                localStorage.setItem('accessToken', data.accessToken);
+                localStorage.setItem('refreshToken', data.refreshToken);
+            }
             toast.success('Authentication successful')
             await checkAuth()
             closeAuthModal()

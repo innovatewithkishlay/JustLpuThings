@@ -23,7 +23,14 @@ export class AuthController {
 
             setAuthCookies(res, tokens.accessToken, tokens.refreshToken, tokens.refreshFamilyId);
 
-            res.json({ success: true, data: { message: 'Logged in successfully' } });
+            res.json({
+                success: true,
+                data: {
+                    message: 'Logged in successfully',
+                    accessToken: tokens.accessToken,
+                    refreshToken: tokens.refreshToken
+                }
+            });
         } catch (err) {
             next(err);
         }
@@ -39,7 +46,14 @@ export class AuthController {
             const tokens = await AuthService.refresh(rawRefresh);
             setAuthCookies(res, tokens.accessToken, tokens.refreshToken, tokens.refreshFamilyId);
 
-            res.json({ success: true, data: { message: 'Token refreshed successfully' } });
+            res.json({
+                success: true,
+                data: {
+                    message: 'Token refreshed successfully',
+                    accessToken: tokens.accessToken,
+                    refreshToken: tokens.refreshToken
+                }
+            });
         } catch (err) {
             // Clear poisoned cookies
             res.clearCookie('accessToken');

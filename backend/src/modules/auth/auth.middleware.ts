@@ -24,6 +24,12 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
         let token = req.cookies?.accessToken;
         const refreshToken = req.cookies?.refreshToken;
 
+        // Fallback: Check Authorization header if cookie is missing (Brave/Privacy fixes)
+        const authHeader = req.headers.authorization;
+        if (!token && authHeader?.startsWith('Bearer ')) {
+            token = authHeader.split(' ')[1];
+        }
+
         // Helper to attempt refreshing tokens
         const tryRefresh = async () => {
             if (!refreshToken) return null;
@@ -64,9 +70,13 @@ export const requireAuth = async (req: Request, res: Response, next: NextFunctio
             // Token was present but invalid/expired - try one last refresh
             const refreshedToken = await tryRefresh();
             if (refreshedToken) {
-                const decoded = jwt.verify(refreshedToken, env.JWT_ACCESS_SECRET) as TokenPayload;
-                req.user = decoded;
-                return next();
+                try {
+                    const decoded = jwt.verify(refreshedToken, env.JWT_ACCESS_SECRET) as TokenPayload;
+                    req.user = decoded;
+                    return next();
+                } catch {
+                    // fall through
+                }
             }
             throw jwtError; // If refresh also fails, fall through to 401
         }

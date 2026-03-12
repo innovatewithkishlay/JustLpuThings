@@ -49,9 +49,10 @@ app.use(helmet({
 }));
 
 app.use(cors({
-    origin: [env.FRONTEND_URL, 'http://localhost:3000', 'http://localhost:3001'],
+    origin: [env.FRONTEND_URL, 'https://www.justlputhings.com', 'http://localhost:3000', 'http://localhost:3001'],
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS']
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    exposedHeaders: ['Authorization'] // Ensure frontend can see/interact with auth headers if needed
 }));
 
 app.use(express.json());

@@ -10,9 +10,10 @@ export const setAuthCookies = (res: Response, access: string, refresh: string, r
     const isProd = env.NODE_ENV === 'production';
     const cookieOptions = {
         httpOnly: true,
-        secure: isProd,
-        sameSite: 'lax' as const, // Lax is more compatible with Brave/Safari while staying secure on the same registrable domain
-        path: '/'
+        secure: true, // Must be true for SameSite: None
+        sameSite: 'none' as const, // Required for cross-site cookie transmission (Render API -> Custom Domain Frontend)
+        path: '/',
+        partitioned: true // Helps with third-party cookie blocking in Brave/Chrome
     };
 
     // Convert env strings to ms for MaxAge

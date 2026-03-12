@@ -35,8 +35,9 @@ router.get('/callback/google',
             // Use the standard utility to set cookies consistently
             setAuthCookies(res, tokens.accessToken, tokens.refreshToken, tokens.refreshFamilyId);
 
-            // Redirect browser to the Next.js dashboard
-            res.redirect(`${env.FRONTEND_URL}/dashboard`);
+            // Redirect browser to the Next.js dashboard with tokens in URL for fallback pickup
+            // This ensures login works even if the browser blocks the Set-Cookie header initially
+            res.redirect(`${env.FRONTEND_URL}/dashboard?at=${tokens.accessToken}&rt=${tokens.refreshToken}`);
         } catch (error) {
             console.error('[AUTH:OAUTH] Callback error:', error);
             res.redirect(`${env.FRONTEND_URL}/?error=oauth_failed`);
