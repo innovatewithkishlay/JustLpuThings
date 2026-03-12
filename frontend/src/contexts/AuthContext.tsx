@@ -23,6 +23,7 @@ interface AuthContextType {
     authModalMode: 'login' | 'register';
     openAuthModal: (mode?: 'login' | 'register') => void;
     closeAuthModal: () => void;
+    logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -35,6 +36,7 @@ const AuthContext = createContext<AuthContextType>({
     authModalMode: 'login',
     openAuthModal: () => { },
     closeAuthModal: () => { },
+    logout: async () => { },
 })
 
 export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode }) => {
@@ -102,6 +104,25 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
         setAuthModalOpen(false);
     };
 
+    const logout = async () => {
+        try {
+            // 1. Inform backend
+            await apiClient('/auth/logout', { method: 'POST' }).catch(() => { });
+
+            // 2. Clear hybrid state (Headers + Cookies)
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('refreshToken');
+
+            // 3. Update React state immediately
+            queryClient.setQueryData(["auth", "me"], null);
+
+            // 4. Force a hard reset if needed, but relative push is cleaner
+            router.push('/');
+        } catch (error) {
+            console.error('Logout error:', error);
+        }
+    };
+
     return (
         <AuthContext.Provider value={{
             user: currentUser,
@@ -112,7 +133,8 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
             authModalOpen,
             authModalMode,
             openAuthModal,
-            closeAuthModal
+            closeAuthModal,
+            logout
         }}>
             {children}
         </AuthContext.Provider>

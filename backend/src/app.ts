@@ -35,7 +35,7 @@ app.use((req, _res, next) => {
 
 const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: env.RATE_LIMIT_AUTH,
+    max: 300, // Temporarily increased for debugging/testing environments
     message: { success: false, error: { message: 'Too many authentication attempts, please try again later.' } }
 });
 

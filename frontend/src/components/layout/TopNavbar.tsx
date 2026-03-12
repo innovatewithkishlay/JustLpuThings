@@ -24,7 +24,7 @@ const MODULES = [
 export function TopNavbar() {
     const { setTheme, theme } = useTheme()
     const pathname = usePathname()
-    const { isAuthenticated, user, isAdmin, openAuthModal, checkAuth } = useAuth()
+    const { isAuthenticated, user, isAdmin, openAuthModal, checkAuth, logout } = useAuth()
     const queryClient = useQueryClient()
     const router = require('next/navigation').useRouter() // Required locally as it's not imported at top
 
@@ -66,15 +66,8 @@ export function TopNavbar() {
     }, [lastScrollY])
 
     const handleLogout = async () => {
-        try {
-            await apiClient('/auth/logout', { method: 'POST' })
-            queryClient.clear()
-            await checkAuth()
-            toast.success("Logged out successfully")
-            router.push('/')
-        } catch (e) {
-            toast.error("Failed to logout securely")
-        }
+        await logout()
+        toast.success("Logged out successfully")
     }
 
     // Hide navbar heavily abstracted viewer pages
