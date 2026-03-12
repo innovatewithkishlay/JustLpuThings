@@ -47,7 +47,18 @@ export class AuthService {
         const userResult = await pool.query('SELECT id, password_hash, role, is_blocked FROM users WHERE email = $1', [email]);
         const user = userResult.rows[0];
 
-        if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+        if (!user) {
+            throw { statusCode: 401, message: 'Invalid credentials' };
+        }
+
+        if (!user.password_hash) {
+            throw {
+                statusCode: 400,
+                message: 'This account was created using Google. Please use the "Continue with Google" button to sign in.'
+            };
+        }
+
+        if (!(await bcrypt.compare(password, user.password_hash))) {
             throw { statusCode: 401, message: 'Invalid credentials' };
         }
 
