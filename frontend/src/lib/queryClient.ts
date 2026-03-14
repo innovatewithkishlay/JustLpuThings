@@ -2,13 +2,22 @@ import { QueryClient, QueryCache, MutationCache } from '@tanstack/react-query';
 import { toast } from 'sonner';
 
 const handleGlobalError = (error: any, query?: any) => {
-    // Suppress toasts for the initial auth check or normal 401s
+    // Suppress toasts for the initial auth check
     if (query?.queryKey?.[0] === 'auth' && query?.queryKey?.[1] === 'me') {
         return;
     }
 
-    if (error?.status === 401 || (error?.status === 403 && (error.message?.toLowerCase().includes('suspended') || error.message?.toLowerCase().includes('blocked')))) {
-        // Dispatch an event so AuthContext can force a logout/modal
+    // Account suspension/block - always force logout
+    if (error?.status === 403 && (error.message?.toLowerCase().includes('suspended') || error.message?.toLowerCase().includes('blocked'))) {
+        if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('auth:unauthorized'));
+        }
+        return;
+    }
+
+    // 401 errors: apiClient already attempted a silent refresh and retry.
+    // If we still get a 401 here, it means the refresh also failed - truly logged out.
+    if (error?.status === 401) {
         if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('auth:unauthorized'));
         }

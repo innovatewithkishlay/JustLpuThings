@@ -74,8 +74,18 @@ export default function ViewerPage() {
     const { data: pdfData, isLoading: pdfLoading, isError: pdfFetchError } = useQuery({
         queryKey: ["pdf-stream", slug],
         queryFn: async () => {
+            // Build headers with Authorization fallback for browsers that block cross-site cookies
+            const headers: Record<string, string> = {};
+            if (typeof window !== 'undefined') {
+                const token = localStorage.getItem('accessToken');
+                if (token) {
+                    headers['Authorization'] = `Bearer ${token}`;
+                }
+            }
+
             const res = await fetch(pdfProxyUrl, {
-                credentials: 'include'
+                credentials: 'include',
+                headers
             })
             if (!res.ok) {
                 const error = new Error(`HTTP Error: ${res.status}`)

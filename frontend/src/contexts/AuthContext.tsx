@@ -46,10 +46,10 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
     const { data: user, isLoading, isError, refetch } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => apiClient<User>('/auth/me'),
-        staleTime: 5 * 60 * 1000,
+        staleTime: 2 * 60 * 1000, // 2 min - keeps auth fresh without excessive calls
         retry: false,
-        refetchOnWindowFocus: false,
-        refetchOnMount: false,
+        refetchOnWindowFocus: true, // Re-validate when user returns to tab
+        refetchOnMount: 'always', // Always check auth on navigation
     });
 
     const router = useRouter();
