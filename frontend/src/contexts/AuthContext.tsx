@@ -4,7 +4,6 @@ import React, { createContext, useContext } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { apiClient } from '@/lib/apiClient'
-import { BookOpen } from 'lucide-react'
 
 interface User {
     id: string;
@@ -39,45 +38,57 @@ const AuthContext = createContext<AuthContextType>({
     logout: async () => { },
 })
 
+// Synchronous token pickup - runs BEFORE React renders, preventing race conditions
+function pickupTokensFromUrl(): boolean {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    const at = params.get('at');
+    const rt = params.get('rt');
+
+    if (at && rt) {
+        localStorage.setItem('accessToken', at);
+        localStorage.setItem('refreshToken', rt);
+
+        // Clean URL immediately
+        const newUrl = window.location.pathname + window.location.hash;
+        window.history.replaceState({}, '', newUrl);
+        return true;
+    }
+    return false;
+}
+
 export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode }) => {
     const [authModalOpen, setAuthModalOpen] = React.useState(false);
     const [authModalMode, setAuthModalMode] = React.useState<'login' | 'register'>('login');
 
+    // Pick up tokens synchronously on first render, BEFORE any query fires
+    const [didPickupTokens] = React.useState(() => pickupTokensFromUrl());
+
     const { data: user, isLoading, isError, refetch } = useQuery({
         queryKey: ["auth", "me"],
         queryFn: () => apiClient<User>('/auth/me'),
-        staleTime: 2 * 60 * 1000, // 2 min - keeps auth fresh without excessive calls
+        staleTime: 2 * 60 * 1000,
         retry: false,
-        refetchOnWindowFocus: true, // Re-validate when user returns to tab
-        refetchOnMount: 'always', // Always check auth on navigation
+        refetchOnWindowFocus: true,
+        refetchOnMount: 'always',
     });
 
     const router = useRouter();
     const queryClient = useQueryClient();
 
+    // Close modal automatically after Google OAuth token pickup succeeds
     React.useEffect(() => {
-        // --- Universal Auth: Token Pickup from URL (Brave/Privacy Fix) ---
-        if (typeof window !== 'undefined') {
-            const params = new URLSearchParams(window.location.search);
-            const at = params.get('at');
-            const rt = params.get('rt');
-
-            if (at && rt) {
-                // Store in localStorage for Header-based auth fallback
-                localStorage.setItem('accessToken', at);
-                localStorage.setItem('refreshToken', rt);
-
-                // Clean URL immediately
-                const newUrl = window.location.pathname + window.location.hash;
-                window.history.replaceState({}, '', newUrl);
-
-                // Re-trigger auth check to populate user state
-                refetch();
-            }
+        if (didPickupTokens && user) {
+            setAuthModalOpen(false);
         }
+    }, [didPickupTokens, user]);
 
+    React.useEffect(() => {
         const handleUnauthorized = () => {
-            queryClient.setQueryData(["auth", "me"], null);
+            // Don't force logout if we just picked up tokens (race condition guard)
+            if (didPickupTokens && !user) return;
+
+            queryClient.removeQueries({ queryKey: ["auth", "me"] });
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             setAuthModalMode('login');
@@ -87,7 +98,7 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 
         window.addEventListener('auth:unauthorized', handleUnauthorized);
         return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
-    }, [queryClient, router, refetch]);
+    }, [queryClient, router, didPickupTokens, user]);
 
     const currentUser = isError ? null : (user || null);
 
@@ -106,17 +117,18 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 
     const logout = async () => {
         try {
-            // 1. Inform backend
+            // 1. Inform backend (fire-and-forget)
             await apiClient('/auth/logout', { method: 'POST' }).catch(() => { });
 
             // 2. Clear hybrid state (Headers + Cookies)
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
 
-            // 3. Update React state immediately
-            queryClient.setQueryData(["auth", "me"], null);
+            // 3. Kill the auth query entirely - prevents refetchOnMount from resurrecting it
+            await queryClient.cancelQueries({ queryKey: ["auth", "me"] });
+            queryClient.removeQueries({ queryKey: ["auth", "me"] });
 
-            // 4. Force a hard reset if needed, but relative push is cleaner
+            // 4. Navigate home
             router.push('/');
         } catch (error) {
             console.error('Logout error:', error);
@@ -142,3 +154,4 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 }
 
 export const useAuth = () => useContext(AuthContext)
+
