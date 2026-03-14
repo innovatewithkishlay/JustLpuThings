@@ -22,9 +22,18 @@ export const visitorTracker = async (req: Request, res: Response, next: NextFunc
             [ipHash]
         ).catch(err => console.error('[VISITOR:LOG:ERR]', err));
 
+        // Aggregate into daily_platform_stats (fire and forget)
+        pool.query(`
+            INSERT INTO daily_platform_stats (date, total_views, total_active_users, total_new_users)
+            VALUES (CURRENT_DATE, 1, 0, 0)
+            ON CONFLICT (date)
+            DO UPDATE SET total_views = daily_platform_stats.total_views + 1
+        `).catch(err => console.error('[DAILY:STATS:ERR]', err));
+
     } catch (err) {
         console.error('[VISITOR:TRACKER:ERR]', err);
     }
 
     next();
 };
+

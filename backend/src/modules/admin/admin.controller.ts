@@ -17,6 +17,18 @@ export class AdminController {
         }
     }
 
+    // --- Traffic Analytics ---
+    static async getTrafficHistory(req: Request, res: Response, next: NextFunction) {
+        try {
+            const days = parseInt(req.query.days as string) || 30;
+            const data = await AdminDashboardService.getTrafficHistory(Math.min(days, 90));
+            res.json({ success: true, data });
+        } catch (err) {
+            next(err);
+        }
+    }
+
+
     // --- Deep Analytics ---
     static async getMaterialStats(req: Request, res: Response, next: NextFunction) {
         try {

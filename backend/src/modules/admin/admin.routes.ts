@@ -42,6 +42,7 @@ router.use(requireAuth, requireAdmin, adminLimiter);
 // --- Analytics & Intelligence ---
 router.get('/telemetry', AdminController.getDashboard);
 router.get('/dashboard', AdminController.getDashboard);
+router.get('/traffic', AdminController.getTrafficHistory);
 router.get('/materials/:id/stats', AdminController.getMaterialStats);
 router.get('/abuse', AdminController.getAbuseEvents);
 

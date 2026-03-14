@@ -68,6 +68,13 @@ interface TelemetryStats {
     totalSessions: number;
 }
 
+interface TrafficDay {
+    date: string;
+    totalHits: number;
+    uniqueVisitors: number;
+    newUsers: number;
+}
+
 
 interface Material {
     id: string;
@@ -132,6 +139,12 @@ export default function AdminDashboard() {
         queryKey: ["admin", "analytics"],
         queryFn: () => apiClient<TelemetryStats>('/admin/telemetry'),
         refetchInterval: 15000 // 15s real-time pulse
+    })
+
+    const { data: trafficHistory = [] } = useQuery({
+        queryKey: ["admin", "traffic"],
+        queryFn: () => apiClient<TrafficDay[]>('/admin/traffic?days=30'),
+        refetchInterval: 60000 // 1 min refresh
     })
 
     const { data: allMaterials = [], isLoading: materialsLoading } = useQuery({
@@ -447,6 +460,95 @@ export default function AdminDashboard() {
                                                 </Card>
                                             ))}
                                         </div>
+
+                                        {/* Daily Traffic Chart */}
+                                        {trafficHistory.length > 0 && (
+                                            <Card className="border-none shadow-premium bg-surface/50 backdrop-blur-xl rounded-[32px] overflow-hidden">
+                                                <CardContent className="p-8">
+                                                    <div className="flex items-center justify-between mb-6">
+                                                        <div>
+                                                            <h3 className="text-lg font-heading font-black tracking-tight">Traffic Pulse</h3>
+                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5">Last 30 Days Activity</p>
+                                                        </div>
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+                                                                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Total Hits</span>
+                                                            </div>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                                                                <span className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Unique</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="flex items-end gap-1 h-48">
+                                                        {(() => {
+                                                            const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
+                                                            return trafficHistory.map((day: TrafficDay, i: number) => {
+                                                                const hitHeight = (day.totalHits / maxHits) * 100;
+                                                                const uniqueHeight = (day.uniqueVisitors / maxHits) * 100;
+                                                                const dateObj = new Date(day.date);
+                                                                const dayLabel = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
+                                                                const fullDate = dateObj.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+                                                                const isToday = i === trafficHistory.length - 1;
+                                                                return (
+                                                                    <div key={i} className="flex-1 flex flex-col items-center gap-0.5 group relative cursor-pointer">
+                                                                        <div className="absolute bottom-full mb-2 hidden group-hover:block z-50 px-3 py-2 rounded-xl bg-black/90 backdrop-blur-md text-white text-[10px] font-bold shadow-2xl whitespace-nowrap border border-white/10">
+                                                                            <div className="font-black text-xs mb-1">{fullDate}</div>
+                                                                            <div className="text-primary">Hits: {day.totalHits.toLocaleString()}</div>
+                                                                            <div className="text-emerald-400">Unique: {day.uniqueVisitors.toLocaleString()}</div>
+                                                                            {day.newUsers > 0 && <div className="text-amber-400">New Users: {day.newUsers}</div>}
+                                                                        </div>
+                                                                        <div className="w-full flex items-end gap-px h-full">
+                                                                            <div
+                                                                                className={`flex-1 rounded-t-md transition-all duration-300 group-hover:opacity-100 ${isToday ? 'bg-primary' : 'bg-primary/50 group-hover:bg-primary/80'}`}
+                                                                                style={{ height: `${Math.max(hitHeight, 2)}%` }}
+                                                                            />
+                                                                            <div
+                                                                                className={`flex-1 rounded-t-md transition-all duration-300 group-hover:opacity-100 ${isToday ? 'bg-emerald-500' : 'bg-emerald-500/50 group-hover:bg-emerald-500/80'}`}
+                                                                                style={{ height: `${Math.max(uniqueHeight, 2)}%` }}
+                                                                            />
+                                                                        </div>
+                                                                        {(i % 5 === 0 || isToday) && (
+                                                                            <span className={`text-[8px] font-bold tracking-wider mt-1 ${isToday ? 'text-primary' : 'text-muted-foreground/60'}`}>
+                                                                                {isToday ? 'Today' : dayLabel}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                );
+                                                            });
+                                                        })()}
+                                                    </div>
+
+                                                    <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/30">
+                                                        <div className="flex items-center gap-6">
+                                                            <div>
+                                                                <div className="text-2xl font-heading font-black tracking-tighter">
+                                                                    {trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.totalHits, 0).toLocaleString()}
+                                                                </div>
+                                                                <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">30-Day Hits</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-2xl font-heading font-black tracking-tighter text-emerald-500">
+                                                                    {trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.uniqueVisitors, 0).toLocaleString()}
+                                                                </div>
+                                                                <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">30-Day Unique</div>
+                                                            </div>
+                                                            <div>
+                                                                <div className="text-2xl font-heading font-black tracking-tighter text-amber-500">
+                                                                    {trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.newUsers, 0).toLocaleString()}
+                                                                </div>
+                                                                <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground">New Signups</div>
+                                                            </div>
+                                                        </div>
+                                                        <div className="text-[10px] font-bold text-muted-foreground/50 italic">
+                                                            Peak: {Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits)).toLocaleString()} hits/day
+                                                        </div>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        )}
                                     </div>
                                 )}
 

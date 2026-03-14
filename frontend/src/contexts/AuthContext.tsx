@@ -48,8 +48,6 @@ function pickupTokensFromUrl(): boolean {
     if (at && rt) {
         localStorage.setItem('accessToken', at);
         localStorage.setItem('refreshToken', rt);
-
-        // Clean URL immediately
         const newUrl = window.location.pathname + window.location.hash;
         window.history.replaceState({}, '', newUrl);
         return true;
@@ -60,8 +58,9 @@ function pickupTokensFromUrl(): boolean {
 export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode }) => {
     const [authModalOpen, setAuthModalOpen] = React.useState(false);
     const [authModalMode, setAuthModalMode] = React.useState<'login' | 'register'>('login');
+    const [loggedOut, setLoggedOut] = React.useState(false);
 
-    // Pick up tokens synchronously on first render, BEFORE any query fires
+    // Pick up tokens synchronously on first render
     const [didPickupTokens] = React.useState(() => pickupTokensFromUrl());
 
     const { data: user, isLoading, isError, refetch } = useQuery({
@@ -69,8 +68,9 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
         queryFn: () => apiClient<User>('/auth/me'),
         staleTime: 2 * 60 * 1000,
         retry: false,
-        refetchOnWindowFocus: true,
-        refetchOnMount: 'always',
+        refetchOnWindowFocus: !loggedOut,
+        refetchOnMount: loggedOut ? false : 'always',
+        enabled: !loggedOut, // Completely disables query after logout
     });
 
     const router = useRouter();
@@ -85,10 +85,9 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 
     React.useEffect(() => {
         const handleUnauthorized = () => {
-            // Don't force logout if we just picked up tokens (race condition guard)
             if (didPickupTokens && !user) return;
 
-            queryClient.removeQueries({ queryKey: ["auth", "me"] });
+            queryClient.setQueryData(["auth", "me"], null);
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
             setAuthModalMode('login');
@@ -100,9 +99,10 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
         return () => window.removeEventListener('auth:unauthorized', handleUnauthorized);
     }, [queryClient, router, didPickupTokens, user]);
 
-    const currentUser = isError ? null : (user || null);
+    const currentUser = (isError || loggedOut) ? null : (user || null);
 
     const checkAuth = async () => {
+        setLoggedOut(false); // Re-enable query if it was disabled
         await refetch();
     }
 
@@ -117,18 +117,20 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 
     const logout = async () => {
         try {
-            // 1. Inform backend (fire-and-forget)
-            await apiClient('/auth/logout', { method: 'POST' }).catch(() => { });
+            // 1. Disable query FIRST to prevent any refetch
+            setLoggedOut(true);
 
-            // 2. Clear hybrid state (Headers + Cookies)
+            // 2. Inform backend (fire-and-forget)
+            apiClient('/auth/logout', { method: 'POST' }).catch(() => { });
+
+            // 3. Clear hybrid state
             localStorage.removeItem('accessToken');
             localStorage.removeItem('refreshToken');
 
-            // 3. Kill the auth query entirely - prevents refetchOnMount from resurrecting it
-            await queryClient.cancelQueries({ queryKey: ["auth", "me"] });
-            queryClient.removeQueries({ queryKey: ["auth", "me"] });
+            // 4. Clear cached user data immediately
+            queryClient.setQueryData(["auth", "me"], null);
 
-            // 4. Navigate home
+            // 5. Navigate home
             router.push('/');
         } catch (error) {
             console.error('Logout error:', error);
@@ -140,7 +142,7 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
             user: currentUser,
             isAuthenticated: !!currentUser,
             isAdmin: currentUser?.role === 'ADMIN',
-            loading: isLoading,
+            loading: isLoading && !loggedOut,
             checkAuth,
             authModalOpen,
             authModalMode,
@@ -154,4 +156,3 @@ export const AuthBootstrapProvider = ({ children }: { children: React.ReactNode 
 }
 
 export const useAuth = () => useContext(AuthContext)
-

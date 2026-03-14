@@ -92,4 +92,45 @@ export class AdminDashboardService {
             }))
         };
     }
+
+    static async getTrafficHistory(days: number = 30) {
+        const query = `
+            SELECT 
+                d.date,
+                COALESCE(dps.total_views, vl.hits, 0) as total_hits,
+                COALESCE(vl.unique_visitors, 0) as unique_visitors,
+                COALESCE(nu.new_users, 0) as new_users
+            FROM generate_series(
+                CURRENT_DATE - ($1 || ' days')::interval, 
+                CURRENT_DATE, 
+                '1 day'::interval
+            ) d(date)
+            LEFT JOIN daily_platform_stats dps ON dps.date = d.date::date
+            LEFT JOIN LATERAL (
+                SELECT 
+                    COUNT(*) as hits,
+                    COUNT(DISTINCT ip_hash) as unique_visitors
+                FROM visitor_logs 
+                WHERE visited_at >= d.date::date 
+                AND visited_at < d.date::date + INTERVAL '1 day'
+            ) vl ON true
+            LEFT JOIN LATERAL (
+                SELECT COUNT(*) as new_users
+                FROM users
+                WHERE created_at >= d.date::date
+                AND created_at < d.date::date + INTERVAL '1 day'
+            ) nu ON true
+            ORDER BY d.date ASC;
+        `;
+
+        const result = await pool.query(query, [days]);
+
+        return result.rows.map((row: any) => ({
+            date: row.date,
+            totalHits: parseInt(row.total_hits || 0, 10),
+            uniqueVisitors: parseInt(row.unique_visitors || 0, 10),
+            newUsers: parseInt(row.new_users || 0, 10)
+        }));
+    }
 }
+
