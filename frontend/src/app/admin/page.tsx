@@ -13,7 +13,6 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table' // Hypothetical, checking if I need to build internal table
 
 // Premium Internal UI Components (Replacements for missing shadcn modules)
 const Badge = ({ children, className = "", variant = "default" }: any) => {
@@ -45,6 +44,14 @@ const TooltipContent = ({ children, className = "", side = "top" }: any) => {
         </div>
     );
 };
+
+// Internal Table Components for Build Stability
+const Table = ({ children, className = "" }: any) => <div className={`w-full overflow-auto ${className}`}>{children}</div>;
+const TableHeader = ({ children, className = "" }: any) => <div className={`border-b border-border/20 ${className}`}>{children}</div>;
+const TableBody = ({ children, className = "" }: any) => <div className={className}>{children}</div>;
+const TableRow = ({ children, className = "" }: any) => <div className={`flex items-center transition-colors hover:bg-muted/50 ${className}`}>{children}</div>;
+const TableHead = ({ children, className = "" }: any) => <div className={`px-4 py-3 text-left align-middle font-black text-[10px] uppercase tracking-widest text-muted-foreground ${className}`}>{children}</div>;
+const TableCell = ({ children, className = "" }: any) => <div className={`px-4 py-3 align-middle text-sm ${className}`}>{children}</div>;
 
 const containerVariants = {
     hidden: { opacity: 0 },
