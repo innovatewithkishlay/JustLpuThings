@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2, Trash2, Edit3, ExternalLink, Check, AlertCircle, Info, LayoutDashboard, Library, Settings2, CloudUpload, ChevronRight, Menu, X, ArrowUpRight, BarChart3, Fingerprint, Heart } from 'lucide-react'
+import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2, Trash2, Edit3, ExternalLink, Check, AlertCircle, Info, LayoutDashboard, Library, Settings2, CloudUpload, ChevronRight, Menu, X, ArrowUpRight, BarChart3, Fingerprint, Heart, Zap, Target } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
@@ -504,18 +504,42 @@ export default function AdminDashboard() {
                                                         </div>
                                                     </div>
 
-                                                    <div className="flex items-end gap-1.5 h-64 px-2">
+                                                    <div className="relative flex items-end gap-1.5 h-64 px-2">
+                                                        {/* Professional Grid Lines */}
+                                                        <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none opacity-20">
+                                                            {[1, 0.75, 0.5, 0.25, 0].map((tick) => (
+                                                                <div key={tick} className="w-full border-t border-muted-foreground/30 flex items-center">
+                                                                    <span className="text-[7px] font-black text-muted-foreground/60 pr-2 absolute -left-6">
+                                                                        {(() => {
+                                                                            const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
+                                                                            // Using the same power scale for markers to match visual representation
+                                                                            const val = Math.pow(tick, 2) * maxHits;
+                                                                            return val > 1000 ? `${(val / 1000).toFixed(0)}k` : Math.round(val);
+                                                                        })()}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+
                                                         {(() => {
                                                             const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
+
+                                                            // Power scale factor (0.5 = Square Root) to make small values visible next to giant peaks
+                                                            const scaleFactor = 0.45;
+                                                            const scaleVal = (val: number) => (Math.pow(val / maxHits, scaleFactor) * 100);
+
                                                             return trafficHistory.map((day: TrafficDay, i: number) => {
-                                                                const hitHeight = (day.totalHits / maxHits) * 100;
-                                                                const uniqueHeight = (day.uniqueVisitors / maxHits) * 100;
+                                                                const hitHeight = scaleVal(day.totalHits);
+                                                                const uniqueHeight = scaleVal(day.uniqueVisitors);
                                                                 const dateObj = new Date(day.date);
                                                                 const dayLabel = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
                                                                 const isToday = i === trafficHistory.length - 1;
 
                                                                 return (
                                                                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
+                                                                        {/* Ghost Track for Vertical Structure */}
+                                                                        <div className="absolute inset-0 bg-muted/5 rounded-t-lg pointer-events-none mb-6" />
+
                                                                         {/* New User Indicator Dot */}
                                                                         {day.newUsers > 0 && (
                                                                             <motion.div
@@ -525,42 +549,38 @@ export default function AdminDashboard() {
                                                                             />
                                                                         )}
 
-                                                                        <div className="w-full flex items-end justify-center gap-[2px] h-full">
+                                                                        <div className="w-full flex items-end justify-center gap-[2px] h-full pb-6 z-10">
                                                                             {/* Hits Bar */}
                                                                             <motion.div
                                                                                 initial={{ height: 0 }}
-                                                                                animate={{ height: `${Math.max(hitHeight, 4)}%` }}
+                                                                                animate={{ height: `${Math.max(hitHeight, 6)}%` }} // Minimum height for visibility
                                                                                 className={`w-[45%] rounded-t-lg transition-all duration-500 relative flex justify-center ${isToday
                                                                                     ? 'bg-gradient-to-t from-primary to-primary/60 shadow-lg shadow-primary/20'
-                                                                                    : 'bg-gradient-to-t from-primary/30 to-primary/20 group-hover:from-primary/60 group-hover:to-primary/40'
+                                                                                    : 'bg-gradient-to-t from-primary/40 to-primary/20 group-hover:from-primary/70 group-hover:to-primary/50'
                                                                                     }`}
                                                                             >
-                                                                                {day.totalHits > 0 && hitHeight > 15 && (
-                                                                                    <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-primary font-mono whitespace-nowrap">
-                                                                                        {day.totalHits > 1000 ? `${(day.totalHits / 1000).toFixed(1)}k` : day.totalHits}
-                                                                                    </span>
-                                                                                )}
+                                                                                <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-primary font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-primary/20 z-20">
+                                                                                    {day.totalHits.toLocaleString()}
+                                                                                </span>
                                                                             </motion.div>
 
                                                                             {/* Unique Bar */}
                                                                             <motion.div
                                                                                 initial={{ height: 0 }}
-                                                                                animate={{ height: `${Math.max(uniqueHeight, 4)}%` }}
+                                                                                animate={{ height: `${Math.max(uniqueHeight, 6)}%` }}
                                                                                 className={`w-[45%] rounded-t-lg transition-all duration-500 relative flex justify-center ${isToday
                                                                                     ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 shadow-lg shadow-emerald-500/20'
-                                                                                    : 'bg-gradient-to-t from-emerald-500/30 to-emerald-500/20 group-hover:from-emerald-500/60 group-hover:to-emerald-500/40'
+                                                                                    : 'bg-gradient-to-t from-emerald-500/40 to-emerald-500/20 group-hover:from-emerald-500/70 group-hover:to-emerald-500/50'
                                                                                     }`}
                                                                             >
-                                                                                {day.uniqueVisitors > 0 && uniqueHeight > 15 && (
-                                                                                    <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-emerald-500 font-mono whitespace-nowrap">
-                                                                                        {day.uniqueVisitors}
-                                                                                    </span>
-                                                                                )}
+                                                                                <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-emerald-500 font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-emerald-500/20 z-20">
+                                                                                    {day.uniqueVisitors.toLocaleString()}
+                                                                                </span>
                                                                             </motion.div>
                                                                         </div>
 
                                                                         {(i % 5 === 0 || isToday) && (
-                                                                            <span className={`text-[9px] font-black tracking-tighter mt-2 italic px-1 ${isToday ? 'text-primary' : 'text-muted-foreground/40 font-bold'
+                                                                            <span className={`text-[9px] font-black tracking-tighter mt-2 absolute bottom-0 italic px-1 ${isToday ? 'text-primary' : 'text-muted-foreground/40 font-bold'
                                                                                 }`}>
                                                                                 {isToday ? 'TODAY' : dayLabel}
                                                                             </span>
@@ -1165,8 +1185,27 @@ export default function AdminDashboard() {
                                 </DialogHeader>
 
                                 <div className="flex-1 overflow-y-auto no-scrollbar p-8 pt-6 space-y-10">
+                                    {/* Detailed KPI Summary */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        {[
+                                            { label: 'Avg daily Hits', val: Math.round(trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.totalHits, 0) / trafficHistory.length).toLocaleString(), icon: Zap, color: 'text-primary' },
+                                            { label: 'Avg Uniques', val: Math.round(trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.uniqueVisitors, 0) / trafficHistory.length).toLocaleString(), icon: Users, color: 'text-emerald-500' },
+                                            { label: 'Conv. Rate', val: `${((trafficHistory.reduce((s: number, d: TrafficDay) => s + d.newUsers, 0) / trafficHistory.reduce((s: number, d: TrafficDay) => s + d.uniqueVisitors, 0)) * 100).toFixed(1)}%`, icon: Target, color: 'text-amber-500' },
+                                        ].map((kpi, i) => (
+                                            <div key={i} className="bg-surface/50 border border-border/20 rounded-[24px] p-6 flex items-center gap-4">
+                                                <div className={`w-12 h-12 rounded-xl bg-muted/10 flex items-center justify-center ${kpi.color}`}>
+                                                    <kpi.icon className="w-5 h-5" />
+                                                </div>
+                                                <div>
+                                                    <div className="text-xl font-black font-heading tracking-tight">{kpi.val}</div>
+                                                    <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">{kpi.label}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+
                                     {/* Expanded Chart View */}
-                                    <div className="bg-surface/30 rounded-[32px] p-8 border border-border/20 shadow-inner">
+                                    <div className="bg-surface/30 rounded-[32px] p-8 border border-border/20 shadow-inner relative">
                                         <div className="flex items-center justify-between mb-10">
                                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Historical Vector Activity</h4>
                                             <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
@@ -1175,21 +1214,44 @@ export default function AdminDashboard() {
                                                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500" /> Signups</div>
                                             </div>
                                         </div>
-                                        <div className="flex items-end gap-2 h-64">
+
+                                        <div className="relative flex items-end gap-2 h-64 px-4">
+                                            {/* Grid Lines for Advanced View */}
+                                            <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none opacity-10">
+                                                {[1, 0.75, 0.5, 0.25, 0].map((tick) => (
+                                                    <div key={tick} className="w-full border-t border-muted-foreground/30" />
+                                                ))}
+                                            </div>
+
                                             {(() => {
                                                 const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
+                                                const scaleFactor = 0.45;
+                                                const scaleVal = (val: number) => (Math.pow(val / maxHits, scaleFactor) * 100);
+
                                                 return trafficHistory.map((day: TrafficDay, i: number) => {
-                                                    const hitHeight = (day.totalHits / maxHits) * 100;
-                                                    const uniqueHeight = (day.uniqueVisitors / maxHits) * 100;
+                                                    const hitHeight = scaleVal(day.totalHits);
+                                                    const uniqueHeight = scaleVal(day.uniqueVisitors);
                                                     const isToday = i === trafficHistory.length - 1;
                                                     return (
-                                                        <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                                                            <div className="w-full flex items-end justify-center gap-[2px] h-full">
-                                                                <div className={`w-[45%] rounded-t-md ${isToday ? 'bg-primary' : 'bg-primary/20 group-hover:bg-primary/40'} transition-all`} style={{ height: `${Math.max(hitHeight, 4)}%` }} />
-                                                                <div className={`w-[45%] rounded-t-md ${isToday ? 'bg-emerald-500' : 'bg-emerald-500/20 group-hover:bg-emerald-500/40'} transition-all`} style={{ height: `${Math.max(uniqueHeight, 4)}%` }} />
+                                                        <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end pb-8">
+                                                            <div className="w-full flex items-end justify-center gap-[1px] h-full">
+                                                                <div className={`w-[45%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-primary' : 'bg-primary/30 group-hover:bg-primary/60'}`} style={{ height: `${Math.max(hitHeight, 4)}%` }} />
+                                                                <div className={`w-[45%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-emerald-500' : 'bg-emerald-500/30 group-hover:bg-emerald-500/60'}`} style={{ height: `${Math.max(uniqueHeight, 4)}%` }} />
                                                             </div>
-                                                            {day.newUsers > 0 && <div className="absolute -top-4 w-1 h-1 rounded-full bg-amber-500" />}
-                                                            {i % 2 === 0 && <span className="text-[7px] font-bold text-muted-foreground/40 mt-1 uppercase tracking-tighter">{new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>}
+                                                            {day.newUsers > 0 && <div className="absolute top-0 w-1.5 h-1.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />}
+                                                            {i % 3 === 0 && <span className="text-[7px] font-black text-muted-foreground/40 absolute bottom-0 uppercase tracking-tighter">{new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>}
+
+                                                            {/* Detailed Tooltip on hover for Advanced View */}
+                                                            <div className="absolute bottom-full mb-4 hidden group-hover:flex flex-col bg-surface border border-border/40 p-3 rounded-xl shadow-2xl z-50 min-w-[120px]">
+                                                                <div className="text-[9px] font-black uppercase text-muted-foreground mb-2 pb-1 border-b border-border/10">
+                                                                    {new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long' })}
+                                                                </div>
+                                                                <div className="space-y-1">
+                                                                    <div className="flex justify-between items-center text-[10px] font-bold"><span className="text-primary">Hits</span> <span>{day.totalHits.toLocaleString()}</span></div>
+                                                                    <div className="flex justify-between items-center text-[10px] font-bold"><span className="text-emerald-500">Unique</span> <span>{day.uniqueVisitors.toLocaleString()}</span></div>
+                                                                    <div className="flex justify-between items-center text-[10px] font-bold"><span className="text-amber-500">Signups</span> <span>{day.newUsers}</span></div>
+                                                                </div>
+                                                            </div>
                                                         </div>
                                                     );
                                                 });
@@ -1198,24 +1260,30 @@ export default function AdminDashboard() {
                                     </div>
 
                                     {/* Data Table */}
-                                    <div className="space-y-4">
-                                        <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">Raw Data Matrix</h4>
+                                    <div className="space-y-6">
+                                        <div className="flex items-center justify-between px-2">
+                                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Raw Telemetry Matrix</h4>
+                                            <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary">REVERSED CHRONOLOGY</Badge>
+                                        </div>
                                         <div className="bg-surface/30 rounded-[32px] border border-border/20 overflow-hidden shadow-sm">
-                                            <div className="grid grid-cols-4 gap-4 px-8 py-5 border-b border-border/20 bg-muted/5">
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Observation Date</div>
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Total Hits</div>
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Unique Visitors</div>
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">New Acquisitions</div>
+                                            <div className="grid grid-cols-4 gap-4 px-10 py-6 border-b border-border/20 bg-muted/5">
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Observation Period</div>
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center">System Hits</div>
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center">Unique Scholars</div>
+                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-right">Acquisition Event</div>
                                             </div>
-                                            <div className="max-h-[300px] overflow-y-auto no-scrollbar">
+                                            <div className="max-h-[400px] overflow-y-auto no-scrollbar last:border-0">
                                                 {[...trafficHistory].reverse().map((day: TrafficDay, i: number) => (
-                                                    <div key={i} className="grid grid-cols-4 gap-4 px-8 py-5 border-b border-border/10 hover:bg-primary/5 transition-colors group">
-                                                        <div className="text-xs font-black italic">{new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long', year: 'numeric' })}</div>
-                                                        <div className="text-sm font-bold font-mono text-primary">{day.totalHits.toLocaleString()}</div>
-                                                        <div className="text-sm font-bold font-mono text-emerald-500">{day.uniqueVisitors.toLocaleString()}</div>
-                                                        <div className="flex items-center gap-2">
-                                                            <span className={`text-sm font-bold font-mono ${day.newUsers > 0 ? 'text-amber-500' : 'text-muted-foreground/30'}`}>{day.newUsers}</span>
-                                                            {day.newUsers > 0 && <Badge className="bg-amber-500/10 text-amber-500 border-none scale-75 origin-left">CONVERSION</Badge>}
+                                                    <div key={i} className="grid grid-cols-4 gap-4 px-10 py-6 border-b border-border/10 hover:bg-primary/5 transition-all group items-center">
+                                                        <div className="text-xs font-black italic group-hover:text-primary transition-colors">
+                                                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
+                                                            <div className="text-[8px] font-bold text-muted-foreground/40 uppercase not-italic tracking-widest mt-0.5">Vector {2026 - i}</div>
+                                                        </div>
+                                                        <div className="text-base font-black font-mono text-primary text-center">{day.totalHits.toLocaleString()}</div>
+                                                        <div className="text-base font-black font-mono text-emerald-500 text-center">{day.uniqueVisitors.toLocaleString()}</div>
+                                                        <div className="flex flex-col items-end">
+                                                            <span className={`text-base font-black font-mono ${day.newUsers > 0 ? 'text-amber-500' : 'text-muted-foreground/10'}`}>{day.newUsers}</span>
+                                                            {day.newUsers > 0 && <Badge className="bg-amber-500/10 text-amber-500 border-none text-[7px] font-black scale-90 origin-right py-0">MATCH FOUND</Badge>}
                                                         </div>
                                                     </div>
                                                 ))}
