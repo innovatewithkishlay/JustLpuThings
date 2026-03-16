@@ -2,8 +2,9 @@
 
 import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card } from '@/components/ui/card'
-import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink, MessageSquare, Send, Heart, Trophy } from 'lucide-react'
+import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink, MessageSquare, Send, Heart, Trophy, TrendingUp } from 'lucide-react'
 import { WHATSAPP_COMMUNITY_LINK } from '@/lib/constants'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -186,23 +187,32 @@ export default function DashboardPage() {
                     </div>
                 </motion.section>
 
-                {/* Leaderboard Teaser Banner */}
+                {/* Leaderboard Active Banner */}
                 <motion.section variants={fadeUp} className="pt-6 pb-12">
-                    <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-blue-500/5 to-transparent border border-blue-500/10 relative overflow-hidden group">
-                        <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6 pointer-events-none opacity-60">
-                            <div className="flex items-center gap-6">
-                                <Trophy className="w-10 h-10 text-blue-500" />
-                                <div>
-                                    <div className="flex items-center gap-3 mb-1">
-                                        <h4 className="text-lg font-bold text-foreground">Academic Leaderboard</h4>
-                                        <span className="px-2 py-0.5 rounded-lg bg-blue-500/10 text-blue-500 text-[9px] font-black uppercase tracking-widest border border-blue-500/20">Coming Soon</span>
+                    <Link href="/dashboard/leaderboard">
+                        <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 relative overflow-hidden group hover:border-primary/40 transition-all cursor-pointer">
+                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+                                <Trophy className="w-32 h-32 text-primary" />
+                            </div>
+                            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
+                                <div className="flex items-center gap-6">
+                                    <div className="w-16 h-16 rounded-3xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-500">
+                                        <Trophy className="w-8 h-8" />
                                     </div>
-                                    <p className="text-sm text-muted-foreground font-medium">Top contributors and active learners will be rewarded! 🏆</p>
+                                    <div>
+                                        <div className="flex items-center gap-3 mb-1">
+                                            <h4 className="text-xl font-heading font-black text-foreground">Study Champions</h4>
+                                            <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">Active Now</span>
+                                        </div>
+                                        <p className="text-sm text-muted-foreground font-medium">See how you rank among your peers. Consistency is key! 🏆</p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary group-hover:gap-4 transition-all">
+                                    View Leaderboard <TrendingUp className="w-4 h-4" />
                                 </div>
                             </div>
-                            <div className="text-[10px] font-black uppercase tracking-[0.3em] text-blue-500/50">Keep Studying to Rank Up</div>
                         </div>
-                    </div>
+                    </Link>
                 </motion.section>
 
             </motion.div>

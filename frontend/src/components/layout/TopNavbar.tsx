@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from 'next/link'
 import { motion } from "framer-motion"
 import { usePathname } from "next/navigation"
-import { Moon, Sun, Search, User, BookOpen } from "lucide-react"
+import { Moon, Sun, Search, User, BookOpen, Trophy, TrendingUp, MessageSquare } from "lucide-react"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
@@ -16,8 +16,7 @@ import { toast } from "sonner"
 
 const MODULES = [
     { name: 'Materials', path: '/dashboard' },
-    { name: 'MCQs', path: '/mcqs', disabled: true },
-    { name: 'Practice', path: '/practice', disabled: true },
+    { name: 'Leaderboard', path: '/dashboard/leaderboard' },
     { name: 'Analytics', path: '/dashboard/analytics' }
 ];
 
@@ -165,10 +164,16 @@ export function TopNavbar() {
                                 <DropdownMenuItem onClick={() => router.push('/dashboard')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
                                     Dashboard
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm flex items-center gap-2">
+                                    <TrendingUp className="w-4 h-4" />
                                     Analytics
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/requests')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/leaderboard')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm flex items-center gap-2">
+                                    <Trophy className="w-4 h-4" />
+                                    Leaderboard
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/requests')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm flex items-center gap-2">
+                                    <MessageSquare className="w-4 h-4" />
                                     My Requests
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator className="bg-white/5" />
