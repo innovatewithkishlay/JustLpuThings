@@ -490,8 +490,8 @@ export default function AdminDashboard() {
                                                                 <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unique</span>
                                                             </div>
                                                             <div className="flex items-center gap-2">
-                                                                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse shadow-sm shadow-amber-500/40" />
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">New Signups</span>
+                                                                <div className="w-3 h-3 rounded bg-gradient-to-t from-amber-500 to-amber-400 shadow-sm shadow-amber-500/30" />
+                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Signups</span>
                                                             </div>
                                                             <Button
                                                                 variant="outline"
@@ -531,6 +531,7 @@ export default function AdminDashboard() {
                                                             return trafficHistory.map((day: TrafficDay, i: number) => {
                                                                 const hitHeight = scaleVal(day.totalHits);
                                                                 const uniqueHeight = scaleVal(day.uniqueVisitors);
+                                                                const signupHeight = scaleVal(day.newUsers);
                                                                 const dateObj = new Date(day.date);
                                                                 const dayLabel = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
                                                                 const isToday = i === trafficHistory.length - 1;
@@ -540,21 +541,12 @@ export default function AdminDashboard() {
                                                                         {/* Ghost Track for Vertical Structure */}
                                                                         <div className="absolute inset-0 bg-muted/5 rounded-t-lg pointer-events-none mb-6" />
 
-                                                                        {/* New User Indicator Dot */}
-                                                                        {day.newUsers > 0 && (
-                                                                            <motion.div
-                                                                                initial={{ scale: 0 }}
-                                                                                animate={{ scale: 1 }}
-                                                                                className="absolute -top-6 w-1.5 h-1.5 rounded-full bg-amber-500 ring-4 ring-amber-500/10 z-10"
-                                                                            />
-                                                                        )}
-
-                                                                        <div className="w-full flex items-end justify-center gap-[2px] h-full pb-6 z-10">
+                                                                        <div className="w-full flex items-end justify-center gap-[1px] h-full pb-6 z-10">
                                                                             {/* Hits Bar */}
                                                                             <motion.div
                                                                                 initial={{ height: 0 }}
-                                                                                animate={{ height: `${Math.max(hitHeight, 6)}%` }} // Minimum height for visibility
-                                                                                className={`w-[45%] rounded-t-lg transition-all duration-500 relative flex justify-center ${isToday
+                                                                                animate={{ height: `${Math.max(hitHeight, 6)}%` }}
+                                                                                className={`w-[30%] rounded-t-sm transition-all duration-500 relative flex justify-center ${isToday
                                                                                     ? 'bg-gradient-to-t from-primary to-primary/60 shadow-lg shadow-primary/20'
                                                                                     : 'bg-gradient-to-t from-primary/40 to-primary/20 group-hover:from-primary/70 group-hover:to-primary/50'
                                                                                     }`}
@@ -568,13 +560,27 @@ export default function AdminDashboard() {
                                                                             <motion.div
                                                                                 initial={{ height: 0 }}
                                                                                 animate={{ height: `${Math.max(uniqueHeight, 6)}%` }}
-                                                                                className={`w-[45%] rounded-t-lg transition-all duration-500 relative flex justify-center ${isToday
+                                                                                className={`w-[30%] rounded-t-sm transition-all duration-500 relative flex justify-center ${isToday
                                                                                     ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 shadow-lg shadow-emerald-500/20'
                                                                                     : 'bg-gradient-to-t from-emerald-500/40 to-emerald-500/20 group-hover:from-emerald-500/70 group-hover:to-emerald-500/50'
                                                                                     }`}
                                                                             >
                                                                                 <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-emerald-500 font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-emerald-500/20 z-20">
                                                                                     {day.uniqueVisitors.toLocaleString()}
+                                                                                </span>
+                                                                            </motion.div>
+
+                                                                            {/* Signup Bar (The New Vector) */}
+                                                                            <motion.div
+                                                                                initial={{ height: 0 }}
+                                                                                animate={{ height: `${day.newUsers > 0 ? Math.max(signupHeight, 6) : 0}%` }}
+                                                                                className={`w-[30%] rounded-t-sm transition-all duration-500 relative flex justify-center ${isToday
+                                                                                    ? 'bg-gradient-to-t from-amber-500 to-amber-400 shadow-lg shadow-amber-500/20'
+                                                                                    : 'bg-gradient-to-t from-amber-500/40 to-amber-500/20 group-hover:from-amber-600/70 group-hover:to-amber-600/50'
+                                                                                    }`}
+                                                                            >
+                                                                                <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-amber-500 font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-amber-500/20 z-20">
+                                                                                    {day.newUsers}
                                                                                 </span>
                                                                             </motion.div>
                                                                         </div>
@@ -1209,9 +1215,9 @@ export default function AdminDashboard() {
                                         <div className="flex items-center justify-between mb-10">
                                             <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Historical Vector Activity</h4>
                                             <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-primary" /> Hits</div>
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-emerald-500" /> Unique</div>
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-amber-500" /> Signups</div>
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-primary" /> Hits</div>
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-emerald-500" /> Unique</div>
+                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-amber-500" /> Signups</div>
                                             </div>
                                         </div>
 
@@ -1231,14 +1237,15 @@ export default function AdminDashboard() {
                                                 return trafficHistory.map((day: TrafficDay, i: number) => {
                                                     const hitHeight = scaleVal(day.totalHits);
                                                     const uniqueHeight = scaleVal(day.uniqueVisitors);
+                                                    const signupHeight = scaleVal(day.newUsers);
                                                     const isToday = i === trafficHistory.length - 1;
                                                     return (
                                                         <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end pb-8">
                                                             <div className="w-full flex items-end justify-center gap-[1px] h-full">
-                                                                <div className={`w-[45%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-primary' : 'bg-primary/30 group-hover:bg-primary/60'}`} style={{ height: `${Math.max(hitHeight, 4)}%` }} />
-                                                                <div className={`w-[45%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-emerald-500' : 'bg-emerald-500/30 group-hover:bg-emerald-500/60'}`} style={{ height: `${Math.max(uniqueHeight, 4)}%` }} />
+                                                                <div className={`w-[30%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-primary' : 'bg-primary/30 group-hover:bg-primary/60'}`} style={{ height: `${Math.max(hitHeight, 4)}%` }} />
+                                                                <div className={`w-[30%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-emerald-500' : 'bg-emerald-500/30 group-hover:bg-emerald-500/60'}`} style={{ height: `${Math.max(uniqueHeight, 4)}%` }} />
+                                                                <div className={`w-[30%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-amber-500' : 'bg-amber-500/30 group-hover:bg-amber-600/60'}`} style={{ height: `${day.newUsers > 0 ? Math.max(signupHeight, 4) : 0}%` }} />
                                                             </div>
-                                                            {day.newUsers > 0 && <div className="absolute top-0 w-1.5 h-1.5 rounded-full bg-amber-500 shadow-sm shadow-amber-500/50" />}
                                                             {i % 3 === 0 && <span className="text-[7px] font-black text-muted-foreground/40 absolute bottom-0 uppercase tracking-tighter">{new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>}
 
                                                             {/* Detailed Tooltip on hover for Advanced View */}
