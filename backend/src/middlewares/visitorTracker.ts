@@ -23,12 +23,21 @@ export const visitorTracker = async (req: Request, res: Response, next: NextFunc
         ).catch(err => console.error('[VISITOR:LOG:ERR]', err));
 
         // Aggregate into daily_platform_stats (fire and forget)
+        // Only increment total_active_users if this IP hasn't been seen today
         pool.query(`
             INSERT INTO daily_platform_stats (date, total_views, total_active_users, total_new_users)
-            VALUES (CURRENT_DATE, 1, 0, 0)
+            VALUES (
+                CURRENT_DATE, 
+                1, 
+                CASE WHEN EXISTS (SELECT 1 FROM visitor_logs WHERE ip_hash = $1 AND visited_at >= CURRENT_DATE) THEN 0 ELSE 1 END,
+                0
+            )
             ON CONFLICT (date)
-            DO UPDATE SET total_views = daily_platform_stats.total_views + 1
-        `).catch(err => console.error('[DAILY:STATS:ERR]', err));
+            DO UPDATE SET 
+                total_views = daily_platform_stats.total_views + 1,
+                total_active_users = daily_platform_stats.total_active_users + 
+                    CASE WHEN EXISTS (SELECT 1 FROM visitor_logs WHERE ip_hash = $1 AND visited_at >= CURRENT_DATE) THEN 0 ELSE 1 END
+        `, [ipHash]).catch(err => console.error('[DAILY:STATS:ERR]', err));
 
     } catch (err) {
         console.error('[VISITOR:TRACKER:ERR]', err);

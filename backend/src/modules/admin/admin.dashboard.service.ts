@@ -94,32 +94,21 @@ export class AdminDashboardService {
     }
 
     static async getTrafficHistory(days: number = 30) {
+        // We use daily_platform_stats as the primary source of truth.
+        // For the current day, we might want to blend or fallback to logs if stats aren't synced yet, 
+        // but our visitorTracker is real-time now, so dps is reliable.
         const query = `
             SELECT 
                 d.date,
-                COALESCE(dps.total_views, vl.hits, 0) as total_hits,
-                COALESCE(vl.unique_visitors, 0) as unique_visitors,
-                COALESCE(nu.new_users, 0) as new_users
+                COALESCE(dps.total_views, 0) as total_hits,
+                COALESCE(dps.total_active_users, 0) as unique_visitors,
+                COALESCE(dps.total_new_users, 0) as new_users
             FROM generate_series(
                 CURRENT_DATE - ($1 || ' days')::interval, 
                 CURRENT_DATE, 
                 '1 day'::interval
             ) d(date)
             LEFT JOIN daily_platform_stats dps ON dps.date = d.date::date
-            LEFT JOIN LATERAL (
-                SELECT 
-                    COUNT(*) as hits,
-                    COUNT(DISTINCT ip_hash) as unique_visitors
-                FROM visitor_logs 
-                WHERE visited_at >= d.date::date 
-                AND visited_at < d.date::date + INTERVAL '1 day'
-            ) vl ON true
-            LEFT JOIN LATERAL (
-                SELECT COUNT(*) as new_users
-                FROM users
-                WHERE created_at >= d.date::date
-                AND created_at < d.date::date + INTERVAL '1 day'
-            ) nu ON true
             ORDER BY d.date ASC;
         `;
 

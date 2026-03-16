@@ -38,6 +38,10 @@ export class AuthService {
             [name, email, hash]
         );
 
+        // Track new user in analytics (fire and forget)
+        const { AnalyticsSubscriber } = require('../analytics/analytics.subscriber');
+        AnalyticsSubscriber.incrementNewUserCount().catch((err: any) => console.error('[AUTH:ANALYTICS:ERR]', err));
+
         return result.rows[0];
     }
 
