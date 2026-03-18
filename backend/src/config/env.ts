@@ -22,9 +22,9 @@ const envSchema = z.object({
 
     LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
 
-    DATABASE_URL: z.string(),
+    DATABASE_URL: z.string().url(),
 
-    REDIS_URL: z.string(),
+    REDIS_URL: z.string().url(),
     REDIS_TOKEN: z.string(),
 
     JWT_ACCESS_SECRET: z.string(),
@@ -44,10 +44,8 @@ const envSchema = z.object({
 const _env = envSchema.safeParse(process.env);
 
 if (!_env.success) {
-    const errorMsg = `❌ Invalid environment variables: ${JSON.stringify(_env.error.format(), null, 2)}`;
-    console.error(errorMsg);
-    // In serverless environments, throwing an error is better for log capture than process.exit
-    throw new Error(errorMsg);
+    console.error('❌ Invalid environment variables:', JSON.stringify(_env.error.format(), null, 4));
+    process.exit(1);
 }
 
 export const env = _env.data;
