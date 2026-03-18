@@ -1,7 +1,7 @@
 import { pool } from '../../config/db';
 import { env } from '../../config/env';
 // import { redis } from '../../config/redis';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { v4 as uuidv4 } from 'uuid';
 import { RegisterInput, LoginInput } from './auth.schema';
