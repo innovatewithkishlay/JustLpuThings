@@ -55,7 +55,7 @@ export class AdminController {
             const adminId = req.user!.userId;
             const data = adminMaterialUploadSchema.parse(req.body);
 
-            const file = req.file as any;
+            const file = (req as any).file;
             if (!file && !data.youtube_url) {
                 throw { statusCode: 400, message: 'Either a PDF file or a valid YouTube URL is required' };
             }

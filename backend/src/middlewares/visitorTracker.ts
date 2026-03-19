@@ -20,7 +20,7 @@ export const visitorTracker = async (req: Request, res: Response, next: NextFunc
         pool.query(
             'INSERT INTO visitor_logs (ip_hash) VALUES ($1)',
             [ipHash]
-        ).catch(err => console.error('[VISITOR:LOG:ERR]', err));
+        ).catch((err: any) => console.error('[VISITOR:LOG:ERR]', err));
 
         // Aggregate into daily_platform_stats (fire and forget)
         // Only increment total_active_users if this IP hasn't been seen today
@@ -37,7 +37,7 @@ export const visitorTracker = async (req: Request, res: Response, next: NextFunc
                 total_views = daily_platform_stats.total_views + 1,
                 total_active_users = daily_platform_stats.total_active_users + 
                     CASE WHEN EXISTS (SELECT 1 FROM visitor_logs WHERE ip_hash = $1 AND visited_at >= CURRENT_DATE) THEN 0 ELSE 1 END
-        `, [ipHash]).catch(err => console.error('[DAILY:STATS:ERR]', err));
+        `, [ipHash]).catch((err: any) => console.error('[DAILY:STATS:ERR]', err));
 
     } catch (err) {
         console.error('[VISITOR:TRACKER:ERR]', err);

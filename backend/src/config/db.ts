@@ -9,7 +9,7 @@ export const pool = new Pool({
     connectionTimeoutMillis: 2000,
 });
 
-pool.on('error', (err) => {
+pool.on('error', (err: any) => {
     logger.error({ err }, 'Unexpected error on idle PostgreSQL client');
 });
 

@@ -6,7 +6,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 export class AdminMaterialsService {
 
-    static async uploadMaterial(adminId: string, data: AdminMaterialUploadInput, file?: Express.Multer.File) {
+    static async uploadMaterial(adminId: string, data: AdminMaterialUploadInput, file?: any) {
         if (file && file.mimetype !== 'application/pdf') {
             throw { statusCode: 400, message: 'Invalid file type. Only PDF is allowed.' };
         }

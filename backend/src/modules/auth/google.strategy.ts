@@ -10,7 +10,7 @@ passport.use(
             clientSecret: env.GOOGLE_CLIENT_SECRET,
             callbackURL: env.GOOGLE_CALLBACK_URL,
         },
-        async (_accessToken, _refreshToken, profile: Profile, done) => {
+        async (_accessToken: string, _refreshToken: string, profile: Profile, done: any) => {
             try {
                 const googleId = profile.id;
                 const email = profile.emails?.[0]?.value;
