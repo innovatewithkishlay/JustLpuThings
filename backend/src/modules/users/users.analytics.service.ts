@@ -94,7 +94,7 @@ export class UserAnalyticsService {
             avg_completion_rate: Math.round(parseFloat(overview.avg_completion_rate)),
             most_studied_subject: mostStudied ? mostStudied.name : 'None yet',
             last_active: overview.last_active,
-            daily_activity: dailyRes.rows.map(row => ({
+            daily_activity: dailyRes.rows.map((row: any) => ({
                 date: row.date.toISOString().split('T')[0],
                 time_spent: parseInt(row.time_spent),
                 materials_opened: parseInt(row.materials_opened)

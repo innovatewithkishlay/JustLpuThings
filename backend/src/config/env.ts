@@ -41,11 +41,4 @@ const envSchema = z.object({
     GOOGLE_CALLBACK_URL: z.string().default('http://localhost:8000/api/v1/auth/callback/google'),
 });
 
-const _env = envSchema.safeParse(process.env);
-
-if (!_env.success) {
-    console.error('❌ Invalid environment variables:', JSON.stringify(_env.error.format(), null, 4));
-    process.exit(1);
-}
-
-export const env = _env.data;
+export const env = envSchema.parse(process.env);
