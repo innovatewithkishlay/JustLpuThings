@@ -11,6 +11,7 @@ passport.use(
             callbackURL: env.GOOGLE_CALLBACK_URL,
         },
         async (_accessToken: string, _refreshToken: string, profile: Profile, done: any) => {
+            console.log(`[OAUTH:DEBUG] Attempting login with callbackURL: ${env.GOOGLE_CALLBACK_URL}`);
             try {
                 const googleId = profile.id;
                 const email = profile.emails?.[0]?.value;
