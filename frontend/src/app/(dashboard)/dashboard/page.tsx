@@ -65,18 +65,16 @@ export default function DashboardPage() {
                 {/* MTH Special Section */}
                 {(mathSpecial.length > 0 || isMathLoading) && (
                     <motion.section variants={fadeUp} className="relative">
-                        <div className="relative rounded-[2.5rem] overflow-hidden mb-8 group border border-border/40 shadow-2xl shadow-primary/5">
+                        <div className="relative h-[160px] md:h-[240px] rounded-[2.5rem] overflow-hidden mb-8 group border border-border/40 shadow-2xl shadow-primary/5 bg-[#0a0a0a] flex items-center justify-center">
                             <img
                                 src="/assets/math.png"
                                 alt="MTH Special"
-                                className="w-full h-auto transition-transform duration-700 group-hover:scale-[1.02]"
+                                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
                             />
-                            {/* Overlay for better text visibility if needed, though the image has text */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
 
                             {/* Decorative Elements */}
-                            <div className="absolute top-6 left-6 md:top-10 md:left-10 z-10">
-                                <span className="px-4 py-2 rounded-full bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-xl animate-pulse">
+                            <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
+                                <span className="px-3 py-1.5 rounded-full bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-xl animate-pulse">
                                     <Sparkles className="w-3 h-3" /> Special Collection
                                 </span>
                             </div>
