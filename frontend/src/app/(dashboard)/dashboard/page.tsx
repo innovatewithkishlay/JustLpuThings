@@ -65,11 +65,11 @@ export default function DashboardPage() {
                 {/* MTH Special Section */}
                 {(mathSpecial.length > 0 || isMathLoading) && (
                     <motion.section variants={fadeUp} className="relative">
-                        <div className="relative h-[250px] md:h-[350px] rounded-[2.5rem] overflow-hidden mb-8 group">
-                            {/* Banner Image Background */}
-                            <div
-                                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                style={{ backgroundImage: 'url(\'/assets/math.png\')' }}
+                        <div className="relative rounded-[2.5rem] overflow-hidden mb-8 group border border-border/40 shadow-2xl shadow-primary/5">
+                            <img
+                                src="/assets/math.png"
+                                alt="MTH Special"
+                                className="w-full h-auto transition-transform duration-700 group-hover:scale-[1.02]"
                             />
                             {/* Overlay for better text visibility if needed, though the image has text */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
