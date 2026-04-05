@@ -69,7 +69,7 @@ export default function DashboardPage() {
                             {/* Banner Image Background */}
                             <div
                                 className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                                style={{ backgroundImage: 'url(\'/images/mth-special.png\')' }}
+                                style={{ backgroundImage: 'url(\'/assets/math.png\')' }}
                             />
                             {/* Overlay for better text visibility if needed, though the image has text */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
