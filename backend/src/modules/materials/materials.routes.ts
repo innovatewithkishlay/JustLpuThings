@@ -8,6 +8,7 @@ const router = Router();
 router.get('/', requireAuth, MaterialsController.list);
 router.get('/semesters', requireAuth, MaterialsController.listSemesters);
 router.get('/subjects', requireAuth, MaterialsController.listSubjects);
+router.get('/subjects/math-special', requireAuth, MaterialsController.listMathSpecialSubjects);
 router.get('/:slug', requireAuth, MaterialsController.getBySlug);
 
 export default router;

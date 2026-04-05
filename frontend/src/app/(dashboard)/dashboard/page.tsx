@@ -27,6 +27,13 @@ interface Semester {
     is_active: boolean;
 }
 
+interface MathSubject {
+    id: string;
+    name: string;
+    slug: string;
+    semester_number: number;
+}
+
 export default function DashboardPage() {
     const router = useRouter()
     const { user } = useAuth()
@@ -37,14 +44,75 @@ export default function DashboardPage() {
         queryFn: () => apiClient<Semester[]>('/materials/semesters').then(res => res || [])
     })
 
+    const { data: mathSpecial = [], isLoading: isMathLoading } = useQuery({
+        queryKey: ["math-special"],
+        queryFn: () => apiClient<MathSubject[]>('/materials/subjects/math-special').then(res => res || [])
+    })
+
     const handleSemesterClick = (id: number, active: boolean) => {
         if (!active) return
         router.push(`/dashboard/semester/${id}`)
     }
 
+    const handleSubjectClick = (semesterId: number, subjectSlug: string) => {
+        router.push(`/dashboard/semester/${semesterId}/subject/${subjectSlug}`)
+    }
+
     return (
         <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-6xl mx-auto">
             <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-12">
+
+                {/* MTH Special Section */}
+                {(mathSpecial.length > 0 || isMathLoading) && (
+                    <motion.section variants={fadeUp} className="relative">
+                        <div className="relative h-[250px] md:h-[350px] rounded-[2.5rem] overflow-hidden mb-8 group">
+                            {/* Banner Image Background */}
+                            <div
+                                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                                style={{ backgroundImage: 'url(\'/images/mth-special.png\')' }}
+                            />
+                            {/* Overlay for better text visibility if needed, though the image has text */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-40 transition-opacity duration-500" />
+
+                            {/* Decorative Elements */}
+                            <div className="absolute top-6 left-6 md:top-10 md:left-10 z-10">
+                                <span className="px-4 py-2 rounded-full bg-amber-500 text-black text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shadow-xl animate-pulse">
+                                    <Sparkles className="w-3 h-3" /> Special Collection
+                                </span>
+                            </div>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {isMathLoading ? (
+                                Array.from({ length: 3 }).map((_, i) => (
+                                    <div key={i} className="h-32 rounded-3xl bg-muted/20 animate-pulse" />
+                                ))
+                            ) : (
+                                mathSpecial.map((sub: MathSubject) => (
+                                    <motion.div key={sub.id} whileHover={{ y: -4 }}>
+                                        <Card
+                                            onClick={() => handleSubjectClick(sub.semester_number, sub.slug)}
+                                            className="p-6 rounded-[2rem] bg-surface border-border/40 hover:border-primary/40 transition-all cursor-pointer group flex items-center gap-5"
+                                        >
+                                            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 transition-colors group-hover:bg-amber-500 group-hover:text-white shrink-0">
+                                                <span className="text-xl font-heading font-black">MTH</span>
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Semester {sub.semester_number}</p>
+                                                <h4 className="font-heading font-black text-lg text-foreground truncate group-hover:text-primary transition-colors">
+                                                    {sub.name}
+                                                </h4>
+                                                <div className="mt-2 flex items-center gap-2 text-[9px] font-bold text-amber-500 uppercase tracking-widest">
+                                                    Notes • PYQs • Tricks
+                                                </div>
+                                            </div>
+                                        </Card>
+                                    </motion.div>
+                                ))
+                            )}
+                        </div>
+                    </motion.section>
+                )}
 
                 <motion.section variants={fadeUp}>
                     <div className="flex flex-col gap-2 mb-10 text-center md:text-left">

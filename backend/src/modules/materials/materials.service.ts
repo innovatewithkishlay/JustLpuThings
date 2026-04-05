@@ -140,4 +140,17 @@ export class MaterialsService {
         const result = await pool.query(sql);
         return result.rows;
     }
+
+    static async getMathSpecialSubjects() {
+        const sql = `
+            SELECT s.id, s.name, s.slug, sem.number as semester_number
+            FROM subjects s
+            JOIN semesters sem ON s.semester_id = sem.id
+            WHERE (s.name ILIKE '%Math%' OR s.slug ILIKE 'MTH%')
+            AND sem.is_active = true
+            ORDER BY sem.number ASC, s.name ASC
+        `;
+        const result = await pool.query(sql);
+        return result.rows;
+    }
 }

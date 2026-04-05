@@ -54,4 +54,13 @@ export class MaterialsController {
             next(err);
         }
     }
+
+    static async listMathSpecialSubjects(req: Request, res: Response, next: NextFunction) {
+        try {
+            const subjects = await MaterialsService.getMathSpecialSubjects();
+            res.json({ success: true, data: subjects });
+        } catch (err) {
+            next(err);
+        }
+    }
 }
