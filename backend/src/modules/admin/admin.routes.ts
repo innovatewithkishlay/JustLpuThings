@@ -27,7 +27,7 @@ const upload = multer({
 const adminLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
     max: env.RATE_LIMIT_ADMIN,
-    keyGenerator: (req) => req.user?.userId || req.ip || 'anonymous',
+    keyGenerator: (req) => req.user?.userId?.toString() || 'anonymous',
     message: { success: false, error: { message: 'Too many admin operations, please try again later.' } },
     skip: (req) => req.method === 'GET', // RELAX: Background polling/analytics shouldn't trigger lockouts.
     handler: (req, _res, next) => {
