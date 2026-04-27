@@ -26,22 +26,31 @@ async function attemptTokenRefresh(): Promise<boolean> {
 
     isRefreshing = true;
     refreshPromise = (async () => {
-        try {
-            const res = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        const storedRefreshToken = typeof window !== 'undefined' ? localStorage.getItem('refreshToken') : null;
+
+        const performRefresh = async () => {
+            return await fetch(`${API_BASE_URL}/auth/refresh`, {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' }
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refreshToken: storedRefreshToken })
             });
+        };
+
+        try {
+            let res = await performRefresh();
+
+            // --- Retry Logic: Handle Render cold starts or transient hiccups (5xx/404) ---
+            if (!res.ok && (res.status >= 500 || res.status === 404)) {
+                await new Promise(r => setTimeout(r, 2000));
+                res = await performRefresh();
+            }
+
             if (!res.ok) return false;
 
             const data = await res.json();
-            // Update localStorage with fresh tokens
-            if (data?.data?.accessToken) {
-                localStorage.setItem('accessToken', data.data.accessToken);
-            }
-            if (data?.data?.refreshToken) {
-                localStorage.setItem('refreshToken', data.data.refreshToken);
-            }
+            if (data?.data?.accessToken) localStorage.setItem('accessToken', data.data.accessToken);
+            if (data?.data?.refreshToken) localStorage.setItem('refreshToken', data.data.refreshToken);
             return true;
         } catch {
             return false;

@@ -38,7 +38,7 @@ export class AuthController {
 
     static async refresh(req: Request, res: Response, next: NextFunction) {
         try {
-            const rawRefresh = req.cookies?.refreshToken;
+            const rawRefresh = req.cookies?.refreshToken || req.body?.refreshToken;
             if (!rawRefresh) {
                 return res.status(401).json({ success: false, error: { message: 'No refresh token provided' } });
             }
