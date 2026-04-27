@@ -93,8 +93,12 @@ export function TopNavbar() {
             >
                 {/* Logo / Brand */}
                 <Link href="/" className="flex items-center gap-3 group">
-                    <div className="w-9 h-9 rounded-2xl bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                        <BookOpen className="h-4 w-4 text-primary" />
+                    <div className="w-10 h-10 rounded-2xl overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
+                        <img
+                            src="/logo.png"
+                            alt="JustLpuThings Logo"
+                            className="w-full h-full object-cover p-1.5"
+                        />
                     </div>
                     <span className="text-xl font-heading font-bold tracking-tight text-foreground">
                         JustLPU<span className="text-primary/80">Things</span>

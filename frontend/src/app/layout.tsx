@@ -22,6 +22,11 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: 'JustLpuThings | Academic Material Management',
   description: 'A dedicated platform prioritizing academic progression.',
+  icons: {
+    icon: '/logo.png',
+    shortcut: '/logo.png',
+    apple: '/logo.png',
+  }
 };
 
 import { MainLayoutWrapper } from '@/components/layout/MainLayoutWrapper';
