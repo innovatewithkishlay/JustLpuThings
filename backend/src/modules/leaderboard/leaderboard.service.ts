@@ -38,7 +38,7 @@ export class LeaderboardService {
                 u.name,
                 u.email,
                 u.avatar_url,
-                COALESCE(SUM(mp.time_spent), 0)::int as total_time_spent,
+                COALESCE(SUM(mp.time_spent), 0)::bigint as total_time_spent,
                 COUNT(DISTINCT mp.material_id)::int as materials_opened,
                 MAX(rh.last_active) as last_active
             FROM users u
@@ -50,8 +50,8 @@ export class LeaderboardService {
             ) rh ON true
             WHERE u.role = 'USER'
             AND (u.is_blocked IS NOT TRUE)
-            AND COALESCE((SELECT SUM(time_spent) FROM material_progress WHERE user_id = u.id), 0) > 0
             GROUP BY u.id, u.name, u.email, u.avatar_url, rh.last_active
+            HAVING COALESCE(SUM(mp.time_spent), 0) > 0
             ORDER BY total_time_spent DESC
             LIMIT 20;
         `;
@@ -87,7 +87,7 @@ export class LeaderboardService {
 
         // Get ALL user ranks for percentile calculation
         const allRanksQuery = `
-            SELECT user_id, SUM(time_spent)::int as total_time
+            SELECT user_id, SUM(time_spent)::bigint as total_time
             FROM material_progress
             GROUP BY user_id
             HAVING SUM(time_spent) > 0
