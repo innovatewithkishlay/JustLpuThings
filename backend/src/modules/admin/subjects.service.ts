@@ -29,16 +29,16 @@ export class AdminSubjectsService {
         try {
             await client.query('BEGIN');
 
-            await client.query(
-                'UPDATE semesters SET is_active = $1 WHERE number = $2',
+            const updated = await client.query(
+                'UPDATE semesters SET is_active = $1 WHERE number = $2 RETURNING id',
                 [isActive, semesterNumber]
             );
 
-            // Audit Log
+            // Audit Log (entity_id is a UUID column, so log the semester's id, not its number)
             await client.query(
                 `INSERT INTO audit_logs (admin_id, action, entity_type, entity_id, metadata)
                  VALUES ($1, $2, $3, $4, $5)`,
-                [adminId, 'TOGGLE_SEMESTER', 'semester', semesterNumber.toString(), JSON.stringify({ number: semesterNumber, is_active: isActive })]
+                [adminId, 'TOGGLE_SEMESTER', 'semester', updated.rows[0]?.id ?? null, JSON.stringify({ number: semesterNumber, is_active: isActive })]
             );
 
             await client.query('COMMIT');
