@@ -1,21 +1,10 @@
 "use client"
 
 import { useParams, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Card } from '@/components/ui/card'
-import { ChevronLeft, FolderOpen, Loader2 } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { ArrowRight } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
-
-const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.4 } }
-}
-
-const stagger = {
-    visible: { transition: { staggerChildren: 0.05 } }
-}
+import { EmptyNote, PageHead } from '@/components/app/Notebook'
 
 interface Subject {
     id: string;
@@ -34,69 +23,45 @@ export default function SemesterPage() {
         queryFn: () => apiClient<Subject[]>(`/materials/subjects?semesterNumber=${semesterId}`)
     })
 
-    const handleBack = () => {
-        router.push('/dashboard')
-    }
-
     const handleSubjectClick = (slug: string) => {
         router.push(`/dashboard/semester/${semesterId}/subject/${slug}`)
     }
 
-    if (isLoading) {
-        return (
-            <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-primary/40" />
-            </div>
-        )
-    }
-
     return (
-        <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-5xl mx-auto">
-            <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-10">
+        <div className="min-h-[calc(100vh-4rem)] pb-28 page-container max-w-5xl mx-auto">
+            <PageHead
+                back="/dashboard"
+                crumbs={[{ label: 'Dashboard', href: '/dashboard' }, { label: `Semester ${semesterId}` }]}
+                title={<>Semester {semesterId}</>}
+                sub={isLoading ? 'Loading subjects…' : `${subjects.length} subject${subjects.length === 1 ? '' : 's'}. Pick one to see its notes and papers.`}
+            />
 
-                <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/50 pb-6">
-                    <div className="flex items-center gap-4">
-                        <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-xl hover:bg-muted">
-                            <ChevronLeft className="w-5 h-5" />
-                        </Button>
-                        <div>
-                            <h1 className="text-2xl font-heading font-black tracking-tight">Semester {semesterId}</h1>
-                            <p className="text-muted-foreground font-medium text-sm">Select a subject to view resources</p>
-                        </div>
-                    </div>
-                </motion.div>
-
-                {subjects.length === 0 ? (
-                    <motion.div variants={fadeUp} className="text-center py-20 bg-muted/10 rounded-[32px] border border-dashed border-border/50">
-                        <FolderOpen className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
-                        <h3 className="text-lg font-bold text-foreground mb-1">No Subjects Found</h3>
-                        <p className="text-muted-foreground text-sm">New subjects will appear here once indexed by admin.</p>
-                    </motion.div>
-                ) : (
-                    <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                        {subjects.map((sub: Subject) => (
-                            <motion.div key={sub.slug} whileHover={{ y: -4, scale: 1.01 }}>
-                                <Card
-                                    onClick={() => handleSubjectClick(sub.slug)}
-                                    className="cursor-pointer h-full flex items-center p-5 rounded-[20px] bg-surface border-border/60 hover:border-primary/40 soft-shadow hover:shadow-primary/10 transition-all group relative overflow-hidden"
-                                >
-                                    <div className="absolute right-0 bottom-0 w-24 h-24 bg-primary/5 rounded-full blur-2xl -mr-6 -mb-6 pointer-events-none group-hover:bg-primary/10 transition-colors duration-500" />
-
-                                    <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center border border-primary/20 text-primary mr-4 group-hover:bg-primary text-primary group-hover:text-primary-foreground transition-colors duration-300">
-                                        <FolderOpen className="w-5 h-5" />
-                                    </div>
-
-                                    <div className="flex-1 min-w-0">
-                                        <h3 className="font-heading font-bold text-base truncate group-hover:text-primary transition-colors">{sub.name}</h3>
-                                        <p className="text-[10px] font-mono font-bold tracking-widest text-muted-foreground uppercase mt-0.5 italic">/{sub.slug}</p>
-                                    </div>
-                                </Card>
-                            </motion.div>
-                        ))}
-                    </motion.div>
-                )}
-
-            </motion.div>
+            {isLoading ? (
+                <ul className="border-t border-foreground/80">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                        <li key={i} className="h-[72px] border-b border-border animate-pulse bg-muted/30" />
+                    ))}
+                </ul>
+            ) : subjects.length === 0 ? (
+                <EmptyNote title="Nothing here yet">New subjects show up here as soon as the admin adds them.</EmptyNote>
+            ) : (
+                <ol className="border-t border-foreground/80">
+                    {subjects.map((sub: Subject, i: number) => (
+                        <li key={sub.slug} className="border-b border-border">
+                            <button
+                                type="button"
+                                onClick={() => handleSubjectClick(sub.slug)}
+                                className="app-row-link group w-full grid grid-cols-[36px_110px_1fr_auto] sm:grid-cols-[48px_140px_1fr_auto] items-center gap-3 py-5 px-2 text-left"
+                            >
+                                <span className="font-mono text-[12px] text-muted-foreground tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+                                <span className="font-mono text-[13px] text-ink-red uppercase">{sub.name.toLowerCase() === sub.slug.toLowerCase() ? '' : sub.slug}</span>
+                                <span className="font-heading text-[22px] leading-tight truncate">{sub.name}</span>
+                                <ArrowRight className="w-4 h-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                            </button>
+                        </li>
+                    ))}
+                </ol>
+            )}
         </div>
     )
 }

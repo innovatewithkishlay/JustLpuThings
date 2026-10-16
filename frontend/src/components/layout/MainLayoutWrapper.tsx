@@ -10,6 +10,8 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     const pathname = usePathname()
     const [showWhatsApp, setShowWhatsApp] = React.useState(true)
     const isViewer = pathname?.startsWith('/viewer/')
+    // Admins are working, not studying: keep the channel bubble off their screens
+    const isAdmin = pathname?.startsWith('/admin')
 
     if (isViewer) {
         return (
@@ -21,12 +23,12 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
 
     return (
         // The home page runs edge-to-edge under the transparent navbar and handles its own top spacing
-        <main className={`min-h-screen bg-background ${pathname === '/' ? '' : 'pt-[112px]'}`}>
+        <main className={`min-h-screen bg-background ${pathname === '/' ? '' : 'pt-24 md:pt-[112px]'}`}>
             {children}
 
             {/* Global Floating WhatsApp Button */}
             <AnimatePresence>
-                {showWhatsApp && (
+                {showWhatsApp && !isAdmin && (
                     <motion.a
                         href={WHATSAPP_COMMUNITY_LINK}
                         target="_blank"
@@ -40,7 +42,7 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                             // Hide after a small delay to allow the link to open
                             setTimeout(() => setShowWhatsApp(false), 1000)
                         }}
-                        className="fixed bottom-8 right-8 z-[100] w-14 h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-2xl shadow-[#25D366]/40 group border-4 border-white dark:border-[#06080C] transition-colors"
+                        className="fixed bottom-5 right-5 sm:bottom-8 sm:right-8 z-[100] w-12 h-12 sm:w-14 sm:h-14 bg-[#25D366] text-white rounded-full flex items-center justify-center shadow-[0_10px_24px_-10px_rgba(0,0,0,0.45)] group transition-colors"
                     >
                         <MessageCircle className="w-7 h-7 fill-current" />
 
@@ -49,8 +51,6 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
                             Follow WhatsApp Channel 🌍🤳
                         </span>
 
-                        {/* Ring Pulse Effect */}
-                        <span className="absolute inset-0 rounded-full bg-[#25D366]/30 animate-ping -z-10" />
                     </motion.a>
                 )}
             </AnimatePresence>

@@ -1,67 +1,15 @@
 "use client"
 
-import { useState, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { useState, useRef, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { Users, BookOpen, Activity, ShieldAlert, Upload, FileIcon, Loader2, Trash2, Edit3, ExternalLink, Check, AlertCircle, Info, LayoutDashboard, Library, Settings2, CloudUpload, ChevronRight, Menu, X, ArrowUpRight, BarChart3, Fingerprint, Heart, Zap, Target } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { Loader2, Trash2, Edit3, Check, FileUp } from 'lucide-react'
 import { Label } from '@/components/ui/label'
-import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog'
-import { useRouter } from 'next/navigation'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { toast } from 'sonner'
-
-// Premium Internal UI Components (Replacements for missing shadcn modules)
-const Badge = ({ children, className = "", variant = "default" }: any) => {
-    const variants: any = {
-        default: "bg-primary/10 text-primary border-primary/20",
-        outline: "border-border/50 text-muted-foreground",
-        secondary: "bg-muted/10 text-muted-foreground border-border/40",
-    };
-    return (
-        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-widest border transition-all ${variants[variant] || variants.default} ${className}`}>
-            {children}
-        </span>
-    );
-};
-
-const TooltipProvider = ({ children }: any) => <>{children}</>;
-const Tooltip = ({ children }: any) => <div className="relative group">{children}</div>;
-const TooltipTrigger = ({ children, asChild }: any) => <>{children}</>;
-const TooltipContent = ({ children, className = "", side = "top" }: any) => {
-    const sideClasses: any = {
-        top: "bottom-full left-1/2 -translate-x-1/2 mb-2",
-        right: "left-full top-1/2 -translate-y-1/2 ml-2",
-        bottom: "top-full left-1/2 -translate-x-1/2 mt-2",
-        left: "right-full top-1/2 -translate-y-1/2 mr-2",
-    };
-    return (
-        <div className={`absolute hidden group-hover:block z-[100] px-3 py-1.5 rounded-lg bg-black/80 backdrop-blur-md border border-white/10 text-white text-[10px] font-black uppercase tracking-widest pointer-events-none shadow-2xl whitespace-nowrap ${sideClasses[side] || sideClasses.top} ${className}`}>
-            {children}
-        </div>
-    );
-};
-
-// Internal Table Components for Build Stability
-const Table = ({ children, className = "" }: any) => <div className={`w-full overflow-auto ${className}`}>{children}</div>;
-const TableHeader = ({ children, className = "" }: any) => <div className={`border-b border-border/20 ${className}`}>{children}</div>;
-const TableBody = ({ children, className = "" }: any) => <div className={className}>{children}</div>;
-const TableRow = ({ children, className = "" }: any) => <div className={`flex items-center transition-colors hover:bg-muted/50 ${className}`}>{children}</div>;
-const TableHead = ({ children, className = "" }: any) => <div className={`px-4 py-3 text-left align-middle font-black text-[10px] uppercase tracking-widest text-muted-foreground ${className}`}>{children}</div>;
-const TableCell = ({ children, className = "" }: any) => <div className={`px-4 py-3 align-middle text-sm ${className}`}>{children}</div>;
-
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-}
-
-const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-}
+import { AdminShell, AdminView, viewFromHash } from '@/components/app/AdminShell'
+import { EmptyNote, Kicker, PageHead, SectionHead, Stat, Tag } from '@/components/app/Notebook'
 
 interface TelemetryStats {
     totalUsers: number;
@@ -113,10 +61,17 @@ interface Semester {
 
 export default function AdminDashboard() {
     const queryClient = useQueryClient()
-    const router = useRouter()
     const fileInputRef = useRef<HTMLInputElement>(null)
 
-    const [activeView, setActiveView] = useState('OVERVIEW')
+    const [activeView, setActiveView] = useState<AdminView>('OVERVIEW')
+
+    // Sidebar links from other admin pages arrive as /admin#library etc.
+    useEffect(() => {
+        const sync = () => setActiveView(viewFromHash(window.location.hash))
+        sync()
+        window.addEventListener('hashchange', sync)
+        return () => window.removeEventListener('hashchange', sync)
+    }, [])
     const [isNavCollapsed, setIsNavCollapsed] = useState(false)
     const [isAdvancedAnalyticsOpen, setIsAnalyticsOpen] = useState(false)
 
@@ -318,1006 +273,563 @@ export default function AdminDashboard() {
         return acc;
     }, {});
 
-    const navItems = [
-        { id: 'OVERVIEW', label: 'Command Center', icon: LayoutDashboard, desc: 'Platform Telemetry' },
-        { id: 'LIBRARY', label: 'Architecture', icon: Library, desc: 'Material Index' },
-        { id: 'REGISTRY', label: 'Subject Registry', icon: Settings2, desc: 'Academic Mappings' },
-        { id: 'DEPLOYMENT', label: 'Deployment', icon: CloudUpload, desc: 'R2 Pipeline' },
-    ] as const;
+    const selectView = (view: AdminView) => {
+        setActiveView(view)
+        const hash = view === 'OVERVIEW' ? '' : view === 'LIBRARY' ? '#library' : view === 'REGISTRY' ? '#registry' : '#upload'
+        window.history.replaceState(null, '', `/admin${hash}`)
+    }
 
     if (statsLoading || materialsLoading) {
         return <div className="page-container"><DashboardSkeleton /></div>
     }
 
+    // Shared bits for the 30-day chart
+    const days = trafficHistory as TrafficDay[]
+    const maxHits = Math.max(...days.map(d => d.totalHits), 1)
+    // Power scale so quiet days stay visible next to big peaks
+    const scaleVal = (val: number) => Math.pow(val / maxHits, 0.45) * 100
+    const sum = (k: keyof TrafficDay) => days.reduce((s, d) => s + (d[k] as number), 0)
+    const shortDate = (d: string, opts: Intl.DateTimeFormatOptions) => new Date(d).toLocaleDateString('en-IN', opts)
+
+    const CATEGORY_LABEL: Record<string, string> = { notes: 'Notes', pyqs: 'End-term', midterm: 'Mid-term', ca: 'CA', ppt: 'Slides', syllabus: 'Syllabus', other: 'Other' }
+
     return (
-        <TooltipProvider>
-            <div className="flex bg-[#FBFCFE] dark:bg-[#06080C] selection:bg-primary/20 min-h-[calc(100vh-112px)]">
-                {/* Desktop Sidebar Rail */}
-                <motion.aside
-                    initial={false}
-                    animate={{ width: isNavCollapsed ? 80 : 280 }}
-                    className="hidden lg:flex flex-col border-r border-border/40 bg-white/50 dark:bg-black/20 backdrop-blur-xl sticky top-[112px] h-[calc(100vh-112px)] z-40 overflow-hidden"
-                >
-                    <div className="p-6 flex items-center justify-between">
-                        <AnimatePresence mode="wait">
-                            {!isNavCollapsed && (
-                                <motion.div
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    exit={{ opacity: 0, x: -10 }}
-                                    className="flex items-center gap-3"
-                                >
-                                    <div className="w-8 h-8 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20">
-                                        <ShieldAlert className="w-5 h-5 text-white" />
-                                    </div>
-                                    <span className="font-heading font-black tracking-tighter text-xl italic uppercase">Admin<span className="text-primary italic">X</span></span>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                        <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => setIsNavCollapsed(!isNavCollapsed)}
-                            className="h-8 w-8 rounded-lg hover:bg-primary/5 text-muted-foreground"
-                        >
-                            {isNavCollapsed ? <Menu className="w-4 h-4" /> : <ChevronRight className="w-4 h-4 rotate-180" />}
-                        </Button>
-                    </div>
+        <AdminShell
+            active={activeView as AdminView}
+            onSelect={selectView}
+            collapsed={isNavCollapsed}
+            onToggleCollapsed={() => setIsNavCollapsed(!isNavCollapsed)}
+        >
+            {activeView === 'OVERVIEW' && (
+                <div>
+                    <PageHead
+                        title={<>Overview</>}
+                        sub="How the site is doing. These numbers refresh every 15 seconds."
+                        actions={days.length > 0 ? (
+                            <button type="button" onClick={() => setIsAnalyticsOpen(true)} className="app-btn-quiet">
+                                Day-by-day table
+                            </button>
+                        ) : undefined}
+                    />
 
-                    <div className="flex-1 px-4 py-6 space-y-2 overflow-y-auto no-scrollbar">
-                        {navItems.map((item) => (
-                            <Tooltip key={item.id} delayDuration={isNavCollapsed ? 0 : 700}>
-                                <TooltipTrigger asChild>
-                                    <button
-                                        onClick={() => setActiveView(item.id)}
-                                        className={`w-full flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all group relative ${activeView === item.id
-                                            ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                                            : 'text-muted-foreground hover:bg-primary/5 hover:text-foreground'
-                                            }`}
-                                    >
-                                        <item.icon className="w-5 h-5 shrink-0" />
-                                        {!isNavCollapsed && (
-                                            <div className="flex flex-col items-start overflow-hidden text-left">
-                                                <span className="text-sm font-black tracking-tight">{item.label}</span>
-                                                <span className={`text-[10px] font-bold uppercase tracking-widest opacity-60 ${activeView === item.id ? 'text-primary-foreground/70' : ''}`}>{item.desc}</span>
-                                            </div>
-                                        )}
-                                        {activeView === item.id && (
-                                            <motion.div
-                                                layoutId="activePill"
-                                                className="absolute left-0 w-1 h-6 bg-white rounded-r-full"
-                                                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-                                            />
-                                        )}
-                                    </button>
-                                </TooltipTrigger>
-                                {isNavCollapsed && <TooltipContent side="right" className="font-bold text-xs">{item.label}</TooltipContent>}
-                            </Tooltip>
-                        ))}
-                    </div>
+                    <dl className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 border-b border-border -mt-4">
+                        <Stat label="Materials live" value={(stats?.totalMaterials || 0).toLocaleString('en-IN')} />
+                        <Stat label="Visits, all time" value={(stats?.totalSessions || 0).toLocaleString('en-IN')} />
+                        <Stat label="Visits today" value={(stats?.trafficToday || 0).toLocaleString('en-IN')} note={`${stats?.visitsToday || 0} unique`} />
+                        <Stat label="Unique visitors" value={(stats?.totalUniqueVisitors || 0).toLocaleString('en-IN')} />
+                        <Stat
+                            label="Flagged accounts"
+                            value={<span className={(stats?.flaggedUsers || 0) > 0 ? 'text-ink-red' : ''}>{stats?.flaggedUsers || 0}</span>}
+                        />
+                    </dl>
 
-                    <div className="p-6 border-t border-border/40 space-y-4">
-                        <Button
-                            onClick={() => router.push('/admin/feedbacks')}
-                            variant="outline"
-                            className={`w-full h-12 rounded-2xl border-border/50 hover:border-amber-500/50 gap-3 font-black text-[10px] uppercase tracking-widest transition-all ${isNavCollapsed ? 'px-0 justify-center' : 'px-4'}`}
-                        >
-                            <Heart className="w-4 h-4 text-amber-500 fill-current" />
-                            {!isNavCollapsed && <span>Feedbacks</span>}
-                        </Button>
-                        <Button
-                            onClick={() => router.push('/admin/users')}
-                            variant="outline"
-                            className={`w-full h-12 rounded-2xl border-border/50 hover:border-primary/50 gap-3 font-black text-[10px] uppercase tracking-widest transition-all ${isNavCollapsed ? 'px-0 justify-center' : 'px-4'}`}
-                        >
-                            <Users className="w-4 h-4 text-blue-500" />
-                            {!isNavCollapsed && <span>User Registry</span>}
-                        </Button>
-                    </div>
-                </motion.aside>
+                    {days.length > 0 && (
+                        <section className="mt-12" aria-label="Last 30 days">
+                            <SectionHead
+                                n="01"
+                                title="Last 30 days"
+                                aside={
+                                    <span className="flex flex-wrap items-center gap-4 text-[13px]">
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-foreground" /> Visits</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ink-blue" /> Unique</span>
+                                        <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-sm bg-ink-red" /> Sign-ups</span>
+                                    </span>
+                                }
+                            />
 
-                {/* Main Workspace Area */}
-                <main className="flex-1 overflow-y-auto relative no-scrollbar bg-background">
-                    <div className="max-w-[1600px] mx-auto p-6 md:p-10 lg:p-12 min-h-full">
-                        <AnimatePresence mode="wait">
-                            <motion.div
-                                key={activeView}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
-                                className="space-y-10"
-                            >
-                                {activeView === 'OVERVIEW' && (
-                                    <div className="space-y-10">
-                                        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-                                            <div>
-                                                <Badge className="mb-3 px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border-primary/20 space-x-2">
-                                                    <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-                                                    <span className="font-mono text-[9px] font-black uppercase tracking-widest">System Monitor v4.2</span>
-                                                </Badge>
-                                                <h1 className="text-2xl md:text-3xl font-heading font-black tracking-tight italic">Global Telemetry</h1>
-                                                <p className="text-muted-foreground font-medium mt-1.5 max-w-xl text-sm opacity-80">Real-time platform intelligence and audience engagement vectors.</p>
-                                            </div>
-                                            <div className="flex gap-4">
-                                                <Button variant="outline" className="h-12 px-6 rounded-2xl bg-surface border-border/40 font-black text-[10px] uppercase tracking-widest flex items-center gap-2 group">
-                                                    <Fingerprint className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" /> Access Logs
-                                                </Button>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6">
-                                            {[
-                                                { label: 'Total Nodes', val: stats?.totalMaterials || 0, icon: Library, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-                                                { label: 'Full Visits', val: stats?.totalSessions || 0, icon: Activity, color: 'text-emerald-500', bg: 'bg-emerald-500/10', sub: 'Lifetime Sessions' },
-                                                { label: 'Today Traffic', val: stats?.trafficToday || 0, icon: BarChart3, color: 'text-amber-500', bg: 'bg-amber-500/10', sub: `Unique: ${stats?.visitsToday || 0}` },
-                                                { label: 'Unique Reach', val: stats?.totalUniqueVisitors || 0, icon: Fingerprint, color: 'text-purple-500', bg: 'bg-purple-500/10', sub: 'Total Individuals' },
-                                                { label: 'Security Alerts', val: stats?.flaggedUsers || 0, icon: ShieldAlert, color: 'text-rose-500', bg: 'bg-rose-500/10' },
-                                            ].map((stat, i) => (
-                                                <Card key={i} className="border-none shadow-premium bg-surface/50 backdrop-blur-xl rounded-[32px] overflow-hidden group hover:ring-1 ring-primary/20 transition-all">
-                                                    <CardContent className="p-8">
-                                                        <div className={`w-10 h-10 rounded-2xl ${stat.bg} ${stat.color} flex items-center justify-center mb-5 transition-transform group-hover:scale-110`}>
-                                                            <stat.icon className="w-5 h-5" />
-                                                        </div>
-                                                        <div className="text-3xl font-heading font-black tracking-tighter mb-0.5">{stat.val.toLocaleString()}</div>
-                                                        <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">{stat.label}</div>
-                                                        {stat.sub && (
-                                                            <div className="flex items-center gap-1.5 mt-4 text-[10px] font-bold text-muted-foreground/60 italic">
-                                                                <ArrowUpRight className="w-3.5 h-3.5" /> {stat.sub}
-                                                            </div>
-                                                        )}
-                                                    </CardContent>
-                                                </Card>
-                                            ))}
-                                        </div>
-
-                                        {/* Daily Traffic Chart */}
-                                        {trafficHistory.length > 0 && (
-                                            <Card className="border-none shadow-premium bg-surface/50 backdrop-blur-xl rounded-[32px] overflow-hidden">
-                                                <CardContent className="p-8">
-                                                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                                                        <div>
-                                                            <h3 className="text-xl font-heading font-black tracking-tight italic">Traffic Pulse</h3>
-                                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mt-0.5 opacity-60">Full Snapshot: Last 30 Days Vector</p>
-                                                        </div>
-                                                        <div className="flex flex-wrap items-center gap-6">
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-3 h-3 rounded-full bg-gradient-to-t from-primary/80 to-primary/40 shadow-sm shadow-primary/20" />
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Hits</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-3 h-3 rounded-full bg-gradient-to-t from-emerald-500/80 to-emerald-500/40 shadow-sm shadow-emerald-500/20" />
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unique</span>
-                                                            </div>
-                                                            <div className="flex items-center gap-2">
-                                                                <div className="w-3 h-3 rounded bg-gradient-to-t from-amber-500 to-amber-400 shadow-sm shadow-amber-500/30" />
-                                                                <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Signups</span>
-                                                            </div>
-                                                            <Button
-                                                                variant="outline"
-                                                                size="sm"
-                                                                onClick={() => setIsAnalyticsOpen(true)}
-                                                                className="h-9 px-4 rounded-xl border-primary/20 hover:border-primary/50 bg-primary/5 text-primary font-black text-[9px] uppercase tracking-[0.15em] flex items-center gap-2"
-                                                            >
-                                                                <BarChart3 className="w-3 h-3" /> Advanced Analytics
-                                                            </Button>
-                                                        </div>
-                                                    </div>
-
-                                                    <div className="relative flex items-end gap-1.5 h-64 px-2">
-                                                        {/* Professional Grid Lines */}
-                                                        <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none opacity-20">
-                                                            {[1, 0.75, 0.5, 0.25, 0].map((tick) => (
-                                                                <div key={tick} className="w-full border-t border-muted-foreground/30 flex items-center">
-                                                                    <span className="text-[7px] font-black text-muted-foreground/60 pr-2 absolute -left-6">
-                                                                        {(() => {
-                                                                            const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
-                                                                            // Using the same power scale for markers to match visual representation
-                                                                            const val = Math.pow(tick, 2) * maxHits;
-                                                                            return val > 1000 ? `${(val / 1000).toFixed(0)}k` : Math.round(val);
-                                                                        })()}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-
-                                                        {(() => {
-                                                            const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
-
-                                                            // Power scale factor (0.5 = Square Root) to make small values visible next to giant peaks
-                                                            const scaleFactor = 0.45;
-                                                            const scaleVal = (val: number) => (Math.pow(val / maxHits, scaleFactor) * 100);
-
-                                                            return trafficHistory.map((day: TrafficDay, i: number) => {
-                                                                const hitHeight = scaleVal(day.totalHits);
-                                                                const uniqueHeight = scaleVal(day.uniqueVisitors);
-                                                                const signupHeight = scaleVal(day.newUsers);
-                                                                const dateObj = new Date(day.date);
-                                                                const dayLabel = dateObj.toLocaleDateString('en-US', { day: 'numeric' });
-                                                                const isToday = i === trafficHistory.length - 1;
-
-                                                                return (
-                                                                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                                                                        {/* Ghost Track for Vertical Structure */}
-                                                                        <div className="absolute inset-0 bg-muted/5 rounded-t-lg pointer-events-none mb-6" />
-
-                                                                        <div className="w-full flex items-end justify-center gap-[1px] h-full pb-6 z-10">
-                                                                            {/* Hits Bar */}
-                                                                            <motion.div
-                                                                                initial={{ height: 0 }}
-                                                                                animate={{ height: `${Math.max(hitHeight, 6)}%` }}
-                                                                                className={`w-[30%] rounded-t-sm transition-all duration-500 relative flex justify-center ${isToday
-                                                                                    ? 'bg-gradient-to-t from-primary to-primary/60 shadow-lg shadow-primary/20'
-                                                                                    : 'bg-gradient-to-t from-primary/40 to-primary/20 group-hover:from-primary/70 group-hover:to-primary/50'
-                                                                                    }`}
-                                                                            >
-                                                                                <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-primary font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-primary/20 z-20">
-                                                                                    {day.totalHits.toLocaleString()}
-                                                                                </span>
-                                                                            </motion.div>
-
-                                                                            {/* Unique Bar */}
-                                                                            <motion.div
-                                                                                initial={{ height: 0 }}
-                                                                                animate={{ height: `${Math.max(uniqueHeight, 6)}%` }}
-                                                                                className={`w-[30%] rounded-t-sm transition-all duration-500 relative flex justify-center ${isToday
-                                                                                    ? 'bg-gradient-to-t from-emerald-500 to-emerald-400 shadow-lg shadow-emerald-500/20'
-                                                                                    : 'bg-gradient-to-t from-emerald-500/40 to-emerald-500/20 group-hover:from-emerald-500/70 group-hover:to-emerald-500/50'
-                                                                                    }`}
-                                                                            >
-                                                                                <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-emerald-500 font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-emerald-500/20 z-20">
-                                                                                    {day.uniqueVisitors.toLocaleString()}
-                                                                                </span>
-                                                                            </motion.div>
-
-                                                                            {/* Signup Bar (The New Vector) */}
-                                                                            <motion.div
-                                                                                initial={{ height: 0 }}
-                                                                                animate={{ height: `${day.newUsers > 0 ? Math.max(signupHeight, 6) : 0}%` }}
-                                                                                className={`w-[30%] rounded-t-sm transition-all duration-500 relative flex justify-center ${isToday
-                                                                                    ? 'bg-gradient-to-t from-amber-500 to-amber-400 shadow-lg shadow-amber-500/20'
-                                                                                    : 'bg-gradient-to-t from-amber-500/40 to-amber-500/20 group-hover:from-amber-600/70 group-hover:to-amber-600/50'
-                                                                                    }`}
-                                                                            >
-                                                                                <span className="absolute -top-7 opacity-0 group-hover:opacity-100 transition-opacity text-[8px] font-black text-amber-500 font-mono whitespace-nowrap bg-background/80 backdrop-blur-sm px-1.5 py-0.5 rounded border border-amber-500/20 z-20">
-                                                                                    {day.newUsers}
-                                                                                </span>
-                                                                            </motion.div>
-                                                                        </div>
-
-                                                                        {(i % 5 === 0 || isToday) && (
-                                                                            <span className={`text-[9px] font-black tracking-tighter mt-2 absolute bottom-0 italic px-1 ${isToday ? 'text-primary' : 'text-muted-foreground/40 font-bold'
-                                                                                }`}>
-                                                                                {isToday ? 'TODAY' : dayLabel}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                );
-                                                            });
-                                                        })()}
-                                                    </div>
-
-                                                    <div className="flex items-center justify-between mt-10 pt-6 border-t border-border/20">
-                                                        <div className="flex items-center gap-10">
-                                                            <div className="space-y-1">
-                                                                <div className="text-3xl font-heading font-black tracking-tighter flex items-center gap-2">
-                                                                    {trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.totalHits, 0).toLocaleString()}
-                                                                    <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[8px]">TOTAL</Badge>
-                                                                </div>
-                                                                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">System Hits (30D)</div>
-                                                            </div>
-                                                            <div className="w-[1px] h-10 bg-border/20" />
-                                                            <div className="space-y-1">
-                                                                <div className="text-3xl font-heading font-black tracking-tighter text-emerald-500 flex items-center gap-2">
-                                                                    {trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.uniqueVisitors, 0).toLocaleString()}
-                                                                    <Badge variant="secondary" className="bg-emerald-500/10 text-emerald-500 border-none text-[8px]">ACTIVE</Badge>
-                                                                </div>
-                                                                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Unique Scholars</div>
-                                                            </div>
-                                                            <div className="w-[1px] h-10 bg-border/20" />
-                                                            <div className="space-y-1">
-                                                                <div className="text-3xl font-heading font-black tracking-tighter text-amber-500 flex items-center gap-2">
-                                                                    {trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.newUsers, 0).toLocaleString()}
-                                                                    <Badge variant="secondary" className="bg-amber-500/10 text-amber-500 border-none text-[8px]">NEW</Badge>
-                                                                </div>
-                                                                <div className="text-[10px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Acquisitions</div>
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="hidden lg:flex flex-col items-end">
-                                                            <div className="text-right">
-                                                                <div className="text-sm font-black text-muted-foreground italic flex items-center gap-2 justify-end">
-                                                                    <ArrowUpRight className="w-4 h-4 text-emerald-500" />
-                                                                    Peak Activity
-                                                                </div>
-                                                                <div className="text-2xl font-heading font-black tracking-tight">{Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits)).toLocaleString()} <span className="text-xs text-muted-foreground font-bold uppercase">HITS / DAY</span></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </CardContent>
-                                            </Card>
-                                        )}
-                                    </div>
-                                )}
-
-                                {activeView === 'LIBRARY' && (
-                                    <div className="space-y-6">
-                                        <div className="flex items-center justify-between">
-                                            <div>
-                                                <h2 className="text-2xl font-heading font-black italic">Architecture Tree</h2>
-                                                <p className="text-muted-foreground font-bold text-[9px] uppercase tracking-widest mt-0.5 opacity-60">{materialsArray.length} Nodes Indexed</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="space-y-10">
-                                            {Object.keys(groupedMaterials).length === 0 ? (
-                                                <Card className="border-dashed border-2 border-border/50 bg-transparent rounded-[32px] p-20 flex flex-col items-center justify-center text-center">
-                                                    <div className="w-16 h-16 rounded-3xl bg-muted/20 flex items-center justify-center mb-6">
-                                                        <Info className="w-8 h-8 text-muted-foreground/30" />
-                                                    </div>
-                                                    <h3 className="text-lg font-bold text-foreground mb-1">Architecture Empty</h3>
-                                                    <p className="text-muted-foreground max-w-xs mx-auto">Upload documents to populate the academic graph.</p>
-                                                </Card>
-                                            ) : (
-                                                Object.keys(groupedMaterials).sort().map(sem => (
-                                                    <div key={sem} className="space-y-6">
-                                                        <div className="flex items-center gap-4">
-                                                            <div className="h-0.5 flex-1 bg-gradient-to-r from-primary/20 to-transparent" />
-                                                            <span className="text-sm font-black text-primary px-4 py-1.5 rounded-2xl bg-primary/10 border border-primary/20 shadow-sm">SEMESTER {sem}</span>
-                                                            <div className="h-0.5 flex-1 bg-gradient-to-l from-primary/20 to-transparent" />
-                                                        </div>
-
-                                                        <div className="grid grid-cols-1 gap-8 pl-4 border-l border-border/20">
-                                                            {Object.keys(groupedMaterials[sem]).sort().map(subject => (
-                                                                <div key={subject} className="space-y-4">
-                                                                    <div className="flex items-center gap-3">
-                                                                        <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                                                                        <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground opacity-80">{subject}</h4>
-                                                                    </div>
-
-                                                                    <div className="grid grid-cols-1 md:grid-cols-2 2xl:grid-cols-3 gap-4">
-                                                                        {Object.keys(groupedMaterials[sem][subject]).map(cat => (
-                                                                            groupedMaterials[sem][subject][cat].map((mat: Material) => (
-                                                                                <Card key={mat.id} className="group border-[0.5px] border-border/40 bg-surface/30 backdrop-blur-md rounded-[20px] overflow-hidden hover:border-primary/40 hover:bg-surface transition-all duration-300 shadow-sm hover:shadow-xl">
-                                                                                    <div className="p-4">
-                                                                                        <div className="flex items-start justify-between gap-4 mb-2">
-                                                                                            <div className="space-y-1 overflow-hidden">
-                                                                                                <div className="flex items-center gap-2 mb-1">
-                                                                                                    <span className="px-1.5 py-0.5 rounded-md bg-indigo-500/10 text-indigo-500 text-[9px] font-black uppercase tracking-tighter border border-indigo-500/20">{mat.category}</span>
-                                                                                                    {mat.unit && <span className="px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-500 text-[9px] font-black tracking-tighter border border-emerald-500/20">U{mat.unit}</span>}
-                                                                                                </div>
-                                                                                                <h5 className="font-bold text-sm text-foreground leading-tight truncate px-0.5 group-hover:text-primary transition-colors">{mat.title}</h5>
-                                                                                            </div>
-                                                                                            <div className="flex gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                                                                <Button
-                                                                                                    variant="ghost"
-                                                                                                    size="icon"
-                                                                                                    className="h-8 w-8 rounded-lg hover:bg-rose-500/10 hover:text-rose-500"
-                                                                                                    onClick={(e) => { e.stopPropagation(); setDeletingMaterial(mat); }}
-                                                                                                >
-                                                                                                    <Trash2 className="w-4 h-4" />
-                                                                                                </Button>
-                                                                                                <Button
-                                                                                                    variant="ghost"
-                                                                                                    size="icon"
-                                                                                                    className="h-8 w-8 rounded-lg hover:bg-primary/10 hover:text-primary"
-                                                                                                    onClick={(e) => {
-                                                                                                        e.stopPropagation();
-                                                                                                        setEditingMaterial(mat);
-                                                                                                        setEditData({ title: mat.title, description: mat.description || '' });
-                                                                                                    }}
-                                                                                                >
-                                                                                                    <Edit3 className="w-4 h-4" />
-                                                                                                </Button>
-                                                                                            </div>
-                                                                                        </div>
-
-                                                                                        <div className="flex items-center justify-between mt-6 pt-4 border-t border-border/20">
-                                                                                            <div className="flex items-center gap-3 text-[10px] font-bold text-muted-foreground font-mono">
-                                                                                                <span className="flex items-center gap-1.5"><Activity className="w-3.5 h-3.5" /> {mat.total_views || 0}</span>
-                                                                                                <span className="opacity-30">|</span>
-                                                                                                <span>{mat.created_at || mat.createdAt ? new Date(mat.created_at || mat.createdAt || "").toLocaleDateString() : 'Recent'}</span>
-                                                                                            </div>
-                                                                                            <Button variant="ghost" size="sm" className="h-7 w-7 rounded-lg hover:bg-primary/10 text-primary p-0">
-                                                                                                <ExternalLink className="w-3.5 h-3.5" />
-                                                                                            </Button>
-                                                                                        </div>
-                                                                                    </div>
-                                                                                </Card>
-                                                                            ))
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            ))}
-                                                        </div>
-                                                    </div>
-                                                ))
-                                            )}
-                                        </div>
-                                    </div>
-                                )}
-
-                                {activeView === 'REGISTRY' && (
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                                        {/* Semester Intelligence Card */}
-                                        <Card className="border-none shadow-xl bg-surface rounded-[32px] overflow-hidden">
-                                            <CardHeader className="p-8 pb-4">
-                                                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 border border-emerald-500/20">
-                                                    <Activity className="w-6 h-6" />
-                                                </div>
-                                                <CardTitle className="text-2xl font-black font-heading leading-tight italic mt-6">Semester Control</CardTitle>
-                                                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground pt-1">INDEX VISIBILITY</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="p-8 pt-4">
-                                                <div className="grid grid-cols-2 gap-3">
-                                                    {semesters.map((s: Semester) => (
-                                                        <button
-                                                            key={s.number}
-                                                            onClick={() => toggleSemesterMutation.mutate({ number: s.number, isActive: !s.is_active })}
-                                                            disabled={toggleSemesterMutation.isPending}
-                                                            className={`flex items-center justify-between p-3 rounded-xl border transition-all ${s.is_active
-                                                                ? 'bg-emerald-500/5 border-emerald-500/20 text-emerald-600'
-                                                                : 'bg-muted/30 border-border/50 text-muted-foreground grayscale-[0.5]'
-                                                                }`}
-                                                        >
-                                                            <span className="text-[10px] font-black uppercase">Sem {s.number}</span>
-                                                            <div className={`w-2 h-2 rounded-full ${s.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'}`} />
-                                                        </button>
-                                                    ))}
-                                                </div>
-                                            </CardContent>
-                                        </Card>
-
-                                        {/* Subject Management Card */}
-                                        <Card className="border-none shadow-xl bg-surface rounded-[32px] overflow-hidden">
-                                            <CardHeader className="p-8 pb-4">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 border border-indigo-500/20">
-                                                        <BookOpen className="w-6 h-6" />
-                                                    </div>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="sm"
-                                                        onClick={() => setIsAddingSubject(!isAddingSubject)}
-                                                        className="text-[10px] font-black uppercase tracking-widest text-primary hover:bg-primary/10"
-                                                    >
-                                                        {isAddingSubject ? 'Cancel' : 'Add Subject'}
-                                                    </Button>
-                                                </div>
-                                                <CardTitle className="text-2xl font-black font-heading leading-tight italic mt-6">Academic Subjects</CardTitle>
-                                                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground pt-1">DYNAMIC MAPPINGS</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="p-8 pt-4">
-                                                <AnimatePresence mode="wait">
-                                                    {isAddingSubject ? (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: 10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, y: -10 }}
-                                                            className="space-y-4"
-                                                        >
-                                                            <div className="p-4 rounded-2xl bg-muted/20 border border-border/50 space-y-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Select Active Semester</Label>
-                                                                    <select
-                                                                        value={newSubjectSem}
-                                                                        onChange={e => setNewSubjectSem(e.target.value)}
-                                                                        className="w-full h-10 px-3 rounded-xl border border-border/50 bg-background/50 text-xs font-bold focus:ring-1 focus:ring-primary/40 outline-none transition-all"
-                                                                    >
-                                                                        {semesters
-                                                                            .filter((s: Semester) => s.is_active)
-                                                                            .map((s: Semester) => <option key={s.number} value={s.number.toString()}>Semester {s.number}</option>)}
-                                                                        {semesters.filter((s: Semester) => s.is_active).length === 0 && (
-                                                                            <option value="" disabled>No active semesters</option>
-                                                                        )}
-                                                                    </select>
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Subject Name</Label>
-                                                                    <Input
-                                                                        placeholder="e.g. Mathematics III"
-                                                                        value={newSubjectName}
-                                                                        onChange={e => setNewSubjectName(e.target.value)}
-                                                                        className="h-10 bg-background/50 border-border/40 rounded-xl px-4 text-xs font-bold"
-                                                                    />
-                                                                </div>
-                                                                <Button
-                                                                    onClick={handleCreateSubject}
-                                                                    disabled={!newSubjectName || !newSubjectSem || createSubjectMutation.isPending}
-                                                                    className="w-full h-10 bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest rounded-xl shadow-lg shadow-indigo-500/20"
-                                                                >
-                                                                    {createSubjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create Subject'}
-                                                                </Button>
-                                                            </div>
-                                                        </motion.div>
-                                                    ) : (
-                                                        <motion.div
-                                                            initial={{ opacity: 0 }}
-                                                            animate={{ opacity: 1 }}
-                                                            className="space-y-3 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar"
-                                                        >
-                                                            {subjects.length === 0 ? (
-                                                                <div className="text-center py-6 text-muted-foreground text-[10px] font-bold uppercase tracking-widest opacity-50 italic">No Subjects Defined</div>
-                                                            ) : (
-                                                                subjects
-                                                                    .sort((a, b) => a.semester_number - b.semester_number)
-                                                                    .map((sub: Subject) => (
-                                                                        <div key={sub.id} className="group flex items-center justify-between p-3 rounded-xl bg-muted/10 hover:bg-muted/30 transition-all border border-transparent hover:border-border/50">
-                                                                            <div>
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <Badge variant="outline" className="h-4 px-1 text-[8px] font-black">S{sub.semester_number}</Badge>
-                                                                                    <div className="text-[11px] font-black text-foreground tracking-tight">{sub.name}</div>
-                                                                                </div>
-                                                                                <div className="text-[9px] font-mono text-muted-foreground opacity-60">/{sub.slug}</div>
-                                                                            </div>
-                                                                            <Button
-                                                                                variant="ghost"
-                                                                                size="icon"
-                                                                                onClick={() => deleteSubjectMutation.mutate(sub.id)}
-                                                                                className="h-7 w-7 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 hover:text-rose-500 transition-all"
-                                                                            >
-                                                                                <Trash2 className="w-3.5 h-3.5" />
-                                                                            </Button>
-                                                                        </div>
-                                                                    ))
-                                                            )}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                )}
-
-                                {activeView === 'DEPLOYMENT' && (
-                                    <div className="max-w-3xl mx-auto">
-                                        <Card className="border-none shadow-premium bg-surface rounded-[32px] overflow-hidden">
-                                            <CardHeader className="p-8 pb-4">
-                                                <div className="w-12 h-12 rounded-[18px] bg-primary/10 flex items-center justify-center mb-6 text-primary border border-primary/20 shadow-inner">
-                                                    <Upload className="w-6 h-6" />
-                                                </div>
-                                                <CardTitle className="text-2xl font-black font-heading leading-tight italic">Resource Deployment</CardTitle>
-                                                <CardDescription className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground pt-1 opacity-60">Cloudflare R2 Encapsulation Pipeline</CardDescription>
-                                            </CardHeader>
-                                            <CardContent className="p-8 pt-4">
-                                                <form onSubmit={handleUploadSubmit} className="space-y-10">
-                                                    <div className="space-y-8">
-                                                        <div className="p-6 rounded-[28px] bg-muted/20 border border-border/50 space-y-6">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Badge variant="secondary" className="px-2 py-0.5 rounded-lg text-[9px] font-black tracking-widest uppercase">Phase 1: Architecture</Badge>
-                                                            </div>
-                                                            <div className="grid grid-cols-2 gap-4">
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Academic Semester</Label>
-                                                                    <select
-                                                                        value={uploadForm.semester}
-                                                                        onChange={e => {
-                                                                            const semester = e.target.value;
-                                                                            setUploadForm({ ...uploadForm, semester, subject: '' });
-                                                                        }}
-                                                                        className="w-full h-12 px-4 rounded-2xl border border-border/50 bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer hover:border-primary/40"
-                                                                    >
-                                                                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s: number) => <option key={s} value={s.toString()}>SEMESTER {s}</option>)}
-                                                                    </select>
-                                                                </div>
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Content Taxonomy</Label>
-                                                                    <select
-                                                                        value={uploadForm.category}
-                                                                        onChange={e => setUploadForm({ ...uploadForm, category: e.target.value })}
-                                                                        className="w-full h-12 px-4 rounded-2xl border border-border/50 bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer hover:border-primary/40"
-                                                                    >
-                                                                        <option value="notes">NOTES</option>
-                                                                        <option value="pyqs">PYQS</option>
-                                                                        <option value="midterm">MID TERM</option>
-                                                                        <option value="ca">CA / ST</option>
-                                                                    </select>
-                                                                </div>
-                                                            </div>
-                                                            <div className="space-y-2">
-                                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Subject Node Mapping</Label>
-                                                                <select
-                                                                    value={uploadForm.subject}
-                                                                    onChange={e => setUploadForm({ ...uploadForm, subject: e.target.value })}
-                                                                    className="w-full h-12 px-4 rounded-2xl border border-border/50 bg-background text-[11px] font-black tracking-tighter uppercase focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer hover:border-primary/40"
-                                                                >
-                                                                    <option value="">— SELECT TARGET SUBJECT —</option>
-                                                                    {subjects
-                                                                        .filter((s: Subject) => s.semester_number.toString() === uploadForm.semester)
-                                                                        .map((sub: Subject) => <option key={sub.id} value={sub.slug}>{sub.name}</option>)
-                                                                    }
-                                                                </select>
-                                                            </div>
-                                                            {uploadForm.category === 'notes' && (
-                                                                <div className="space-y-2">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">LPU Unit Index</Label>
-                                                                    <select
-                                                                        value={uploadForm.unit}
-                                                                        onChange={e => setUploadForm({ ...uploadForm, unit: e.target.value })}
-                                                                        className="w-full h-12 px-4 rounded-2xl border border-border/50 bg-background text-sm font-bold focus:ring-2 focus:ring-primary/20 outline-none transition-all appearance-none cursor-pointer hover:border-primary/40"
-                                                                    >
-                                                                        <option value="">— SELECT UNIT (OPTIONAL) —</option>
-                                                                        <option value="overview">Overview (Syllabus / General)</option>
-                                                                        <option value="1">UNIT 1</option>
-                                                                        <option value="2">UNIT 2</option>
-                                                                        <option value="3">UNIT 3</option>
-                                                                        <option value="4">UNIT 4</option>
-                                                                        <option value="5">UNIT 5</option>
-                                                                        <option value="6">UNIT 6</option>
-                                                                    </select>
-                                                                </div>
-                                                            )}
-                                                        </div>
-
-                                                        <div className="space-y-6">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Badge variant="secondary" className="px-2 py-0.5 rounded-lg text-[9px] font-black tracking-widest uppercase">Phase 2: Metadata</Badge>
-                                                            </div>
-                                                            <div className="space-y-3">
-                                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Display Title</Label>
-                                                                <Input
-                                                                    placeholder="Aesthetic Material Title..."
-                                                                    value={uploadForm.title} onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
-                                                                    className="h-14 bg-muted/5 border-border/40 rounded-2xl px-6 text-base font-bold shadow-inner focus-visible:ring-primary/20 transition-all"
-                                                                />
-                                                            </div>
-
-                                                            <div className="space-y-3">
-                                                                <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Narrative Context</Label>
-                                                                <textarea
-                                                                    placeholder="Detailed description for the student dashboard..."
-                                                                    value={uploadForm.description} onChange={e => setUploadForm({ ...uploadForm, description: e.target.value })}
-                                                                    className="w-full min-h-[140px] bg-muted/5 border-border/40 rounded-2xl p-6 text-sm font-medium shadow-inner focus:ring-2 ring-primary/20 outline-none transition-all resize-none hover:border-primary/40"
-                                                                />
-                                                            </div>
-                                                        </div>
-
-                                                        <div className="space-y-6">
-                                                            <div className="flex items-center gap-2 mb-2">
-                                                                <Badge variant="secondary" className="px-2 py-0.5 rounded-lg text-[9px] font-black tracking-widest uppercase">Phase 3: Payload</Badge>
-                                                            </div>
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                                                <div className="space-y-3">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Instructional Video</Label>
-                                                                    <Input
-                                                                        placeholder="YouTube URL..."
-                                                                        value={uploadForm.youtube_url} onChange={e => setUploadForm({ ...uploadForm, youtube_url: e.target.value })}
-                                                                        className="h-12 bg-muted/5 border-border/40 rounded-xl px-5 text-xs font-mono"
-                                                                    />
-                                                                </div>
-                                                                <div className="space-y-3">
-                                                                    <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">PDF Document</Label>
-                                                                    <div
-                                                                        onClick={() => fileInputRef.current?.click()}
-                                                                        className="h-12 border-2 border-dashed border-border/50 rounded-xl flex items-center px-4 cursor-pointer hover:bg-primary/5 hover:border-primary/40 transition-all group overflow-hidden"
-                                                                    >
-                                                                        <Input
-                                                                            ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
-                                                                            onChange={e => setFile(e.target.files ? e.target.files[0] : null)}
-                                                                        />
-                                                                        {file ? (
-                                                                            <div className="flex items-center gap-2 text-primary">
-                                                                                <Check className="w-4 h-4" />
-                                                                                <span className="text-[10px] font-black truncate max-w-[150px] uppercase">{file.name}</span>
-                                                                            </div>
-                                                                        ) : (
-                                                                            <>
-                                                                                <FileIcon className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-                                                                                <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground ml-3 group-hover:text-foreground">Attach PDF Binary</span>
-                                                                            </>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <Button
-                                                        type="submit"
-                                                        disabled={uploadMutation.isPending}
-                                                        className="w-full h-20 bg-primary text-primary-foreground font-black text-sm uppercase tracking-[0.4em] rounded-[24px] shadow-2xl shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all relative overflow-hidden group"
-                                                    >
-                                                        <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                                                        {uploadMutation.isPending ? <Loader2 className="w-6 h-6 animate-spin" /> : 'INITIATE FULL DEPLOYMENT'}
-                                                    </Button>
-                                                </form>
-                                            </CardContent>
-                                        </Card>
-                                    </div>
-                                )}
-                            </motion.div>
-                        </AnimatePresence>
-                    </div>
-                </main>
-
-                {/* Overlays & Modals */}
-                <AnimatePresence>
-                    {showSubjectConfirm && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="w-full max-w-md bg-white dark:bg-[#0C0F14] rounded-[32px] p-10 shadow-2xl border border-border/40"
-                            >
-                                <div className="w-16 h-16 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 mb-8 mx-auto border border-indigo-500/20">
-                                    <AlertCircle className="w-8 h-8" />
-                                </div>
-                                <h3 className="text-2xl font-black font-heading text-center italic mb-4">Confirm Subject Registry</h3>
-                                <p className="text-center text-muted-foreground font-medium mb-8">
-                                    Are you sure you want to map <span className="text-foreground font-bold">"{newSubjectName}"</span> to <span className="text-foreground font-bold">Semester {newSubjectSem}</span>?
-                                </p>
-                                <div className="flex gap-4">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setShowSubjectConfirm(false)}
-                                        className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest border-border/50"
-                                    >
-                                        Cancel
-                                    </Button>
-                                    <Button
-                                        onClick={() => {
-                                            createSubjectMutation.mutate({ name: newSubjectName, semesterNumber: parseInt(newSubjectSem) });
-                                            setShowSubjectConfirm(false);
-                                        }}
-                                        className="flex-1 h-12 rounded-2xl bg-indigo-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-indigo-500/20"
-                                    >
-                                        Confirm Access
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {editingMaterial && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="w-full max-w-2xl bg-white dark:bg-[#0C0F14] rounded-[40px] p-12 shadow-2xl border border-border/40"
-                            >
-                                <div className="flex items-center justify-between mb-10">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                                            <Edit3 className="w-6 h-6" />
-                                        </div>
-                                        <div>
-                                            <h3 className="text-2xl font-black font-heading italic">Edit Metadata</h3>
-                                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground pt-1">MATERIAL ID: {editingMaterial.id.slice(0, 8)}</p>
-                                        </div>
-                                    </div>
-                                    <Button variant="ghost" size="icon" onClick={() => setEditingMaterial(null)} className="rounded-xl"><X className="w-5 h-5" /></Button>
-                                </div>
-
-                                <div className="space-y-8">
-                                    <div className="space-y-3">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Display Title</Label>
-                                        <Input
-                                            value={editData.title}
-                                            onChange={e => setEditData({ ...editData, title: e.target.value })}
-                                            className="h-14 bg-muted/20 border-border/40 rounded-2xl px-6 text-base font-bold shadow-inner"
-                                        />
-                                    </div>
-                                    <div className="space-y-3">
-                                        <Label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground ml-2">Description</Label>
-                                        <textarea
-                                            value={editData.description}
-                                            onChange={e => setEditData({ ...editData, description: e.target.value })}
-                                            className="w-full min-h-[160px] bg-muted/20 border-border/40 rounded-2xl p-6 text-sm font-medium shadow-inner outline-none resize-none"
-                                        />
-                                    </div>
-                                    <Button
-                                        onClick={handleEditSave}
-                                        disabled={updateMutation.isPending}
-                                        className="w-full h-16 bg-primary text-primary-foreground font-black text-sm uppercase tracking-[0.3em] rounded-2xl shadow-xl shadow-primary/20"
-                                    >
-                                        {updateMutation.isPending ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Synchronize Changes'}
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {deletingMaterial && (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/60 backdrop-blur-md"
-                        >
-                            <motion.div
-                                initial={{ scale: 0.9, opacity: 0 }}
-                                animate={{ scale: 1, opacity: 1 }}
-                                className="w-full max-w-md bg-white dark:bg-[#0C0F14] rounded-[32px] p-10 shadow-2xl border border-border/40"
-                            >
-                                <div className="w-16 h-16 rounded-2xl bg-rose-500/10 flex items-center justify-center text-rose-500 mb-8 mx-auto border border-rose-500/20">
-                                    <Trash2 className="w-8 h-8" />
-                                </div>
-                                <h3 className="text-2xl font-black font-heading text-center italic mb-4">Critical Purge Operation</h3>
-                                <p className="text-center text-muted-foreground font-medium mb-8">
-                                    To purge <span className="text-foreground font-bold">"{deletingMaterial.title}"</span> from R2 and the database, type <span className="text-rose-500 font-black uppercase">DELETE</span> below.
-                                </p>
-                                <Input
-                                    placeholder="TYPE DELETE TO CONFIRM"
-                                    value={deleteConfirmText}
-                                    onChange={e => setDeleteConfirmText(e.target.value.toUpperCase())}
-                                    className="h-12 bg-rose-500/5 border-rose-500/20 rounded-xl px-4 text-center text-xs font-black tracking-widest text-rose-600 mb-8 focus:ring-rose-500/20"
-                                />
-                                <div className="flex gap-4">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => { setDeletingMaterial(null); setDeleteConfirmText(''); }}
-                                        className="flex-1 h-12 rounded-2xl font-black text-[10px] uppercase tracking-widest"
-                                    >
-                                        Abort
-                                    </Button>
-                                    <Button
-                                        disabled={deleteConfirmText !== 'DELETE' || deleteMutation.isPending}
-                                        onClick={() => deleteMutation.mutate(deletingMaterial.id)}
-                                        className="flex-1 h-12 rounded-2xl bg-rose-600 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-rose-500/20 disabled:opacity-50 disabled:grayscale"
-                                    >
-                                        {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Execute Purge'}
-                                    </Button>
-                                </div>
-                            </motion.div>
-                        </motion.div>
-                    )}
-
-                    {/* Advanced Analytics Modal */}
-                    <Dialog open={isAdvancedAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
-                        <DialogContent className="max-w-5xl bg-surface/95 backdrop-blur-2xl border-border/40 rounded-[40px] shadow-2xl p-0 overflow-hidden">
-                            <div className="flex flex-col h-[85vh]">
-                                <DialogHeader className="p-8 pb-4 border-b border-border/20">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center text-primary border border-primary/20">
-                                                <BarChart3 className="w-6 h-6" />
-                                            </div>
-                                            <div>
-                                                <DialogTitle className="text-2xl font-black font-heading italic">Advanced Platform Telemetry</DialogTitle>
-                                                <DialogDescription className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">High-Density Intelligence Dashboard</DialogDescription>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </DialogHeader>
-
-                                <div className="flex-1 overflow-y-auto no-scrollbar p-8 pt-6 space-y-10">
-                                    {/* Detailed KPI Summary */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        {[
-                                            { label: 'Avg daily Hits', val: Math.round(trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.totalHits, 0) / trafficHistory.length).toLocaleString(), icon: Zap, color: 'text-primary' },
-                                            { label: 'Avg Uniques', val: Math.round(trafficHistory.reduce((sum: number, d: TrafficDay) => sum + d.uniqueVisitors, 0) / trafficHistory.length).toLocaleString(), icon: Users, color: 'text-emerald-500' },
-                                            { label: 'Conv. Rate', val: `${((trafficHistory.reduce((s: number, d: TrafficDay) => s + d.newUsers, 0) / trafficHistory.reduce((s: number, d: TrafficDay) => s + d.uniqueVisitors, 0)) * 100).toFixed(1)}%`, icon: Target, color: 'text-amber-500' },
-                                        ].map((kpi, i) => (
-                                            <div key={i} className="bg-surface/50 border border-border/20 rounded-[24px] p-6 flex items-center gap-4">
-                                                <div className={`w-12 h-12 rounded-xl bg-muted/10 flex items-center justify-center ${kpi.color}`}>
-                                                    <kpi.icon className="w-5 h-5" />
-                                                </div>
-                                                <div>
-                                                    <div className="text-xl font-black font-heading tracking-tight">{kpi.val}</div>
-                                                    <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground opacity-60">{kpi.label}</div>
-                                                </div>
-                                            </div>
+                            <div className="app-card p-5 sm:p-7">
+                                <div className="relative flex items-end gap-[3px] sm:gap-1.5 h-60">
+                                    <div className="absolute inset-x-0 top-0 bottom-6 flex flex-col justify-between pointer-events-none">
+                                        {[1, 0.5, 0].map((tick) => (
+                                            <div key={tick} className="w-full border-t border-dashed border-border" />
                                         ))}
                                     </div>
-
-                                    {/* Expanded Chart View */}
-                                    <div className="bg-surface/30 rounded-[32px] p-8 border border-border/20 shadow-inner relative">
-                                        <div className="flex items-center justify-between mb-10">
-                                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Historical Vector Activity</h4>
-                                            <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-widest text-muted-foreground">
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-primary" /> Hits</div>
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-emerald-500" /> Unique</div>
-                                                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded bg-amber-500" /> Signups</div>
+                                    {days.map((day, i) => {
+                                        const isToday = i === days.length - 1
+                                        return (
+                                            <div key={i} className="flex-1 h-full flex flex-col items-center group relative">
+                                                <div className="w-full flex items-end justify-center gap-px h-full pb-6 z-10">
+                                                    <div className={`w-1/3 rounded-t-[2px] ${isToday ? 'bg-foreground' : 'bg-foreground/70 group-hover:bg-foreground'}`} style={{ height: `${Math.max(scaleVal(day.totalHits), 3)}%` }} />
+                                                    <div className={`w-1/3 rounded-t-[2px] ${isToday ? 'bg-ink-blue' : 'bg-ink-blue/60 group-hover:bg-ink-blue'}`} style={{ height: `${Math.max(scaleVal(day.uniqueVisitors), 3)}%` }} />
+                                                    <div className={`w-1/3 rounded-t-[2px] ${isToday ? 'bg-ink-red' : 'bg-ink-red/60 group-hover:bg-ink-red'}`} style={{ height: `${day.newUsers > 0 ? Math.max(scaleVal(day.newUsers), 3) : 0}%` }} />
+                                                </div>
+                                                {(i % 5 === 0 || isToday) && (
+                                                    <span className={`absolute bottom-0 font-mono text-[10px] whitespace-nowrap ${isToday ? 'text-ink-red' : 'text-muted-foreground'}`}>
+                                                        {isToday ? 'today' : shortDate(day.date, { day: 'numeric', month: 'short' })}
+                                                    </span>
+                                                )}
+                                                <div className="absolute bottom-full mb-2 hidden group-hover:block z-30 app-card px-3 py-2 text-[12px] whitespace-nowrap shadow-lg">
+                                                    <div className="font-mono text-[11px] text-muted-foreground mb-1">{shortDate(day.date, { weekday: 'short', day: 'numeric', month: 'short' })}</div>
+                                                    <div>{day.totalHits.toLocaleString('en-IN')} visits</div>
+                                                    <div className="text-ink-blue">{day.uniqueVisitors.toLocaleString('en-IN')} unique</div>
+                                                    <div className="text-ink-red">{day.newUsers} sign-ups</div>
+                                                </div>
                                             </div>
-                                        </div>
-
-                                        <div className="relative flex items-end gap-2 h-64 px-4">
-                                            {/* Grid Lines for Advanced View */}
-                                            <div className="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none opacity-10">
-                                                {[1, 0.75, 0.5, 0.25, 0].map((tick) => (
-                                                    <div key={tick} className="w-full border-t border-muted-foreground/30" />
-                                                ))}
-                                            </div>
-
-                                            {(() => {
-                                                const maxHits = Math.max(...trafficHistory.map((d: TrafficDay) => d.totalHits), 1);
-                                                const scaleFactor = 0.45;
-                                                const scaleVal = (val: number) => (Math.pow(val / maxHits, scaleFactor) * 100);
-
-                                                return trafficHistory.map((day: TrafficDay, i: number) => {
-                                                    const hitHeight = scaleVal(day.totalHits);
-                                                    const uniqueHeight = scaleVal(day.uniqueVisitors);
-                                                    const signupHeight = scaleVal(day.newUsers);
-                                                    const isToday = i === trafficHistory.length - 1;
-                                                    return (
-                                                        <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative h-full justify-end pb-8">
-                                                            <div className="w-full flex items-end justify-center gap-[1px] h-full">
-                                                                <div className={`w-[30%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-primary' : 'bg-primary/30 group-hover:bg-primary/60'}`} style={{ height: `${Math.max(hitHeight, 4)}%` }} />
-                                                                <div className={`w-[30%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-emerald-500' : 'bg-emerald-500/30 group-hover:bg-emerald-500/60'}`} style={{ height: `${Math.max(uniqueHeight, 4)}%` }} />
-                                                                <div className={`w-[30%] rounded-t-sm transition-all duration-300 ${isToday ? 'bg-amber-500' : 'bg-amber-500/30 group-hover:bg-amber-600/60'}`} style={{ height: `${day.newUsers > 0 ? Math.max(signupHeight, 4) : 0}%` }} />
-                                                            </div>
-                                                            {i % 3 === 0 && <span className="text-[7px] font-black text-muted-foreground/40 absolute bottom-0 uppercase tracking-tighter">{new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'short' })}</span>}
-
-                                                            {/* Detailed Tooltip on hover for Advanced View */}
-                                                            <div className="absolute bottom-full mb-4 hidden group-hover:flex flex-col bg-surface border border-border/40 p-3 rounded-xl shadow-2xl z-50 min-w-[120px]">
-                                                                <div className="text-[9px] font-black uppercase text-muted-foreground mb-2 pb-1 border-b border-border/10">
-                                                                    {new Date(day.date).toLocaleDateString('en-US', { day: 'numeric', month: 'long' })}
-                                                                </div>
-                                                                <div className="space-y-1">
-                                                                    <div className="flex justify-between items-center text-[10px] font-bold"><span className="text-primary">Hits</span> <span>{day.totalHits.toLocaleString()}</span></div>
-                                                                    <div className="flex justify-between items-center text-[10px] font-bold"><span className="text-emerald-500">Unique</span> <span>{day.uniqueVisitors.toLocaleString()}</span></div>
-                                                                    <div className="flex justify-between items-center text-[10px] font-bold"><span className="text-amber-500">Signups</span> <span>{day.newUsers}</span></div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    );
-                                                });
-                                            })()}
-                                        </div>
-                                    </div>
-
-                                    {/* Data Table */}
-                                    <div className="space-y-6">
-                                        <div className="flex items-center justify-between px-2">
-                                            <h4 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">Raw Telemetry Matrix</h4>
-                                            <Badge variant="outline" className="text-[8px] font-black border-primary/20 text-primary">REVERSED CHRONOLOGY</Badge>
-                                        </div>
-                                        <div className="bg-surface/30 rounded-[32px] border border-border/20 overflow-hidden shadow-sm">
-                                            <div className="grid grid-cols-4 gap-4 px-10 py-6 border-b border-border/20 bg-muted/5">
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">Observation Period</div>
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center">System Hits</div>
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-center">Unique Scholars</div>
-                                                <div className="text-[9px] font-black uppercase tracking-widest text-muted-foreground text-right">Acquisition Event</div>
-                                            </div>
-                                            <div className="max-h-[400px] overflow-y-auto no-scrollbar last:border-0">
-                                                {[...trafficHistory].reverse().map((day: TrafficDay, i: number) => (
-                                                    <div key={i} className="grid grid-cols-4 gap-4 px-10 py-6 border-b border-border/10 hover:bg-primary/5 transition-all group items-center">
-                                                        <div className="text-xs font-black italic group-hover:text-primary transition-colors">
-                                                            {new Date(day.date).toLocaleDateString('en-US', { weekday: 'short', day: 'numeric', month: 'long' })}
-                                                            <div className="text-[8px] font-bold text-muted-foreground/40 uppercase not-italic tracking-widest mt-0.5">Vector {2026 - i}</div>
-                                                        </div>
-                                                        <div className="text-base font-black font-mono text-primary text-center">{day.totalHits.toLocaleString()}</div>
-                                                        <div className="text-base font-black font-mono text-emerald-500 text-center">{day.uniqueVisitors.toLocaleString()}</div>
-                                                        <div className="flex flex-col items-end">
-                                                            <span className={`text-base font-black font-mono ${day.newUsers > 0 ? 'text-amber-500' : 'text-muted-foreground/10'}`}>{day.newUsers}</span>
-                                                            {day.newUsers > 0 && <Badge className="bg-amber-500/10 text-amber-500 border-none text-[7px] font-black scale-90 origin-right py-0">MATCH FOUND</Badge>}
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
+                                        )
+                                    })}
                                 </div>
 
-                                <div className="p-8 border-t border-border/20 flex items-center justify-between bg-muted/5">
-                                    <div className="flex items-center gap-8">
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Insight Reliability</span>
-                                            <span className="text-xs font-black text-emerald-500">99.8% ACCURATE SNAPSHOT</span>
-                                        </div>
-                                        <div className="flex flex-col">
-                                            <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground opacity-60">Data Persisted</span>
-                                            <span className="text-xs font-black text-primary">POSTGRES ANALYTICS ENGINE</span>
-                                        </div>
+                                <dl className="mt-6 pt-5 border-t border-border grid grid-cols-2 md:grid-cols-4 gap-y-4">
+                                    <div><dt className="text-[13px] text-muted-foreground">Visits</dt><dd className="font-heading text-[28px] leading-tight">{sum('totalHits').toLocaleString('en-IN')}</dd></div>
+                                    <div><dt className="text-[13px] text-muted-foreground">Unique visitors</dt><dd className="font-heading text-[28px] leading-tight text-ink-blue">{sum('uniqueVisitors').toLocaleString('en-IN')}</dd></div>
+                                    <div><dt className="text-[13px] text-muted-foreground">New sign-ups</dt><dd className="font-heading text-[28px] leading-tight text-ink-red">{sum('newUsers').toLocaleString('en-IN')}</dd></div>
+                                    <div><dt className="text-[13px] text-muted-foreground">Busiest day</dt><dd className="font-heading text-[28px] leading-tight">{maxHits.toLocaleString('en-IN')} <span className="font-sans text-[13px] text-muted-foreground">visits</span></dd></div>
+                                </dl>
+                            </div>
+                        </section>
+                    )}
+                </div>
+            )}
+
+            {activeView === 'LIBRARY' && (
+                <div>
+                    <PageHead
+                        title={<>Library</>}
+                        sub={`Showing the latest ${materialsArray.length} material${materialsArray.length === 1 ? '' : 's'}, grouped by semester and subject.`}
+                        actions={<button type="button" onClick={() => selectView('DEPLOYMENT')} className="app-btn">Upload material</button>}
+                    />
+
+                    {Object.keys(groupedMaterials).length === 0 ? (
+                        <EmptyNote
+                            title="The library is empty"
+                            action={<button type="button" onClick={() => selectView('DEPLOYMENT')} className="app-btn">Upload the first one</button>}
+                        >
+                            Uploaded notes and papers will be listed here.
+                        </EmptyNote>
+                    ) : (
+                        <div className="space-y-14">
+                            {Object.keys(groupedMaterials).sort().map(sem => (
+                                <section key={sem} aria-label={`Semester ${sem}`}>
+                                    <div className="flex items-baseline gap-4 mb-4">
+                                        <span className="font-heading text-[44px] leading-none tracking-[-0.03em]">{sem}</span>
+                                        <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Semester</span>
+                                        <span className="flex-1 h-px bg-border" />
                                     </div>
-                                    <Button onClick={() => setIsAnalyticsOpen(false)} className="h-12 px-8 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em]">Close Access</Button>
+
+                                    <div className="space-y-8">
+                                        {Object.keys(groupedMaterials[sem]).sort().map(subject => {
+                                            const rows: Material[] = Object.values(groupedMaterials[sem][subject] as Record<string, Material[]>).flat()
+                                            return (
+                                                <div key={subject}>
+                                                    <p className="flex items-baseline gap-3 mb-2 px-2">
+                                                        <span className="font-mono text-[13px] text-ink-red uppercase">{subject}</span>
+                                                        <span className="text-[12px] text-muted-foreground">{rows.length} item{rows.length === 1 ? '' : 's'}</span>
+                                                    </p>
+                                                    <ul className="border-t border-foreground/80">
+                                                        {rows.map((mat: Material) => (
+                                                            <li key={mat.id} className="group grid grid-cols-[1fr_auto] md:grid-cols-[110px_1fr_80px_110px_auto] items-center gap-x-4 gap-y-1 py-3 px-2 border-b border-border text-[14px] hover:bg-muted/40 transition-colors">
+                                                                <span className="flex items-center gap-1.5 col-span-2 md:col-span-1">
+                                                                    <Tag tone={mat.category === 'notes' ? 'blue' : mat.category === 'pyqs' || mat.category === 'midterm' || mat.category === 'ca' ? 'red' : 'plain'}>
+                                                                        {CATEGORY_LABEL[mat.category || 'other'] || mat.category}
+                                                                    </Tag>
+                                                                    {mat.unit && <Tag>{mat.unit === 'overview' ? 'Ovw' : `U${mat.unit}`}</Tag>}
+                                                                </span>
+                                                                <span className="font-medium truncate">{mat.title}</span>
+                                                                <span className="hidden md:block font-mono text-[12px] text-muted-foreground text-right tabular-nums" title="Views">{Number(mat.total_views || 0).toLocaleString('en-IN')} views</span>
+                                                                <span className="hidden md:block font-mono text-[12px] text-muted-foreground text-right">
+                                                                    {mat.created_at || mat.createdAt ? shortDate(mat.created_at || mat.createdAt || '', { day: 'numeric', month: 'short', year: '2-digit' }) : 'recent'}
+                                                                </span>
+                                                                <span className="flex items-center gap-1 justify-end md:opacity-40 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity">
+                                                                    <button
+                                                                        type="button"
+                                                                        aria-label={`Edit ${mat.title}`}
+                                                                        onClick={() => {
+                                                                            setEditingMaterial(mat);
+                                                                            setEditData({ title: mat.title, description: mat.description || '' });
+                                                                        }}
+                                                                        className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-muted"
+                                                                    >
+                                                                        <Edit3 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                    <button
+                                                                        type="button"
+                                                                        aria-label={`Delete ${mat.title}`}
+                                                                        onClick={() => setDeletingMaterial(mat)}
+                                                                        className="w-8 h-8 rounded-md flex items-center justify-center hover:bg-destructive/10 hover:text-destructive"
+                                                                    >
+                                                                        <Trash2 className="w-3.5 h-3.5" />
+                                                                    </button>
+                                                                </span>
+                                                            </li>
+                                                        ))}
+                                                    </ul>
+                                                </div>
+                                            )
+                                        })}
+                                    </div>
+                                </section>
+                            ))}
+                        </div>
+                    )}
+                </div>
+            )}
+
+            {activeView === 'REGISTRY' && (
+                <div>
+                    <PageHead
+                        title={<>Subjects <em className="text-muted-foreground">&amp;</em> semesters</>}
+                        sub="Open a semester to show it to students. Add the subjects it should list."
+                    />
+
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+                        <section className="lg:col-span-5" aria-label="Semesters">
+                            <SectionHead n="01" title="Semesters" aside={semestersLoading ? 'loading…' : `${semesters.filter((s: Semester) => s.is_active).length} open`} />
+                            <ul className="border-t border-foreground/80">
+                                {semesters.map((s: Semester) => (
+                                    <li key={s.number} className="border-b border-border">
+                                        <label className="flex items-center justify-between gap-4 py-3 px-2 cursor-pointer hover:bg-muted/40">
+                                            <span className="flex items-baseline gap-3">
+                                                <span className="font-heading text-[24px] leading-none w-8">{s.number}</span>
+                                                <span className="text-[14px] text-muted-foreground">{s.is_active ? 'Visible to students' : 'Hidden, shows “opening soon”'}</span>
+                                            </span>
+                                            <span className="relative inline-flex items-center">
+                                                <input
+                                                    type="checkbox"
+                                                    className="peer sr-only"
+                                                    checked={s.is_active}
+                                                    disabled={toggleSemesterMutation.isPending}
+                                                    onChange={() => toggleSemesterMutation.mutate({ number: s.number, isActive: !s.is_active })}
+                                                    aria-label={`Semester ${s.number} visible`}
+                                                />
+                                                <span className="w-10 h-6 rounded-full border border-input bg-muted peer-checked:bg-foreground peer-checked:border-foreground transition-colors peer-focus-visible:outline-2 peer-focus-visible:outline-ring" />
+                                                <span className="absolute left-1 w-4 h-4 rounded-full bg-surface shadow transition-transform peer-checked:translate-x-4" />
+                                            </span>
+                                        </label>
+                                    </li>
+                                ))}
+                            </ul>
+                        </section>
+
+                        <section className="lg:col-span-7" aria-label="Subjects">
+                            <SectionHead
+                                n="02"
+                                title="Subjects"
+                                aside={
+                                    <button type="button" onClick={() => setIsAddingSubject(!isAddingSubject)} className={isAddingSubject ? 'app-btn-quiet' : 'app-btn'}>
+                                        {isAddingSubject ? 'Cancel' : 'Add subject'}
+                                    </button>
+                                }
+                            />
+
+                            {isAddingSubject && (
+                                <div className="app-card p-5 mb-6 grid grid-cols-1 sm:grid-cols-[160px_1fr_auto] gap-3 items-end">
+                                    <div>
+                                        <Label htmlFor="new-sub-sem" className="text-[13px] mb-1.5 block">Semester</Label>
+                                        <select id="new-sub-sem" value={newSubjectSem} onChange={e => setNewSubjectSem(e.target.value)} className="app-field">
+                                            {semesters
+                                                .filter((s: Semester) => s.is_active)
+                                                .map((s: Semester) => <option key={s.number} value={s.number.toString()}>Semester {s.number}</option>)}
+                                            {semesters.filter((s: Semester) => s.is_active).length === 0 && (
+                                                <option value="" disabled>No open semesters</option>
+                                            )}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <Label htmlFor="new-sub-name" className="text-[13px] mb-1.5 block">Subject name or code</Label>
+                                        <input id="new-sub-name" placeholder="e.g. CSE316" value={newSubjectName} onChange={e => setNewSubjectName(e.target.value)} className="app-field" />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleCreateSubject}
+                                        disabled={!newSubjectName || !newSubjectSem || createSubjectMutation.isPending}
+                                        className="app-btn h-11"
+                                    >
+                                        {createSubjectMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {subjectsLoading ? (
+                                <p className="text-muted-foreground text-sm">Loading subjects…</p>
+                            ) : subjects.length === 0 ? (
+                                <EmptyNote title="No subjects yet">Add one above and it’ll show up under its semester.</EmptyNote>
+                            ) : (
+                                <ul className="border-t border-foreground/80 max-h-[520px] overflow-y-auto">
+                                    {[...subjects]
+                                        .sort((a, b) => a.semester_number - b.semester_number || a.name.localeCompare(b.name))
+                                        .map((sub: Subject) => (
+                                            <li key={sub.id} className="group grid grid-cols-[48px_1fr_auto] items-center gap-3 py-2.5 px-2 border-b border-border hover:bg-muted/40">
+                                                <span className="font-mono text-[12px] text-muted-foreground">S{sub.semester_number}</span>
+                                                <span className="min-w-0">
+                                                    <span className="block font-medium truncate">{sub.name}</span>
+                                                    <span className="block font-mono text-[11px] text-muted-foreground">/{sub.slug}</span>
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    aria-label={`Remove ${sub.name}`}
+                                                    onClick={() => deleteSubjectMutation.mutate(sub.id)}
+                                                    className="w-8 h-8 rounded-md flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                                                >
+                                                    <Trash2 className="w-3.5 h-3.5" />
+                                                </button>
+                                            </li>
+                                        ))}
+                                </ul>
+                            )}
+                        </section>
+                    </div>
+                </div>
+            )}
+
+            {activeView === 'DEPLOYMENT' && (
+                <div className="max-w-3xl">
+                    <PageHead
+                        title={<>Upload <em className="text-muted-foreground">material</em></>}
+                        sub="A PDF, a YouTube lecture, or both. Students see it as soon as you upload."
+                    />
+
+                    <form onSubmit={handleUploadSubmit} className="space-y-12">
+                        <fieldset>
+                            <legend className="mb-5"><Kicker n="01">Where it goes</Kicker></legend>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <Label htmlFor="up-sem" className="text-[13px] mb-1.5 block">Semester</Label>
+                                    <select
+                                        id="up-sem"
+                                        value={uploadForm.semester}
+                                        onChange={e => {
+                                            const semester = e.target.value;
+                                            setUploadForm({ ...uploadForm, semester, subject: '' });
+                                        }}
+                                        className="app-field"
+                                    >
+                                        {[1, 2, 3, 4, 5, 6, 7, 8].map((s: number) => <option key={s} value={s.toString()}>Semester {s}</option>)}
+                                    </select>
+                                </div>
+                                <div>
+                                    <Label htmlFor="up-cat" className="text-[13px] mb-1.5 block">Type</Label>
+                                    <select id="up-cat" value={uploadForm.category} onChange={e => setUploadForm({ ...uploadForm, category: e.target.value })} className="app-field">
+                                        <option value="notes">Notes</option>
+                                        <option value="pyqs">End-term PYQs</option>
+                                        <option value="midterm">Mid-term papers</option>
+                                        <option value="ca">CA papers</option>
+                                    </select>
+                                </div>
+                                <div className={uploadForm.category === 'notes' ? '' : 'sm:col-span-2'}>
+                                    <Label htmlFor="up-sub" className="text-[13px] mb-1.5 block">Subject</Label>
+                                    <select id="up-sub" value={uploadForm.subject} onChange={e => setUploadForm({ ...uploadForm, subject: e.target.value })} className="app-field">
+                                        <option value="">Choose a subject</option>
+                                        {subjects
+                                            .filter((s: Subject) => s.semester_number.toString() === uploadForm.semester)
+                                            .map((sub: Subject) => <option key={sub.id} value={sub.slug}>{sub.name}</option>)
+                                        }
+                                    </select>
+                                </div>
+                                {uploadForm.category === 'notes' && (
+                                    <div>
+                                        <Label htmlFor="up-unit" className="text-[13px] mb-1.5 block">Unit <span className="text-muted-foreground">(optional)</span></Label>
+                                        <select id="up-unit" value={uploadForm.unit} onChange={e => setUploadForm({ ...uploadForm, unit: e.target.value })} className="app-field">
+                                            <option value="">No unit</option>
+                                            <option value="overview">Overview (syllabus / general)</option>
+                                            {[1, 2, 3, 4, 5, 6].map(u => <option key={u} value={String(u)}>Unit {u}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend className="mb-5"><Kicker n="02">What it is</Kicker></legend>
+                            <div className="space-y-4">
+                                <div>
+                                    <Label htmlFor="up-title" className="text-[13px] mb-1.5 block">Title</Label>
+                                    <input
+                                        id="up-title"
+                                        placeholder="e.g. CSE316 Unit 3 — Deadlocks"
+                                        value={uploadForm.title}
+                                        onChange={e => setUploadForm({ ...uploadForm, title: e.target.value })}
+                                        className="app-field"
+                                    />
+                                    <p className="mt-1.5 text-[12px] text-muted-foreground">At least 5 characters. This is what students see in the list.</p>
+                                </div>
+                                <div>
+                                    <Label htmlFor="up-desc" className="text-[13px] mb-1.5 block">Description <span className="text-muted-foreground">(optional)</span></Label>
+                                    <textarea
+                                        id="up-desc"
+                                        rows={4}
+                                        placeholder="What's covered, which year's paper, anything worth knowing."
+                                        value={uploadForm.description}
+                                        onChange={e => setUploadForm({ ...uploadForm, description: e.target.value })}
+                                        className="app-field"
+                                    />
                                 </div>
                             </div>
-                        </DialogContent>
-                    </Dialog>
-                </AnimatePresence>
-            </div>
-        </TooltipProvider>
+                        </fieldset>
+
+                        <fieldset>
+                            <legend className="mb-5"><Kicker n="03">The file</Kicker></legend>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <Label className="text-[13px] mb-1.5 block">PDF</Label>
+                                    <button
+                                        type="button"
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="w-full h-24 rounded-lg border border-dashed border-input hover:border-foreground/60 hover:bg-muted/40 transition-colors flex flex-col items-center justify-center gap-1 text-center px-4"
+                                    >
+                                        {file ? (
+                                            <>
+                                                <span className="flex items-center gap-1.5 text-[14px] font-medium"><Check className="w-4 h-4 text-emerald-600" /> <span className="truncate max-w-[200px]">{file.name}</span></span>
+                                                <span className="text-[12px] text-muted-foreground">Click to choose another</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <span className="flex items-center gap-1.5 text-[14px] font-medium"><FileUp className="w-4 h-4" /> Choose a PDF</span>
+                                                <span className="text-[12px] text-muted-foreground">Stored on Cloudflare R2</span>
+                                            </>
+                                        )}
+                                    </button>
+                                    <input
+                                        ref={fileInputRef} type="file" accept="application/pdf" className="hidden"
+                                        onChange={e => setFile(e.target.files ? e.target.files[0] : null)}
+                                    />
+                                </div>
+                                <div>
+                                    <Label htmlFor="up-yt" className="text-[13px] mb-1.5 block">YouTube link</Label>
+                                    <input
+                                        id="up-yt"
+                                        placeholder="https://youtube.com/watch?v=…"
+                                        value={uploadForm.youtube_url}
+                                        onChange={e => setUploadForm({ ...uploadForm, youtube_url: e.target.value })}
+                                        className="app-field font-mono text-[13px]"
+                                    />
+                                    <p className="mt-1.5 text-[12px] text-muted-foreground">Add one, the other, or both.</p>
+                                </div>
+                            </div>
+                        </fieldset>
+
+                        <div className="flex items-center gap-4 pt-6 border-t border-border">
+                            <button type="submit" disabled={uploadMutation.isPending} className="app-btn h-12 px-6">
+                                {uploadMutation.isPending ? <><Loader2 className="w-4 h-4 animate-spin" /> Uploading…</> : 'Upload material'}
+                            </button>
+                            <span className="text-[13px] text-muted-foreground">Goes live straight away.</span>
+                        </div>
+                    </form>
+                </div>
+            )}
+
+            {/* Confirm new subject */}
+            <Dialog open={showSubjectConfirm} onOpenChange={setShowSubjectConfirm}>
+                <DialogContent className="app-card max-w-md p-7">
+                    <DialogHeader>
+                        <DialogTitle className="font-heading font-normal text-[26px] tracking-[-0.02em]">Add this subject?</DialogTitle>
+                        <DialogDescription className="text-[15px]">
+                            <span className="text-foreground font-semibold">“{newSubjectName}”</span> will be listed under <span className="text-foreground font-semibold">Semester {newSubjectSem}</span>.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex justify-end gap-3 mt-4">
+                        <button type="button" onClick={() => setShowSubjectConfirm(false)} className="app-btn-quiet">Cancel</button>
+                        <button
+                            type="button"
+                            onClick={() => {
+                                createSubjectMutation.mutate({ name: newSubjectName, semesterNumber: parseInt(newSubjectSem) });
+                                setShowSubjectConfirm(false);
+                            }}
+                            className="app-btn"
+                        >
+                            Add subject
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Edit material */}
+            <Dialog open={!!editingMaterial} onOpenChange={(open) => { if (!open) setEditingMaterial(null) }}>
+                <DialogContent className="app-card max-w-xl p-7">
+                    <DialogHeader>
+                        <DialogTitle className="font-heading font-normal text-[26px] tracking-[-0.02em]">Edit material</DialogTitle>
+                        <DialogDescription className="font-mono text-[11px]">id {editingMaterial?.id.slice(0, 8)}</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 mt-2">
+                        <div>
+                            <Label htmlFor="edit-title" className="text-[13px] mb-1.5 block">Title</Label>
+                            <input id="edit-title" value={editData.title} onChange={e => setEditData({ ...editData, title: e.target.value })} className="app-field" />
+                        </div>
+                        <div>
+                            <Label htmlFor="edit-desc" className="text-[13px] mb-1.5 block">Description</Label>
+                            <textarea id="edit-desc" rows={5} value={editData.description} onChange={e => setEditData({ ...editData, description: e.target.value })} className="app-field" />
+                        </div>
+                        <div className="flex justify-end gap-3 pt-2">
+                            <button type="button" onClick={() => setEditingMaterial(null)} className="app-btn-quiet">Cancel</button>
+                            <button type="button" onClick={handleEditSave} disabled={updateMutation.isPending} className="app-btn">
+                                {updateMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save changes'}
+                            </button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Delete material */}
+            <Dialog open={!!deletingMaterial} onOpenChange={(open) => { if (!open) { setDeletingMaterial(null); setDeleteConfirmText('') } }}>
+                <DialogContent className="app-card max-w-md p-7">
+                    <DialogHeader>
+                        <DialogTitle className="font-heading font-normal text-[26px] tracking-[-0.02em]">Delete for good?</DialogTitle>
+                        <DialogDescription className="text-[15px]">
+                            <span className="text-foreground font-semibold">“{deletingMaterial?.title}”</span> will be removed from the site and its file deleted from storage. Type <span className="font-mono text-destructive">DELETE</span> to confirm.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <input
+                        aria-label="Type DELETE to confirm"
+                        placeholder="DELETE"
+                        value={deleteConfirmText}
+                        onChange={e => setDeleteConfirmText(e.target.value.toUpperCase())}
+                        className="app-field font-mono tracking-[0.2em] text-center mt-2"
+                    />
+                    <div className="flex justify-end gap-3 mt-4">
+                        <button type="button" onClick={() => { setDeletingMaterial(null); setDeleteConfirmText(''); }} className="app-btn-quiet">Keep it</button>
+                        <button
+                            type="button"
+                            disabled={deleteConfirmText !== 'DELETE' || deleteMutation.isPending}
+                            onClick={() => deletingMaterial && deleteMutation.mutate(deletingMaterial.id)}
+                            className="app-btn app-btn-danger"
+                        >
+                            {deleteMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Delete'}
+                        </button>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Day-by-day traffic */}
+            <Dialog open={isAdvancedAnalyticsOpen} onOpenChange={setIsAnalyticsOpen}>
+                <DialogContent className="app-card max-w-3xl p-0 overflow-hidden">
+                    <div className="flex flex-col max-h-[85vh]">
+                        <DialogHeader className="p-7 pb-5 border-b border-border">
+                            <DialogTitle className="font-heading font-normal text-[28px] tracking-[-0.02em]">Day by day</DialogTitle>
+                            <DialogDescription>The last {days.length} days, newest first.</DialogDescription>
+                        </DialogHeader>
+
+                        {days.length > 0 && (
+                            <dl className="grid grid-cols-3 px-7 border-b border-border">
+                                <Stat label="Average visits a day" value={Math.round(sum('totalHits') / days.length).toLocaleString('en-IN')} />
+                                <Stat label="Average unique a day" value={Math.round(sum('uniqueVisitors') / days.length).toLocaleString('en-IN')} />
+                                <Stat label="Sign-up rate" value={`${sum('uniqueVisitors') ? ((sum('newUsers') / sum('uniqueVisitors')) * 100).toFixed(1) : '0.0'}%`} />
+                            </dl>
+                        )}
+
+                        <div className="flex-1 overflow-y-auto px-7 pb-6">
+                            <table className="w-full text-[14px] border-collapse">
+                                <thead className="sticky top-0 bg-surface">
+                                    <tr className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground border-b border-foreground/80">
+                                        <th className="py-3 text-left font-normal">Date</th>
+                                        <th className="py-3 text-right font-normal">Visits</th>
+                                        <th className="py-3 text-right font-normal">Unique</th>
+                                        <th className="py-3 text-right font-normal">Sign-ups</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {[...days].reverse().map((day, i) => (
+                                        <tr key={i} className="border-b border-border">
+                                            <td className="py-2.5">{shortDate(day.date, { weekday: 'short', day: 'numeric', month: 'long' })}</td>
+                                            <td className="py-2.5 text-right font-mono tabular-nums">{day.totalHits.toLocaleString('en-IN')}</td>
+                                            <td className="py-2.5 text-right font-mono tabular-nums text-ink-blue">{day.uniqueVisitors.toLocaleString('en-IN')}</td>
+                                            <td className={`py-2.5 text-right font-mono tabular-nums ${day.newUsers > 0 ? 'text-ink-red' : 'text-muted-foreground/50'}`}>{day.newUsers}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </AdminShell>
     )
 }
-

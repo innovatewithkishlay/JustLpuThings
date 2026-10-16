@@ -86,7 +86,7 @@ export function TopNavbar() {
                         priority
                         className="w-9 h-9 object-contain transition-transform duration-300 group-hover:-rotate-6"
                     />
-                    <span className="chrome-serif text-[21px] leading-none font-[460]">
+                    <span className="chrome-serif text-[18px] sm:text-[21px] leading-none font-[460] whitespace-nowrap">
                         Just LPU <em className="italic" style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1' }}>Things</em>
                     </span>
                 </Link>
