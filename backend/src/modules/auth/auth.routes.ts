@@ -1,7 +1,7 @@
 import { Router, Response } from 'express';
 import { AuthController } from './auth.controller';
 import { requireAuth } from './auth.middleware';
-import passport from './google.strategy';
+import passport, { googleOAuthEnabled } from './google.strategy';
 import { AuthService } from './auth.service';
 import { env } from '../../config/env';
 import { setAuthCookies } from './auth.utils';
@@ -17,6 +17,12 @@ router.get('/me', requireAuth, AuthController.me);
 router.post('/logout', requireAuth, AuthController.logout);
 
 // ── Google OAuth ──────────────────────────────────────────────
+if (!googleOAuthEnabled) {
+    router.get(['/google', '/callback/google'], (_req, res: Response) => {
+        res.redirect(`${env.FRONTEND_URL}/?error=oauth_failed`);
+    });
+}
+
 router.get('/google',
     passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );

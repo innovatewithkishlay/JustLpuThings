@@ -3,7 +3,11 @@ import { Strategy as GoogleStrategy, Profile } from 'passport-google-oauth20';
 import { pool } from '../../config/db';
 import { env } from '../../config/env';
 
-passport.use(
+// Google OAuth is optional (see env.ts): only register the strategy when it's
+// configured, otherwise passport throws at import time and the server can't boot.
+export const googleOAuthEnabled = Boolean(env.GOOGLE_CLIENT_ID && env.GOOGLE_CLIENT_SECRET);
+
+if (googleOAuthEnabled) passport.use(
     new GoogleStrategy(
         {
             clientID: env.GOOGLE_CLIENT_ID,
