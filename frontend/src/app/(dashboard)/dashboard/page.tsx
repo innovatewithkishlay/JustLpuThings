@@ -1,10 +1,8 @@
 "use client"
 
-import { motion } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Card } from '@/components/ui/card'
-import { BookOpen, Lock, Sparkles, MessageCircle, ExternalLink, MessageSquare, Send, Heart, Trophy, TrendingUp } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Lock } from 'lucide-react'
 import { WHATSAPP_COMMUNITY_LINK } from '@/lib/constants'
 import { useAuth } from '@/contexts/AuthContext'
 
@@ -12,15 +10,7 @@ import { useQuery } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { FeedbackModal } from '@/components/modals/FeedbackModal'
 import { useState } from 'react'
-
-const fadeUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-}
-
-const stagger = {
-    visible: { transition: { staggerChildren: 0.05 } }
-}
+import { Kicker, PageHead, SectionHead } from '@/components/app/Notebook'
 
 interface Semester {
     number: number;
@@ -58,230 +48,161 @@ export default function DashboardPage() {
         router.push(`/dashboard/semester/${semesterId}/subject/${subjectSlug}`)
     }
 
+    const firstName = (user?.name || user?.email?.split('@')[0] || 'there').split(' ')[0]
+    const openCount = semesters.filter((s: Semester) => s.is_active).length
+
     return (
-        <div className="min-h-[calc(100vh-4rem)] pb-24 page-container max-w-6xl mx-auto">
-            <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-12">
+        <div className="min-h-[calc(100vh-4rem)] pb-28 page-container max-w-6xl mx-auto">
+            <PageHead
+                title={<>Hi {firstName}. <em className="text-muted-foreground">Which semester?</em></>}
+                sub="Pick your semester, then your subject. Notes, PYQs, CA and mid-term papers are all inside."
+            />
 
-                {/* MTH Special Section */}
-                {(mathSpecial.length > 0 || isMathLoading) && (
-                    <motion.section variants={fadeUp} className="relative">
-                        <div className="relative h-[160px] md:h-[240px] rounded-[2.5rem] overflow-hidden mb-8 group border border-border/40 shadow-2xl shadow-primary/5 bg-[#0a0a0a] flex items-center justify-center">
-                            <img
-                                src="/assets/math.png"
-                                alt="MTH Special"
-                                className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.02]"
-                            />
+            {/* Semesters */}
+            <section aria-labelledby="sem-heading">
+                <div className="flex items-end justify-between mb-5">
+                    <div>
+                        <Kicker n="01" className="mb-2">Semesters</Kicker>
+                        <h2 id="sem-heading" className="sr-only">Semesters</h2>
+                    </div>
+                    {!isLoading && <p className="font-mono text-[12px] text-muted-foreground">{openCount} of {semesters.length} open</p>}
+                </div>
 
-                            {/* Decorative Elements */}
-                            <div className="absolute top-4 left-4 md:top-6 md:left-6 z-10">
-                                <span className="px-3 py-1.5 rounded-full bg-amber-500 text-black text-[9px] font-black uppercase tracking-widest flex items-center gap-2 shadow-xl animate-pulse">
-                                    <Sparkles className="w-3 h-3" /> Special Collection
-                                </span>
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {isLoading ? (
+                        Array.from({ length: 8 }).map((_, i) => (
+                            <div key={i} className="h-36 rounded-xl bg-muted/60 animate-pulse" />
+                        ))
+                    ) : (
+                        semesters.map((sem: Semester) => (
+                            <button
+                                key={sem.number}
+                                type="button"
+                                onClick={() => handleSemesterClick(sem.number, sem.is_active)}
+                                disabled={!sem.is_active}
+                                aria-label={`Semester ${sem.number}${sem.is_active ? '' : ' (opening soon)'}`}
+                                className={`group relative h-36 text-left rounded-xl p-5 flex flex-col justify-between transition-all ${sem.is_active
+                                    ? 'app-card hover:-translate-y-0.5 hover:shadow-[3px_3px_0_0_var(--ink-red)] hover:border-foreground/70 focus-visible:outline-2 focus-visible:outline-ring'
+                                    : 'border border-dashed border-border text-muted-foreground cursor-not-allowed'
+                                    }`}
+                            >
+                                <div className="flex items-start justify-between">
+                                    <span className="font-mono text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Semester</span>
+                                    {sem.is_active
+                                        ? <ArrowRight className="w-4 h-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                                        : <Lock className="w-3.5 h-3.5 opacity-50" />}
+                                </div>
+                                <div className="flex items-end justify-between">
+                                    <span className={`font-heading text-[56px] leading-[0.8] tracking-[-0.04em] ${sem.is_active ? '' : 'opacity-40'}`}>{sem.number}</span>
+                                    <span className={`text-[12px] ${sem.is_active ? 'text-emerald-700 dark:text-emerald-400' : ''}`}>
+                                        {sem.is_active ? 'open' : 'opening soon'}
+                                    </span>
+                                </div>
+                            </button>
+                        ))
+                    )}
+                </div>
+            </section>
+
+            {/* MTH special collection */}
+            {(mathSpecial.length > 0 || isMathLoading) && (
+                <section className="mt-16" aria-labelledby="mth-heading">
+                    <Kicker n="02" className="mb-2">Special collection</Kicker>
+                    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                        <div className="lg:col-span-5">
+                            <h2 id="mth-heading" className="font-heading text-[32px] leading-[1.05] tracking-[-0.02em]">
+                                Maths, <em>every semester.</em>
+                            </h2>
+                            <p className="mt-3 text-muted-foreground leading-relaxed">
+                                The subject most people get stuck on, so it gets its own shelf: notes, PYQs and the tricks that save time in the exam.
+                            </p>
+                            <div className="mt-6 rounded-lg overflow-hidden border border-border bg-black">
+                                <img src="/assets/math.png" alt="MTH special collection" className="w-full h-auto max-h-44 object-contain" />
                             </div>
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <ul className="lg:col-span-7 border-t border-foreground/80">
                             {isMathLoading ? (
                                 Array.from({ length: 3 }).map((_, i) => (
-                                    <div key={i} className="h-32 rounded-3xl bg-muted/20 animate-pulse" />
+                                    <li key={i} className="h-16 border-b border-border animate-pulse bg-muted/40" />
                                 ))
                             ) : (
                                 mathSpecial.map((sub: MathSubject) => (
-                                    <motion.div key={sub.id} whileHover={{ y: -4 }}>
-                                        <Card
+                                    <li key={sub.id} className="border-b border-border">
+                                        <button
+                                            type="button"
                                             onClick={() => handleSubjectClick(sub.semester_number, sub.slug)}
-                                            className="p-6 rounded-[2rem] bg-surface border-border/40 hover:border-primary/40 transition-all cursor-pointer group flex items-center gap-5"
+                                            className="app-row-link group w-full grid grid-cols-[90px_1fr_auto] items-center gap-4 py-4 px-2 text-left"
                                         >
-                                            <div className="w-16 h-16 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-600 transition-colors group-hover:bg-amber-500 group-hover:text-white shrink-0">
-                                                <span className="text-xl font-heading font-black">MTH</span>
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Semester {sub.semester_number}</p>
-                                                <h4 className="font-heading font-black text-lg text-foreground truncate group-hover:text-primary transition-colors">
-                                                    {sub.name}
-                                                </h4>
-                                                <div className="mt-2 flex items-center gap-2 text-[9px] font-bold text-amber-500 uppercase tracking-widest">
-                                                    Notes • PYQs • Tricks
-                                                </div>
-                                            </div>
-                                        </Card>
-                                    </motion.div>
+                                            <span className="font-mono text-[12px] text-ink-red uppercase">{sub.slug}</span>
+                                            <span>
+                                                <span className="block font-heading text-[21px] leading-tight">{sub.name}</span>
+                                                <span className="block text-[12px] text-muted-foreground mt-0.5">Semester {sub.semester_number} · notes, PYQs, tricks</span>
+                                            </span>
+                                            <ArrowRight className="w-4 h-4 opacity-40 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all" />
+                                        </button>
+                                    </li>
                                 ))
                             )}
-                        </div>
-                    </motion.section>
-                )}
-
-                <motion.section variants={fadeUp}>
-                    <div className="flex flex-col gap-2 mb-10 text-center md:text-left">
-                        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-sm font-medium text-primary w-fit mx-auto md:mx-0 mb-2">
-                            <Sparkles className="w-4 h-4" /> Welcome back, {user?.name || user?.email?.split('@')[0] || 'Scholar'}
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-heading font-black tracking-tight leading-tight">
-                            Academic Progress
-                        </h1>
-                        <p className="text-muted-foreground font-medium text-sm md:text-base max-w-2xl mt-1">
-                            Select your active semester to access official notes, pyqs and curated materials.
-                        </p>
+                        </ul>
                     </div>
+                </section>
+            )}
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 px-1">
-                        {isLoading ? (
-                            Array.from({ length: 4 }).map((_, i) => (
-                                <div key={i} className="h-48 rounded-[2rem] bg-muted/20 animate-pulse" />
-                            ))
-                        ) : (
-                            semesters.map((sem: Semester) => (
-                                <motion.div key={sem.number} whileHover={sem.is_active ? { y: -6 } : {}}>
-                                    <Card
-                                        onClick={() => handleSemesterClick(sem.number, sem.is_active)}
-                                        className={`relative h-64 flex flex-col p-8 rounded-[2.5rem] border transition-all group overflow-hidden ${sem.is_active
-                                            ? 'cursor-pointer bg-surface border-border/40 hover:border-primary/40 hover:shadow-2xl hover:shadow-primary/5'
-                                            : 'cursor-not-allowed bg-muted/5 border-border/20 opacity-60 grayscale-[0.8]'
-                                            }`}
-                                    >
-                                        <div className="flex items-start justify-between mb-8 relative z-10">
-                                            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center border transition-all duration-500 ${sem.is_active
-                                                ? 'bg-primary/10 border-primary/20 text-primary group-hover:bg-primary group-hover:text-white'
-                                                : 'bg-muted/50 border-border/50 text-muted-foreground'
-                                                }`}>
-                                                {sem.is_active ? <BookOpen className="w-7 h-7" /> : <Lock className="w-6 h-6 opacity-60" />}
-                                            </div>
-
-                                            {sem.is_active ? (
-                                                <div className="px-3 py-1 bg-emerald-500/10 border border-emerald-500/20 rounded-full text-[10px] font-black uppercase tracking-widest text-emerald-500">
-                                                    Available
-                                                </div>
-                                            ) : (
-                                                <div className="px-3 py-1 bg-muted/50 border border-border/50 rounded-full text-[10px] font-black uppercase tracking-widest text-muted-foreground">
-                                                    Locked
-                                                </div>
-                                            )}
-                                        </div>
-
-                                        <div className="relative z-10 mt-auto">
-                                            <h3 className={`font-heading font-black text-3xl tracking-tight transition-colors ${sem.is_active ? 'text-foreground' : 'text-muted-foreground'}`}>
-                                                Sem {sem.number}
-                                            </h3>
-                                            <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-2 opacity-60 group-hover:opacity-100 transition-opacity">
-                                                {sem.is_active ? 'View Modules →' : 'Opening Soon'}
-                                            </p>
-                                        </div>
-                                    </Card>
-                                </motion.div>
-                            ))
-                        )}
-                    </div>
-                </motion.section>
-
-                {/* The Student Lounge - Quick Actions */}
-                <motion.section variants={fadeUp} className="pt-12 border-t border-border/10">
-                    <div className="flex flex-col gap-1 mb-8">
-                        <h2 className="text-xl font-heading font-black tracking-tight uppercase opacity-40">The Student Lounge</h2>
-                        <p className="text-sm text-muted-foreground font-medium italic">Everything else you need while studying.</p>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        {/* WhatsApp Card */}
-                        <motion.div
-                            whileHover={{ y: -4 }}
-                            className="p-8 rounded-[2.5rem] bg-surface/50 border border-border/40 backdrop-blur-sm relative overflow-hidden group hover:border-[#25D366]/40 transition-all cursor-pointer"
-                            onClick={() => window.open(WHATSAPP_COMMUNITY_LINK, '_blank')}
-                        >
-                            <div className="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-12">
-                                <MessageCircle className="w-32 h-32 text-[#25D366]" />
-                            </div>
-                            <div className="relative z-10 space-y-6">
-                                <div className="w-12 h-12 rounded-2xl bg-[#25D366]/10 border border-[#25D366]/20 flex items-center justify-center text-[#25D366]">
-                                    <MessageCircle className="w-6 h-6 fill-current" />
-                                </div>
-                                <div>
-                                    <h4 className="text-lg font-bold text-foreground mb-1">Community</h4>
-                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Join 1000+ students for real-time updates and exam help.</p>
-                                </div>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-[#25D366] flex items-center gap-2">
-                                    Follow Channel <ExternalLink className="w-3 h-3" />
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        {/* Talk to Admin Card */}
-                        <motion.div
-                            whileHover={{ y: -4 }}
-                            className="p-8 rounded-[2.5rem] bg-surface/50 border border-border/40 backdrop-blur-sm relative overflow-hidden group hover:border-primary/40 transition-all cursor-pointer"
-                            onClick={() => router.push('/dashboard/requests')}
-                        >
-                            <div className="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity -rotate-12">
-                                <MessageSquare className="w-32 h-32 text-primary" />
-                            </div>
-                            <div className="relative z-10 space-y-6">
-                                <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary">
-                                    <MessageSquare className="w-6 h-6" />
-                                </div>
-                                <div>
-                                    <h4 className="text-lg font-bold text-foreground mb-1">Talk to Admin</h4>
-                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Request new materials, report bugs, or give feedback directly.</p>
-                                </div>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                                    Start Chat <Send className="w-3 h-3" />
-                                </div>
-                            </div>
-                        </motion.div>
-
-                        {/* Share Love Card */}
-                        <motion.div
-                            whileHover={{ y: -4 }}
-                            className="p-8 rounded-[2.5rem] bg-surface/50 border border-border/40 backdrop-blur-sm relative overflow-hidden group hover:border-amber-500/40 transition-all cursor-pointer"
-                            onClick={() => setIsFeedbackOpen(true)}
-                        >
-                            <div className="absolute -top-4 -right-4 opacity-5 group-hover:opacity-10 transition-opacity rotate-45">
-                                <Heart className="w-32 h-32 text-amber-500" />
-                            </div>
-                            <div className="relative z-10 space-y-6">
-                                <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500">
-                                    <Heart className="w-6 h-6 fill-current" />
-                                </div>
-                                <div>
-                                    <h4 className="text-lg font-bold text-foreground mb-1">Share Love</h4>
-                                    <p className="text-xs text-muted-foreground font-medium leading-relaxed">Enjoying the platform? Leave a review and help us grow.</p>
-                                </div>
-                                <div className="text-[10px] font-black uppercase tracking-widest text-amber-500 flex items-center gap-2">
-                                    Give Feedback <Sparkles className="w-3 h-3" />
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                </motion.section>
-
-                {/* Leaderboard Active Banner */}
-                <motion.section variants={fadeUp} className="pt-6 pb-12">
-                    <Link href="/dashboard/leaderboard">
-                        <div className="p-8 rounded-[2.5rem] bg-gradient-to-r from-primary/10 to-transparent border border-primary/20 relative overflow-hidden group hover:border-primary/40 transition-all cursor-pointer">
-                            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
-                                <Trophy className="w-32 h-32 text-primary" />
-                            </div>
-                            <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-6">
-                                <div className="flex items-center gap-6">
-                                    <div className="w-16 h-16 rounded-3xl bg-primary flex items-center justify-center text-white shadow-lg shadow-primary/20 group-hover:scale-110 transition-transform duration-500">
-                                        <Trophy className="w-8 h-8" />
-                                    </div>
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-1">
-                                            <h4 className="text-xl font-heading font-black text-foreground">Study Champions</h4>
-                                            <span className="px-2 py-0.5 rounded-lg bg-emerald-500/10 text-emerald-500 text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">Active Now</span>
-                                        </div>
-                                        <p className="text-sm text-muted-foreground font-medium">See how you rank among your peers. Consistency is key! 🏆</p>
-                                    </div>
-                                </div>
-                                <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.3em] text-primary group-hover:gap-4 transition-all">
-                                    View Leaderboard <TrendingUp className="w-4 h-4" />
-                                </div>
-                            </div>
-                        </div>
-                    </Link>
-                </motion.section>
-
-            </motion.div>
+            {/* Everything else */}
+            <section className="mt-16">
+                <SectionHead n={mathSpecial.length > 0 || isMathLoading ? '03' : '02'} title="While you study" />
+                <ul className="border-t border-foreground/80">
+                    {[
+                        {
+                            title: 'Study champions',
+                            body: 'See where you stand. Consistency beats cramming.',
+                            cta: 'Open leaderboard',
+                            href: '/dashboard/leaderboard',
+                        },
+                        {
+                            title: 'Ask the admin',
+                            body: 'Missing notes for a subject? Found a broken PDF? Tell us here.',
+                            cta: 'Send a request',
+                            href: '/dashboard/requests',
+                        },
+                        {
+                            title: 'WhatsApp channel',
+                            body: 'New uploads and exam-week updates, straight to your phone.',
+                            cta: 'Follow channel',
+                            external: WHATSAPP_COMMUNITY_LINK,
+                        },
+                        {
+                            title: 'Leave a review',
+                            body: 'If the notes helped, a line from you helps the next batch find us.',
+                            cta: 'Write a review',
+                            onClick: () => setIsFeedbackOpen(true),
+                        },
+                    ].map((row) => {
+                        const inner = (
+                            <>
+                                <span className="font-heading text-[21px] leading-tight">{row.title}</span>
+                                <span className="text-[14px] text-muted-foreground">{row.body}</span>
+                                <span className="text-[13px] font-semibold flex items-center gap-1.5 justify-self-end whitespace-nowrap">
+                                    {row.cta} {row.external ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowRight className="w-3.5 h-3.5" />}
+                                </span>
+                            </>
+                        )
+                        const cls = 'app-row-link w-full grid grid-cols-1 md:grid-cols-[220px_1fr_auto] items-center gap-x-6 gap-y-1 py-5 px-2 text-left'
+                        return (
+                            <li key={row.title} className="border-b border-border">
+                                {row.href ? (
+                                    <Link href={row.href} className={cls}>{inner}</Link>
+                                ) : row.external ? (
+                                    <a href={row.external} target="_blank" rel="noopener noreferrer" className={cls}>{inner}</a>
+                                ) : (
+                                    <button type="button" onClick={row.onClick} className={cls}>{inner}</button>
+                                )}
+                            </li>
+                        )
+                    })}
+                </ul>
+            </section>
 
             <FeedbackModal
                 isOpen={isFeedbackOpen}

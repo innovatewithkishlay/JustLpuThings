@@ -73,8 +73,7 @@ function SearchContent() {
 
             {/* Massive Search Input Structure */}
             <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="relative mb-12 group">
-                <div className="absolute -inset-0.5 bg-gradient-to-r from-primary to-indigo-400 rounded-[28px] blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
-                <div className="relative flex items-center bg-surface rounded-[24px] border border-border p-2 soft-shadow">
+                                <div className="relative flex items-center app-card p-2">
                     <div className="pl-4 pr-2 text-muted-foreground group-focus-within:text-primary transition-colors">
                         <SearchIcon className="w-6 h-6" />
                     </div>

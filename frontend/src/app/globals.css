@@ -8,9 +8,13 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-surface: var(--surface);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-mono);
-  --font-heading: var(--font-heading);
+  --font-sans: var(--font-lp-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-lp-mono), ui-monospace, monospace;
+  --font-heading: var(--font-lp-serif), Georgia, serif;
+  --font-hand: var(--font-lp-hand), cursive;
+  --color-ink-red: var(--ink-red);
+  --color-ink-blue: var(--ink-blue);
+  --color-highlight: var(--highlight);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
   --color-card: var(--surface);
@@ -33,41 +37,45 @@
 }
 
 :root {
-  --radius: 16px;
-  /* Light Mode */
-  --background: #F8FAFC;
-  /* Softer light matching newer SaaS specs */
-  --foreground: #0f172a;
-  --surface: #FFFFFF;
-  --primary: #4f46e5;
-  --primary-foreground: #ffffff;
-  --muted: #f1f5f9;
-  --muted-foreground: #64748b;
-  --accent: #4f46e5;
-  --accent-foreground: #ffffff;
-  --destructive: #ef4444;
+  --radius: 10px;
+  /* Notebook palette: paper, ink, a red pen and a blue pen */
+  --background: #f4efe4;
+  --foreground: #1b1813;
+  --surface: #fffcf5;
+  --primary: #1b1813;
+  --primary-foreground: #f4efe4;
+  --muted: #ebe4d4;
+  --muted-foreground: #6f675a;
+  --accent: #ebe4d4;
+  --accent-foreground: #1b1813;
+  --destructive: #b3261e;
   --destructive-foreground: #ffffff;
-  --border: #e2e8f0;
-  --input: #e2e8f0;
-  --ring: #4f46e5;
+  --border: #dcd3c1;
+  --input: #d3c9b5;
+  --ring: #2a4cb0;
+  --ink-red: #c23b22;
+  --ink-blue: #2a4cb0;
+  --highlight: rgba(255, 210, 63, 0.85);
 }
 
 .dark {
-  /* Dark Mode */
-  --background: #0B0F19;
-  --foreground: #f1f5f9;
-  --surface: #111827;
-  --primary: #818cf8;
-  --primary-foreground: #0f172a;
-  --muted: #1e293b;
-  --muted-foreground: #94a3b8;
-  --accent: #818cf8;
-  --accent-foreground: #0f172a;
-  --destructive: #f87171;
-  --destructive-foreground: #0f172a;
-  --border: #1e293b;
-  --input: #1e293b;
-  --ring: #818cf8;
+  --background: #14120f;
+  --foreground: #f0eadf;
+  --surface: #1c1915;
+  --primary: #f0eadf;
+  --primary-foreground: #14120f;
+  --muted: #26221c;
+  --muted-foreground: #978e80;
+  --accent: #26221c;
+  --accent-foreground: #f0eadf;
+  --destructive: #f0715a;
+  --destructive-foreground: #14120f;
+  --border: #34302a;
+  --input: #3d3830;
+  --ring: #8aa4ff;
+  --ink-red: #f0715a;
+  --ink-blue: #8aa4ff;
+  --highlight: rgba(231, 184, 36, 0.38);
 }
 
 @layer base {
@@ -78,7 +86,7 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-    letter-spacing: -0.025em;
+    letter-spacing: -0.006em;
   }
 }
 
@@ -471,4 +479,112 @@
     transform: none;
   }
 }
+}
+
+/* ── App pages (dashboard, admin) ─────────────────────────
+   Same notebook language as the home page: hairlines, a serif for titles,
+   mono for codes and numbers, ink buttons. */
+@layer components {
+  .app-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding-inline: 1rem;
+    border-radius: 0.5rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  }
+
+  .app-btn:hover:not(:disabled) {
+    transform: translate(-1px, -1px);
+    box-shadow: 2px 2px 0 0 var(--ink-red);
+  }
+
+  .app-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+
+  .app-btn-quiet {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: 2.5rem;
+    padding-inline: 1rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--foreground);
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+  }
+
+  .app-btn-quiet:hover:not(:disabled) {
+    background: var(--muted);
+  }
+
+  .app-btn-danger {
+    background: var(--destructive);
+    color: var(--destructive-foreground);
+  }
+
+  .app-field {
+    width: 100%;
+    height: 2.75rem;
+    padding-inline: 0.85rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--input);
+    background: var(--surface);
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  textarea.app-field {
+    height: auto;
+    padding-block: 0.75rem;
+    resize: vertical;
+  }
+
+  .app-field:focus {
+    border-color: var(--ring);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--ring) 18%, transparent);
+  }
+
+  .app-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+  }
+
+  .app-row-link {
+    transition: background-color 0.15s ease;
+  }
+
+  .app-row-link:hover {
+    background: color-mix(in srgb, var(--muted) 55%, transparent);
+  }
+
+  .app-btn:focus-visible,
+  .app-btn-quiet:focus-visible,
+  .app-row-link:focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  .app-hl {
+    background-image: linear-gradient(100deg, transparent 0.3em, var(--highlight) 0.4em, var(--highlight) calc(100% - 0.3em), transparent calc(100% - 0.2em));
+    background-size: 100% 0.42em;
+    background-position: 0 88%;
+    background-repeat: no-repeat;
+    padding-inline: 0.06em;
+  }
 }
