@@ -20,7 +20,8 @@ export function MainLayoutWrapper({ children }: { children: React.ReactNode }) {
     }
 
     return (
-        <main className="min-h-screen pt-[112px] bg-background">
+        // The home page runs edge-to-edge under the transparent navbar and handles its own top spacing
+        <main className={`min-h-screen bg-background ${pathname === '/' ? '' : 'pt-[112px]'}`}>
             {children}
 
             {/* Global Floating WhatsApp Button */}

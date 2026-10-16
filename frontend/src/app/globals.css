@@ -171,3 +171,210 @@
   padding-right: 2rem;
   max-width: 80rem;
 }
+/* ── Home page ("lp") ─────────────────────────────────────
+   Scoped to the landing page only: warm paper, ink, a highlighter
+   and a red pen. Nothing outside `.lp` reads these tokens. */
+.lp {
+  --lp-paper: #f4efe4;
+  --lp-paper-2: #ebe4d4;
+  --lp-card: #fffcf5;
+  --lp-ink: #1b1813;
+  --lp-ink-2: #48423a;
+  --lp-mute: #7b7366;
+  --lp-line: #dcd3c1;
+  --lp-hl: rgba(255, 210, 63, 0.85);
+  --lp-red: #c23b22;
+  --lp-blue: #2a4cb0;
+  --lp-sticky: #ffe27a;
+
+  background: var(--lp-paper);
+  color: var(--lp-ink);
+  overflow-x: clip;
+  font-family: var(--font-lp-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.006em;
+}
+
+.dark .lp {
+  --lp-paper: #14120f;
+  --lp-paper-2: #1b1814;
+  --lp-card: #1f1c17;
+  --lp-ink: #f0eadf;
+  --lp-ink-2: #cbc2b2;
+  --lp-mute: #978e80;
+  --lp-line: #34302a;
+  --lp-hl: rgba(231, 184, 36, 0.38);
+  --lp-red: #f0715a;
+  --lp-blue: #8aa4ff;
+  --lp-sticky: #f2cf5b;
+}
+
+.lp ::selection {
+  background: var(--lp-hl);
+  color: var(--lp-ink);
+}
+
+.lp-serif {
+  font-family: var(--font-lp-serif), Georgia, serif;
+  font-variation-settings: "SOFT" 50, "WONK" 0;
+  letter-spacing: -0.03em;
+}
+
+.lp-serif em,
+.lp-serif .lp-italic {
+  font-variation-settings: "SOFT" 100, "WONK" 1;
+}
+
+.lp-mono {
+  font-family: var(--font-lp-mono), ui-monospace, monospace;
+  letter-spacing: 0;
+}
+
+.lp-hand {
+  font-family: var(--font-lp-hand), "Comic Sans MS", cursive;
+  letter-spacing: 0;
+  line-height: 1.1;
+}
+
+.lp-wrap {
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  padding-inline: 1.25rem;
+}
+
+@media (min-width: 640px) {
+  .lp-wrap {
+    padding-inline: 2rem;
+  }
+}
+
+/* Highlighter stroke behind text, slightly uneven like a real marker */
+.lp-hl {
+  background-image: linear-gradient(100deg, transparent 0.4em, var(--lp-hl) 0.5em, var(--lp-hl) calc(100% - 0.4em), transparent calc(100% - 0.25em));
+  background-size: 100% 0.42em;
+  background-position: 0 88%;
+  background-repeat: no-repeat;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+  padding-inline: 0.06em;
+}
+
+.lp-card {
+  background: var(--lp-card);
+  border: 1px solid var(--lp-line);
+  box-shadow: 0 1px 0 rgba(27, 24, 19, 0.04), 0 18px 40px -24px rgba(27, 24, 19, 0.35);
+}
+
+.dark .lp-card {
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.8);
+}
+
+/* A strip of masking tape */
+.lp-tape {
+  position: absolute;
+  width: 92px;
+  height: 26px;
+  background: rgba(233, 222, 190, 0.78);
+  border-left: 1px dashed rgba(0, 0, 0, 0.06);
+  border-right: 1px dashed rgba(0, 0, 0, 0.06);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+}
+
+.dark .lp-tape {
+  background: rgba(120, 110, 86, 0.55);
+}
+
+/* Notebook paper: ruled lines and a red margin */
+.lp-ruled {
+  background-color: var(--lp-card);
+  background-image:
+    linear-gradient(to right, transparent 2.75rem, color-mix(in srgb, var(--lp-red) 45%, transparent) 2.75rem, color-mix(in srgb, var(--lp-red) 45%, transparent) calc(2.75rem + 1px), transparent calc(2.75rem + 1px)),
+    repeating-linear-gradient(to bottom, transparent 0 47px, var(--lp-line) 47px 48px);
+}
+
+.lp-leader {
+  flex: 1;
+  min-width: 1.5rem;
+  border-bottom: 2px dotted var(--lp-line);
+  transform: translateY(-0.3em);
+}
+
+.lp-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  height: 3.25rem;
+  padding-inline: 1.5rem;
+  border-radius: 0.6rem;
+  background: var(--lp-ink);
+  color: var(--lp-paper);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  box-shadow: 0 0 0 0 var(--lp-red);
+}
+
+.lp-btn:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 3px 3px 0 0 var(--lp-red);
+}
+
+.lp-btn:focus-visible,
+.lp-link:focus-visible,
+.lp a:focus-visible {
+  outline: 2px solid var(--lp-blue);
+  outline-offset: 3px;
+}
+
+.lp-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  text-decoration: underline;
+  text-decoration-color: var(--lp-line);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+  transition: text-decoration-color 0.15s ease;
+}
+
+.lp-link:hover {
+  text-decoration-color: var(--lp-red);
+}
+
+@keyframes lp-ticker {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.lp-ticker {
+  animation: lp-ticker 60s linear infinite;
+}
+
+@keyframes lp-draw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.lp-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: lp-draw 0.9s 0.5s cubic-bezier(0.65, 0, 0.35, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-ticker {
+    animation: none;
+  }
+
+  .lp-draw {
+    animation: none;
+    stroke-dashoffset: 0;
+  }
+
+  .lp-btn:hover {
+    transform: none;
+  }
+}
