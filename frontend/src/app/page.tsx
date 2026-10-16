@@ -10,7 +10,6 @@ import {
   LastPage,
   HomeFooter
 } from '@/components/home/HomeSections'
-import { homeFontVars } from '@/components/home/fonts'
 
 export const metadata: Metadata = {
   title: 'Just LPU Things — Every LPU exam, one place.',
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
 
 export default function LandingPage() {
   return (
-    <div className={`lp ${homeFontVars} min-h-screen antialiased`}>
+    <div className="lp lp-tokens min-h-screen antialiased">
       <HomeHero />
       <CodeTicker />
       <InsideASubject />

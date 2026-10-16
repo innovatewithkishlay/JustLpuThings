@@ -171,10 +171,99 @@
   padding-right: 2rem;
   max-width: 80rem;
 }
+/* ── Site chrome (navbar, sign-in modal) ─────────────────
+   Follows the app theme by default; inside `.lp-tokens` (the home page)
+   it switches to the notebook palette so the chrome matches the page. */
+:root {
+  --chrome-bg: var(--background);
+  --chrome-card: var(--surface);
+  --chrome-ink: var(--foreground);
+  --chrome-mute: var(--muted-foreground);
+  --chrome-line: var(--border);
+  --chrome-soft: var(--muted);
+  --chrome-btn: var(--primary);
+  --chrome-btn-ink: var(--primary-foreground);
+  --chrome-accent: var(--primary);
+}
+
+.lp-tokens {
+  --chrome-bg: var(--lp-paper);
+  --chrome-card: var(--lp-card);
+  --chrome-ink: var(--lp-ink);
+  --chrome-mute: var(--lp-mute);
+  --chrome-line: var(--lp-line);
+  --chrome-soft: var(--lp-paper-2);
+  --chrome-btn: var(--lp-ink);
+  --chrome-btn-ink: var(--lp-paper);
+  --chrome-accent: var(--lp-red);
+}
+
+@layer components {
+.chrome-serif {
+  font-family: var(--font-lp-serif), Georgia, serif;
+  font-variation-settings: "SOFT" 50, "WONK" 0;
+  letter-spacing: -0.025em;
+}
+
+.chrome-icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 9999px;
+  color: var(--chrome-ink);
+  transition: background-color 0.15s ease;
+}
+
+.chrome-icon-btn:hover {
+  background: var(--chrome-soft);
+}
+
+.chrome-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding-inline: 1.1rem;
+  border-radius: 0.55rem;
+  background: var(--chrome-btn);
+  color: var(--chrome-btn-ink);
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+}
+
+.chrome-btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 2px 2px 0 0 var(--chrome-accent);
+}
+
+.chrome-btn:disabled {
+  opacity: 0.6;
+}
+
+.chrome-icon-btn:focus-visible,
+.chrome-btn:focus-visible,
+.chrome-link:focus-visible {
+  outline: 2px solid var(--chrome-accent);
+  outline-offset: 2px;
+}
+
+.chrome-menu {
+  background: var(--chrome-card) !important;
+  color: var(--chrome-ink) !important;
+  border: 1px solid var(--chrome-line) !important;
+  box-shadow: 0 18px 40px -20px rgba(0, 0, 0, 0.35) !important;
+}
+}
+
 /* ── Home page ("lp") ─────────────────────────────────────
    Scoped to the landing page only: warm paper, ink, a highlighter
    and a red pen. Nothing outside `.lp` reads these tokens. */
-.lp {
+.lp,
+.lp-tokens {
   --lp-paper: #f4efe4;
   --lp-paper-2: #ebe4d4;
   --lp-card: #fffcf5;
@@ -186,7 +275,9 @@
   --lp-red: #c23b22;
   --lp-blue: #2a4cb0;
   --lp-sticky: #ffe27a;
+}
 
+.lp {
   background: var(--lp-paper);
   color: var(--lp-ink);
   overflow-x: clip;
@@ -194,7 +285,8 @@
   letter-spacing: -0.006em;
 }
 
-.dark .lp {
+.dark .lp,
+.dark .lp-tokens {
   --lp-paper: #14120f;
   --lp-paper-2: #1b1814;
   --lp-card: #1f1c17;
@@ -213,6 +305,7 @@
   color: var(--lp-ink);
 }
 
+@layer components {
 .lp-serif {
   font-family: var(--font-lp-serif), Georgia, serif;
   font-variation-settings: "SOFT" 50, "WONK" 0;
@@ -377,4 +470,5 @@
   .lp-btn:hover {
     transform: none;
   }
+}
 }

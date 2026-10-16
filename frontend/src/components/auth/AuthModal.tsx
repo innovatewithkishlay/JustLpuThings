@@ -3,18 +3,17 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useMutation } from '@tanstack/react-query'
-import { useRouter } from 'next/navigation'
-import { Button } from '@/components/ui/button'
+import { usePathname, useRouter } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { toast } from 'sonner'
 import { apiClient } from '@/lib/apiClient'
-import { BookOpen, Loader2, X, Eye, EyeOff, KeyRound, Mail, User, ShieldCheck, Users } from 'lucide-react'
+import { Loader2, X, Eye, EyeOff, KeyRound, Mail, User, ShieldCheck, Users } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 
 export function AuthModal() {
     const router = useRouter()
+    const pathname = usePathname()
     const { authModalOpen, authModalMode, closeAuthModal, openAuthModal, checkAuth, isAuthenticated, isAdmin, loading } = useAuth()
 
     const [loginForm, setLoginForm] = useState({ email: '', password: '', role: 'USER' as 'USER' | 'ADMIN' })
@@ -39,6 +38,14 @@ export function AuthModal() {
         }
         return () => { document.body.style.overflow = 'unset' }
     }, [authModalOpen])
+
+    // Close on Escape
+    useEffect(() => {
+        if (!authModalOpen) return
+        const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeAuthModal() }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [authModalOpen, closeAuthModal])
 
     const loginMutation = useMutation({
         mutationFn: async (credentials: typeof loginForm) => {
@@ -103,249 +110,204 @@ export function AuthModal() {
         registerMutation.mutate({ name: registerForm.name, email: registerForm.email, password: registerForm.password })
     }
 
+    const isLogin = authModalMode === 'login'
+    const tokens = pathname === '/' ? 'lp-tokens' : ''
+
     return (
         <AnimatePresence>
             {authModalOpen && (
-                <>
+                <div className={tokens}>
                     {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={closeAuthModal}
-                        className="fixed inset-0 z-[100] bg-background/40 backdrop-blur-sm"
+                        className="fixed inset-0 z-[100] bg-black/45 backdrop-blur-[2px]"
                     />
 
                     {/* Modal Content */}
-                    <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 sm:p-6 pointer-events-none">
+                    <div className="fixed inset-0 z-[101] flex items-center justify-center p-4 sm:p-6 pointer-events-none overflow-y-auto">
                         <motion.div
-                            initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                            role="dialog"
+                            aria-modal="true"
+                            aria-labelledby="auth-modal-title"
+                            initial={{ opacity: 0, y: 14 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 14 }}
                             transition={{ duration: 0.2, ease: "easeOut" }}
-                            className="w-full max-w-[420px] pointer-events-auto relative"
+                            className="w-full max-w-[420px] pointer-events-auto relative my-auto rounded-xl bg-[var(--chrome-card)] text-[var(--chrome-ink)] border border-[var(--chrome-line)] shadow-[0_30px_60px_-24px_rgba(0,0,0,0.45)]"
                         >
-                            <Button
-                                variant="ghost"
-                                size="icon"
+                            <button
+                                type="button"
                                 onClick={closeAuthModal}
-                                className="absolute right-4 top-4 z-10 rounded-full hover:bg-muted/50"
+                                aria-label="Close"
+                                className="chrome-icon-btn absolute right-3 top-3 z-10 !w-9 !h-9 text-[var(--chrome-mute)]"
                             >
-                                <X className="h-5 w-5 text-muted-foreground hover:text-foreground transition-colors" />
-                            </Button>
+                                <X className="h-[18px] w-[18px]" />
+                            </button>
 
-                            <Card className="soft-shadow border-[0.5px] border-border/80 overflow-hidden rounded-[20px] bg-background/95 backdrop-blur-2xl relative">
-                                <CardHeader className="space-y-1.5 pt-6 px-6">
-                                    <CardTitle className="text-xl font-heading font-bold text-center tracking-tight">
-                                        {authModalMode === 'login' ? 'Sign In' : 'Create Account'}
-                                    </CardTitle>
-                                </CardHeader>
+                            <div className="px-6 sm:px-8 pt-8 pb-7">
+                                <h2 id="auth-modal-title" className="chrome-serif text-[30px] leading-[1.05] pr-8">
+                                    {isLogin ? 'Welcome back.' : 'Make your account.'}
+                                </h2>
+                                <p className="mt-2 text-sm text-[var(--chrome-mute)]">
+                                    {isLogin
+                                        ? 'Sign in to pick up where you left off.'
+                                        : 'Free. Notes, PYQs and your reading progress in one place.'}
+                                </p>
 
-                                <CardContent className="px-6 pb-6">
+                                <div className="mt-7">
                                     <AnimatePresence mode="wait">
-                                        {authModalMode === 'login' ? (
+                                        {isLogin ? (
                                             <motion.form
                                                 key="login"
-                                                initial={{ opacity: 0, x: -20 }}
+                                                initial={{ opacity: 0, x: -12 }}
                                                 animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: 20 }}
-                                                transition={{ duration: 0.2 }}
+                                                exit={{ opacity: 0, x: 12 }}
+                                                transition={{ duration: 0.18 }}
                                                 onSubmit={handleLoginSubmit}
                                                 className="space-y-4"
                                             >
-                                                <div className="flex p-1 bg-muted/30 rounded-xl mb-4">
+                                                <div className="grid grid-cols-2 p-1 rounded-lg bg-[var(--chrome-soft)]" role="group" aria-label="Sign in as">
                                                     <button
                                                         type="button"
+                                                        aria-pressed={loginForm.role === 'USER'}
                                                         onClick={() => setLoginForm({ ...loginForm, role: 'USER' })}
-                                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${loginForm.role === 'USER' ? 'bg-background text-primary soft-shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                                                        className={`flex items-center justify-center gap-2 py-2 text-[13px] font-semibold rounded-md transition-all ${loginForm.role === 'USER' ? 'bg-[var(--chrome-card)] text-[var(--chrome-ink)] shadow-sm' : 'text-[var(--chrome-mute)] hover:text-[var(--chrome-ink)]'}`}
                                                     >
                                                         <Users className="w-3.5 h-3.5" />
                                                         Student
                                                     </button>
                                                     <button
                                                         type="button"
+                                                        aria-pressed={loginForm.role === 'ADMIN'}
                                                         onClick={() => {
                                                             setLoginForm({ ...loginForm, role: 'ADMIN' });
                                                             // Force to login mode if clicking Admin
                                                             openAuthModal('login');
                                                         }}
-                                                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold rounded-lg transition-all ${loginForm.role === 'ADMIN' ? 'bg-background text-primary soft-shadow' : 'text-muted-foreground hover:text-foreground'}`}
+                                                        className={`flex items-center justify-center gap-2 py-2 text-[13px] font-semibold rounded-md transition-all ${loginForm.role === 'ADMIN' ? 'bg-[var(--chrome-card)] text-[var(--chrome-ink)] shadow-sm' : 'text-[var(--chrome-mute)] hover:text-[var(--chrome-ink)]'}`}
                                                     >
                                                         <ShieldCheck className="w-3.5 h-3.5" />
                                                         Admin
                                                     </button>
                                                 </div>
-                                                <div className="space-y-3">
-                                                    <div className="space-y-1">
-                                                        <Label htmlFor="login-email" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Email</Label>
-                                                        <div className="relative group">
-                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                                                <Mail className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                                            </div>
-                                                            <Input
-                                                                id="login-email"
-                                                                type="email"
-                                                                placeholder="name@university.edu"
-                                                                value={loginForm.email}
-                                                                onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
-                                                                disabled={loginMutation.isPending}
-                                                                className="h-11 pl-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <div className="flex items-center justify-between ml-1">
-                                                            <Label htmlFor="login-password" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground">Password</Label>
-                                                        </div>
-                                                        <div className="relative group">
-                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                                                <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                                            </div>
-                                                            <Input
-                                                                id="login-password"
-                                                                type={showPassword ? "text" : "password"}
-                                                                placeholder="••••••••"
-                                                                value={loginForm.password}
-                                                                onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
-                                                                disabled={loginMutation.isPending}
-                                                                className="h-11 pl-10 pr-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setShowPassword(!showPassword)}
-                                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                                                            >
-                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <Button type="submit" className="w-full h-11 rounded-[10px] text-sm font-semibold active:scale-[0.98] transition-all mt-6 group relative overflow-hidden" disabled={loginMutation.isPending}>
-                                                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                                                    {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                                    {loginMutation.isPending ? 'Authenticating...' : 'Sign In'}
-                                                </Button>
+
+                                                <Field id="login-email" label="Email" icon={Mail}>
+                                                    <Input
+                                                        id="login-email"
+                                                        type="email"
+                                                        autoComplete="email"
+                                                        placeholder="you@example.com"
+                                                        value={loginForm.email}
+                                                        onChange={(e) => setLoginForm({ ...loginForm, email: e.target.value })}
+                                                        disabled={loginMutation.isPending}
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                                <Field id="login-password" label="Password" icon={KeyRound}>
+                                                    <Input
+                                                        id="login-password"
+                                                        type={showPassword ? "text" : "password"}
+                                                        autoComplete="current-password"
+                                                        placeholder="••••••••"
+                                                        value={loginForm.password}
+                                                        onChange={(e) => setLoginForm({ ...loginForm, password: e.target.value })}
+                                                        disabled={loginMutation.isPending}
+                                                        className={`${inputClass} pr-10`}
+                                                    />
+                                                    <RevealToggle shown={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                                                </Field>
+
+                                                <button type="submit" className="chrome-btn w-full !h-11 !mt-6" disabled={loginMutation.isPending}>
+                                                    {loginMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                                    {loginMutation.isPending ? 'Signing in…' : 'Sign in'}
+                                                </button>
                                             </motion.form>
                                         ) : (
                                             <motion.form
                                                 key="register"
-                                                initial={{ opacity: 0, x: 20 }}
+                                                initial={{ opacity: 0, x: 12 }}
                                                 animate={{ opacity: 1, x: 0 }}
-                                                exit={{ opacity: 0, x: -20 }}
-                                                transition={{ duration: 0.2 }}
+                                                exit={{ opacity: 0, x: -12 }}
+                                                transition={{ duration: 0.18 }}
                                                 onSubmit={handleRegisterSubmit}
                                                 className="space-y-4"
                                             >
-                                                <div className="space-y-3">
-                                                    <div className="space-y-1">
-                                                        <Label htmlFor="reg-name" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Full Name</Label>
-                                                        <div className="relative group">
-                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                                                <User className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                                            </div>
-                                                            <Input
-                                                                id="reg-name"
-                                                                type="text"
-                                                                placeholder="Alice Doe"
-                                                                value={registerForm.name}
-                                                                onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
-                                                                disabled={registerMutation.isPending}
-                                                                className="h-11 pl-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label htmlFor="reg-email" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Email</Label>
-                                                        <div className="relative group">
-                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                                                <Mail className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                                            </div>
-                                                            <Input
-                                                                id="reg-email"
-                                                                type="email"
-                                                                placeholder="name@university.edu"
-                                                                value={registerForm.email}
-                                                                onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
-                                                                disabled={registerMutation.isPending}
-                                                                className="h-11 pl-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label htmlFor="reg-password" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Password</Label>
-                                                        <div className="relative group">
-                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                                                <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                                            </div>
-                                                            <Input
-                                                                id="reg-password"
-                                                                type={showPassword ? "text" : "password"}
-                                                                placeholder="••••••••"
-                                                                value={registerForm.password}
-                                                                onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
-                                                                disabled={registerMutation.isPending}
-                                                                className="h-11 pl-10 pr-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setShowPassword(!showPassword)}
-                                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                                                            >
-                                                                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                    <div className="space-y-1">
-                                                        <Label htmlFor="reg-confirm" className="text-[11px] font-semibold tracking-wide uppercase text-muted-foreground ml-1">Confirm Password</Label>
-                                                        <div className="relative group">
-                                                            <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                                                                <KeyRound className="h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                                                            </div>
-                                                            <Input
-                                                                id="reg-confirm"
-                                                                type={showConfirmPassword ? "text" : "password"}
-                                                                placeholder="••••••••"
-                                                                value={registerForm.confirmPassword}
-                                                                onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
-                                                                disabled={registerMutation.isPending}
-                                                                className="h-11 pl-10 pr-10 text-sm bg-muted/20 border-border/50 transition-all focus-visible:bg-background focus-visible:ring-primary/30 focus-visible:border-primary rounded-[10px]"
-                                                            />
-                                                            <button
-                                                                type="button"
-                                                                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-muted-foreground hover:text-foreground transition-colors"
-                                                            >
-                                                                {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <Button type="submit" className="w-full h-11 rounded-[10px] text-sm font-semibold active:scale-[0.98] transition-all mt-6 group relative overflow-hidden" disabled={registerMutation.isPending}>
-                                                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 -translate-x-full group-hover:animate-[shimmer_1.5s_infinite]" />
-                                                    {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                                                    {registerMutation.isPending ? 'Creating...' : 'Create Account'}
-                                                </Button>
+                                                <Field id="reg-name" label="Full name" icon={User}>
+                                                    <Input
+                                                        id="reg-name"
+                                                        type="text"
+                                                        autoComplete="name"
+                                                        placeholder="Your name"
+                                                        value={registerForm.name}
+                                                        onChange={(e) => setRegisterForm({ ...registerForm, name: e.target.value })}
+                                                        disabled={registerMutation.isPending}
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                                <Field id="reg-email" label="Email" icon={Mail}>
+                                                    <Input
+                                                        id="reg-email"
+                                                        type="email"
+                                                        autoComplete="email"
+                                                        placeholder="you@example.com"
+                                                        value={registerForm.email}
+                                                        onChange={(e) => setRegisterForm({ ...registerForm, email: e.target.value })}
+                                                        disabled={registerMutation.isPending}
+                                                        className={inputClass}
+                                                    />
+                                                </Field>
+                                                <Field id="reg-password" label="Password" icon={KeyRound}>
+                                                    <Input
+                                                        id="reg-password"
+                                                        type={showPassword ? "text" : "password"}
+                                                        autoComplete="new-password"
+                                                        placeholder="••••••••"
+                                                        value={registerForm.password}
+                                                        onChange={(e) => setRegisterForm({ ...registerForm, password: e.target.value })}
+                                                        disabled={registerMutation.isPending}
+                                                        className={`${inputClass} pr-10`}
+                                                    />
+                                                    <RevealToggle shown={showPassword} onToggle={() => setShowPassword(!showPassword)} />
+                                                </Field>
+                                                <Field id="reg-confirm" label="Confirm password" icon={KeyRound}>
+                                                    <Input
+                                                        id="reg-confirm"
+                                                        type={showConfirmPassword ? "text" : "password"}
+                                                        autoComplete="new-password"
+                                                        placeholder="••••••••"
+                                                        value={registerForm.confirmPassword}
+                                                        onChange={(e) => setRegisterForm({ ...registerForm, confirmPassword: e.target.value })}
+                                                        disabled={registerMutation.isPending}
+                                                        className={`${inputClass} pr-10`}
+                                                    />
+                                                    <RevealToggle shown={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />
+                                                </Field>
+
+                                                <button type="submit" className="chrome-btn w-full !h-11 !mt-6" disabled={registerMutation.isPending}>
+                                                    {registerMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                                                    {registerMutation.isPending ? 'Creating…' : 'Create account'}
+                                                </button>
                                             </motion.form>
                                         )}
                                     </AnimatePresence>
 
                                     {/* ── Google OAuth ──────────────────────── */}
-                                    <div className="relative my-5">
-                                        <div className="absolute inset-0 flex items-center">
-                                            <div className="w-full border-t border-border/30" />
-                                        </div>
-                                        <div className="relative flex justify-center">
-                                            <span className="bg-background px-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground/40">or</span>
-                                        </div>
+                                    <div className="flex items-center gap-3 my-5 text-xs text-[var(--chrome-mute)]">
+                                        <span className="h-px flex-1 bg-[var(--chrome-line)]" />
+                                        or
+                                        <span className="h-px flex-1 bg-[var(--chrome-line)]" />
                                     </div>
 
                                     <button
                                         type="button"
                                         onClick={() => { window.location.href = `${process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'}/api/v1/auth/google` }}
-                                        className="w-full h-11 flex items-center justify-center gap-3 rounded-[10px] border border-border/60 bg-background hover:bg-muted/30 active:scale-[0.98] transition-all text-sm font-medium text-foreground"
+                                        className="chrome-link w-full h-11 flex items-center justify-center gap-3 rounded-[0.55rem] border border-[var(--chrome-line)] bg-transparent hover:bg-[var(--chrome-soft)] transition-colors text-sm font-semibold"
                                     >
                                         {/* Google G logo */}
-                                        <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24">
+                                        <svg className="w-[18px] h-[18px]" viewBox="0 0 24 24" aria-hidden>
                                             <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                                             <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
                                             <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05" />
@@ -353,42 +315,69 @@ export function AuthModal() {
                                         </svg>
                                         Continue with Google
                                     </button>
+                                </div>
 
-                                </CardContent>
-                                <CardFooter className="flex flex-col px-6 pb-6 pt-0 mt-2">
-                                    <div className="text-xs w-full text-center text-muted-foreground font-medium">
-                                        {authModalMode === 'login' ? (
+                                <p className="mt-6 text-[13px] text-center text-[var(--chrome-mute)]">
+                                    {isLogin ? (
+                                        loginForm.role !== 'ADMIN' && (
                                             <>
-                                                {loginForm.role !== 'ADMIN' && (
-                                                    <>
-                                                        Don't have an account?{' '}
-                                                        <button
-                                                            onClick={() => openAuthModal('register')}
-                                                            className="text-primary hover:underline underline-offset-4 focus-visible:underline focus-visible:outline-none transition-colors font-semibold"
-                                                        >
-                                                            Sign up
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </>
-                                        ) : (
-                                            <>
-                                                Already have an account?{' '}
+                                                New here?{' '}
                                                 <button
-                                                    onClick={() => openAuthModal('login')}
-                                                    className="text-primary hover:underline underline-offset-4 focus-visible:underline focus-visible:outline-none transition-colors font-semibold"
+                                                    type="button"
+                                                    onClick={() => openAuthModal('register')}
+                                                    className="chrome-link font-semibold text-[var(--chrome-ink)] underline underline-offset-4 decoration-[var(--chrome-line)] hover:decoration-[var(--chrome-accent)] rounded"
                                                 >
-                                                    Sign in
+                                                    Create a free account
                                                 </button>
                                             </>
-                                        )}
-                                    </div>
-                                </CardFooter>
-                            </Card>
+                                        )
+                                    ) : (
+                                        <>
+                                            Already have an account?{' '}
+                                            <button
+                                                type="button"
+                                                onClick={() => openAuthModal('login')}
+                                                className="chrome-link font-semibold text-[var(--chrome-ink)] underline underline-offset-4 decoration-[var(--chrome-line)] hover:decoration-[var(--chrome-accent)] rounded"
+                                            >
+                                                Sign in
+                                            </button>
+                                        </>
+                                    )}
+                                </p>
+                            </div>
                         </motion.div>
                     </div>
-                </>
+                </div>
             )}
         </AnimatePresence>
+    )
+}
+
+const inputClass = "h-11 pl-10 text-[15px] rounded-[0.55rem] bg-[var(--chrome-bg)] border-[var(--chrome-line)] text-[var(--chrome-ink)] placeholder:text-[var(--chrome-mute)]/70 shadow-none transition-colors focus-visible:ring-2 focus-visible:ring-[var(--chrome-accent)]/25 focus-visible:border-[var(--chrome-accent)]"
+
+function Field({ id, label, icon: Icon, children }: { id: string; label: string; icon: React.ElementType; children: React.ReactNode }) {
+    return (
+        <div className="space-y-1.5">
+            <Label htmlFor={id} className="text-[13px] font-medium text-[var(--chrome-ink)]">{label}</Label>
+            <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <Icon className="h-4 w-4 text-[var(--chrome-mute)] group-focus-within:text-[var(--chrome-accent)] transition-colors" />
+                </div>
+                {children}
+            </div>
+        </div>
+    )
+}
+
+function RevealToggle({ shown, onToggle }: { shown: boolean; onToggle: () => void }) {
+    return (
+        <button
+            type="button"
+            onClick={onToggle}
+            aria-label={shown ? 'Hide password' : 'Show password'}
+            className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-[var(--chrome-mute)] hover:text-[var(--chrome-ink)] transition-colors"
+        >
+            {shown ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+        </button>
     )
 }
