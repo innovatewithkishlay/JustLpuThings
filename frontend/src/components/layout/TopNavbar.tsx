@@ -2,59 +2,48 @@
 
 import * as React from "react"
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from "framer-motion"
-import { usePathname } from "next/navigation"
-import { Moon, Sun, Search, User, BookOpen, Trophy, TrendingUp, MessageSquare } from "lucide-react"
+import { usePathname, useRouter } from "next/navigation"
+import { Moon, Sun, Monitor, Check, Trophy, TrendingUp, MessageSquare, LayoutGrid, LogOut, Shield, Inbox } from "lucide-react"
 import { NotificationBell } from "@/components/notifications/NotificationBell"
 import { useTheme } from "next-themes"
-import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { useAuth } from "@/contexts/AuthContext"
-import { useQueryClient } from "@tanstack/react-query"
-import { apiClient } from "@/lib/apiClient"
 import { toast } from "sonner"
 
-const MODULES = [
-    { name: 'Materials', path: '/dashboard' },
-    { name: 'Leaderboard', path: '/dashboard/leaderboard' },
-    { name: 'Analytics', path: '/dashboard/analytics' }
-];
+const THEMES = [
+    { value: 'light', label: 'Light', icon: Sun },
+    { value: 'dark', label: 'Dark', icon: Moon },
+    { value: 'system', label: 'System', icon: Monitor },
+] as const
+
+const menuItem = "cursor-pointer rounded-md px-3 py-2.5 text-sm flex items-center gap-2.5 focus:bg-[var(--chrome-soft)] focus:text-[var(--chrome-ink)]"
 
 export function TopNavbar() {
     const { setTheme, theme } = useTheme()
     const pathname = usePathname()
-    const { isAuthenticated, user, isAdmin, openAuthModal, checkAuth, logout } = useAuth()
-    const queryClient = useQueryClient()
-    const router = require('next/navigation').useRouter() // Required locally as it's not imported at top
+    const router = useRouter()
+    const { isAuthenticated, user, isAdmin, openAuthModal, logout } = useAuth()
 
     const [isScrolled, setIsScrolled] = React.useState(false)
     const [isVisible, setIsVisible] = React.useState(true)
-    const [lastScrollY, setLastScrollY] = React.useState(0)
+    const lastScrollY = React.useRef(0)
     const scrollTimeout = React.useRef<NodeJS.Timeout | null>(null)
 
     React.useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY
 
-            // Transform to island
             setIsScrolled(currentScrollY > 20)
 
-            // Dynamic visibility
-            if (currentScrollY > lastScrollY && currentScrollY > 100) {
-                // Scrolling down - hide
-                setIsVisible(false)
-            } else {
-                // Scrolling up - show
-                setIsVisible(true)
-            }
+            // Hide while scrolling down, show while scrolling up
+            setIsVisible(!(currentScrollY > lastScrollY.current && currentScrollY > 100))
+            lastScrollY.current = currentScrollY
 
-            setLastScrollY(currentScrollY)
-
-            // Detect scroll stop to bring it back
+            // Bring it back once scrolling stops
             if (scrollTimeout.current) clearTimeout(scrollTimeout.current)
-            scrollTimeout.current = setTimeout(() => {
-                setIsVisible(true)
-            }, 1000) // Bring back after 1s of no scrolling
+            scrollTimeout.current = setTimeout(() => setIsVisible(true), 1000)
         }
 
         window.addEventListener('scroll', handleScroll, { passive: true })
@@ -62,141 +51,151 @@ export function TopNavbar() {
             window.removeEventListener('scroll', handleScroll)
             if (scrollTimeout.current) clearTimeout(scrollTimeout.current)
         }
-    }, [lastScrollY])
+    }, [])
 
     const handleLogout = async () => {
         await logout()
         toast.success("Logged out successfully")
     }
 
-    // Hide navbar heavily abstracted viewer pages
+    // Hide navbar on the distraction-free viewer pages
     if (pathname?.startsWith('/viewer/')) return null;
 
+    // On the home page the chrome picks up the notebook palette
+    const tokens = pathname === '/' ? 'lp-tokens' : ''
+    const initial = (user?.name?.[0] || user?.email?.[0] || 'U').toUpperCase()
+
     return (
-        <motion.div
+        <motion.header
             initial={{ y: 0 }}
-            animate={{ y: isVisible ? 0 : -120 }}
-            transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className={`fixed top-0 left-0 right-0 z-50 flex justify-center transition-all duration-700 py-6 ${isScrolled ? 'px-4' : 'px-0'}`}
+            animate={{ y: isVisible ? 0 : -100 }}
+            transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+            className={`${tokens} fixed top-0 inset-x-0 z-50 transition-[background-color,border-color,box-shadow] duration-300 border-b ${isScrolled
+                ? 'bg-[color-mix(in_srgb,var(--chrome-bg)_88%,transparent)] backdrop-blur-md border-[var(--chrome-line)]'
+                : 'bg-transparent border-transparent'
+                }`}
         >
-            <motion.div
-                animate={{
-                    width: isScrolled ? '90%' : '100%',
-                    borderRadius: isScrolled ? '32px' : '0px',
-                    maxWidth: isScrolled ? '1100px' : '100%',
-                    y: isScrolled ? 0 : -10
-                }}
-                className={`flex items-center h-16 transition-all duration-700 relative ${isScrolled
-                    ? 'px-8 border border-white/10 dark:border-white/5 bg-white/5 dark:bg-black/20 backdrop-blur-[40px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] after:absolute after:inset-0 after:rounded-[32px] after:border after:border-white/20 after:pointer-events-none'
-                    : 'px-12 border-transparent bg-transparent backdrop-blur-0'
-                    }`}
-            >
-                {/* Logo / Brand */}
-                <Link href="/" className="flex items-center gap-3 group">
-                    <div className="w-10 h-10 rounded-2xl overflow-hidden flex items-center justify-center group-hover:scale-110 transition-transform duration-500">
-                        <img
-                            src="/logo.png"
-                            alt="JustLpuThings Logo"
-                            className="w-full h-full object-cover p-1.5"
-                        />
-                    </div>
-                    <span className="text-xl font-heading font-bold tracking-tight text-foreground">
-                        JustLPU<span className="text-primary/80">Things</span>
+            <nav className="mx-auto max-w-[1180px] h-16 md:h-[72px] px-4 sm:px-8 flex items-center gap-3 text-[var(--chrome-ink)]">
+                {/* Brand */}
+                <Link href="/" className="chrome-link flex items-center gap-2.5 rounded-md -ml-1 pl-1 pr-2 py-1 group">
+                    <Image
+                        src="/logo.png"
+                        alt=""
+                        width={36}
+                        height={36}
+                        priority
+                        className="w-9 h-9 object-contain transition-transform duration-300 group-hover:-rotate-6"
+                    />
+                    <span className="chrome-serif text-[18px] sm:text-[21px] leading-none font-[460] whitespace-nowrap">
+                        Just LPU <em className="italic" style={{ fontVariationSettings: '"SOFT" 100, "WONK" 1' }}>Things</em>
                     </span>
                 </Link>
 
                 <div className="flex-1" />
 
-                <div className="flex items-center gap-6">
-                    {/* Dark Mode Toggle */}
+                <div className="flex items-center gap-1 sm:gap-2">
+                    {/* Theme */}
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="w-10 h-10 px-0 rounded-2xl hover:bg-white/10 transition-colors">
-                                <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0 text-foreground/70" />
-                                <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100 text-foreground/70" />
-                                <span className="sr-only">Toggle theme</span>
-                            </Button>
+                            <button type="button" className="chrome-icon-btn" aria-label="Change theme">
+                                <Sun className="h-[18px] w-[18px] dark:hidden" />
+                                <Moon className="h-[18px] w-[18px] hidden dark:block" />
+                            </button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="rounded-2xl soft-shadow border-white/10 backdrop-blur-3xl bg-white/10 dark:bg-black/40">
-                            <DropdownMenuItem onClick={() => setTheme("light")} className="rounded-xl m-1">Light</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("dark")} className="rounded-xl m-1">Dark</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setTheme("system")} className="rounded-xl m-1">System</DropdownMenuItem>
+                        <DropdownMenuContent align="end" className={`${tokens} chrome-menu w-40 rounded-lg p-1`}>
+                            {THEMES.map(({ value, label, icon: Icon }) => (
+                                <DropdownMenuItem key={value} onClick={() => setTheme(value)} className={menuItem}>
+                                    <Icon className="w-4 h-4 opacity-70" />
+                                    {label}
+                                    {theme === value && <Check className="w-4 h-4 ml-auto text-[var(--chrome-accent)]" />}
+                                </DropdownMenuItem>
+                            ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
 
-                    {/* Notification Bell */}
                     {isAuthenticated && <NotificationBell />}
 
-                    {/* Profile / Avatar */}
                     {isAuthenticated ? (
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="relative rounded-2xl w-10 h-10 bg-primary/20 hover:bg-primary/30 border border-primary/30 text-primary font-bold text-xs transition-all hover:scale-105"
+                                <button
+                                    type="button"
+                                    aria-label="Account menu"
+                                    className="chrome-icon-btn ml-1 !bg-[var(--chrome-btn)] !text-[var(--chrome-btn-ink)] chrome-serif text-[17px] font-medium hover:opacity-90"
                                 >
-                                    {user?.name?.[0] || user?.email?.[0] || 'U'}
-                                </Button>
+                                    {initial}
+                                </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-64 rounded-3xl soft-shadow border-white/10 backdrop-blur-3xl bg-white/10 dark:bg-black/60 p-2">
-                                <DropdownMenuLabel className="font-normal px-4 py-4">
-                                    <div className="flex flex-col space-y-2">
-                                        <p className="text-sm font-semibold leading-none">{user?.name || 'Student'}</p>
-                                        <p className="text-[11px] leading-none text-muted-foreground/60">{user?.email}</p>
-                                        <div className="pt-2">
-                                            <span className={`inline-flex items-center px-3 py-1 rounded-full text-[9px] font-bold tracking-widest uppercase ${isAdmin ? 'bg-rose-500/20 text-rose-500' : 'bg-primary/20 text-primary'}`}>
-                                                {user?.role}
-                                            </span>
-                                        </div>
-                                    </div>
+                            <DropdownMenuContent align="end" className={`${tokens} chrome-menu w-64 rounded-lg p-1.5`}>
+                                <DropdownMenuLabel className="font-normal px-3 pt-3 pb-3">
+                                    <p className="text-sm font-semibold leading-tight truncate">{user?.name || 'Student'}</p>
+                                    <p className="mt-1 text-xs text-[var(--chrome-mute)] truncate">{user?.email}</p>
+                                    <span className={`mt-3 inline-flex items-center px-2 py-0.5 rounded font-mono text-[10px] uppercase tracking-wider border ${isAdmin
+                                        ? 'border-rose-500/30 text-rose-500'
+                                        : 'border-[var(--chrome-line)] text-[var(--chrome-mute)]'
+                                        }`}>
+                                        {user?.role}
+                                    </span>
                                 </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-white/5" />
+                                <DropdownMenuSeparator className="bg-[var(--chrome-line)]" />
 
                                 {isAdmin && (
                                     <>
-                                        <DropdownMenuItem onClick={() => router.push('/admin')} className="cursor-pointer font-semibold text-primary rounded-xl px-4 py-3 m-1">
-                                            Admin Panel
+                                        <DropdownMenuItem onClick={() => router.push('/admin')} className={`${menuItem} font-semibold`}>
+                                            <Shield className="w-4 h-4 opacity-70" /> Admin Panel
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => router.push('/admin/inbox')} className="cursor-pointer font-semibold text-primary/80 rounded-xl px-4 py-3 m-1">
-                                            Inbox & Notifications
+                                        <DropdownMenuItem onClick={() => router.push('/admin/inbox')} className={menuItem}>
+                                            <Inbox className="w-4 h-4 opacity-70" /> Inbox & Notifications
                                         </DropdownMenuItem>
-                                        <DropdownMenuSeparator className="bg-white/5" />
+                                        <DropdownMenuSeparator className="bg-[var(--chrome-line)]" />
                                     </>
                                 )}
 
-                                <DropdownMenuItem onClick={() => router.push('/dashboard')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm">
-                                    Dashboard
+                                <DropdownMenuItem onClick={() => router.push('/dashboard')} className={menuItem}>
+                                    <LayoutGrid className="w-4 h-4 opacity-70" /> Dashboard
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm flex items-center gap-2">
-                                    <TrendingUp className="w-4 h-4" />
-                                    Analytics
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/analytics')} className={menuItem}>
+                                    <TrendingUp className="w-4 h-4 opacity-70" /> Analytics
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/leaderboard')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm flex items-center gap-2">
-                                    <Trophy className="w-4 h-4" />
-                                    Leaderboard
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/leaderboard')} className={menuItem}>
+                                    <Trophy className="w-4 h-4 opacity-70" /> Leaderboard
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => router.push('/dashboard/requests')} className="cursor-pointer rounded-xl px-4 py-3 m-1 text-sm flex items-center gap-2">
-                                    <MessageSquare className="w-4 h-4" />
-                                    My Requests
+                                <DropdownMenuItem onClick={() => router.push('/dashboard/requests')} className={menuItem}>
+                                    <MessageSquare className="w-4 h-4 opacity-70" /> My Requests
                                 </DropdownMenuItem>
-                                <DropdownMenuSeparator className="bg-white/5" />
-                                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10 rounded-xl px-4 py-3 m-1 text-sm">
-                                    Log out
+                                <DropdownMenuSeparator className="bg-[var(--chrome-line)]" />
+                                <DropdownMenuItem onClick={handleLogout} className={`${menuItem} text-destructive focus:text-destructive focus:bg-destructive/10`}>
+                                    <LogOut className="w-4 h-4" /> Log out
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
                     ) : (
-                        <Button
-                            variant="default"
-                            className="rounded-2xl h-11 px-8 text-xs font-bold bg-primary hover:bg-primary/90 shadow-[0_10px_30px_rgba(var(--primary),0.2)] hover:scale-105 transition-all"
-                            onClick={() => openAuthModal('login')}
-                        >
-                            Sign In
-                        </Button>
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => openAuthModal('login')}
+                                className="chrome-link hidden sm:inline-flex h-10 items-center px-3 rounded-md text-sm font-semibold hover:underline underline-offset-[6px] decoration-2 decoration-[var(--chrome-accent)]"
+                            >
+                                Sign in
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => openAuthModal('login')}
+                                className="chrome-btn ml-1 sm:hidden"
+                            >
+                                Sign in
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => openAuthModal('register')}
+                                className="chrome-btn hidden sm:inline-flex"
+                            >
+                                Join free
+                            </button>
+                        </>
                     )}
                 </div>
-            </motion.div>
-        </motion.div>
+            </nav>
+        </motion.header>
     )
 }

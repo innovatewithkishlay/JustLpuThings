@@ -63,22 +63,23 @@ export function NotificationBell() {
 
     return (
         <div className="relative">
-            <Button
-                variant="ghost"
-                className="relative w-10 h-10 px-0 rounded-2xl hover:bg-white/10 transition-colors"
+            <button
+                type="button"
+                aria-label="Notifications"
+                className="chrome-icon-btn relative"
                 onClick={() => setOpen(!open)}
             >
-                <Bell className="h-5 w-5 text-foreground/70" />
+                <Bell className="h-[18px] w-[18px]" />
                 {unreadCount > 0 && (
                     <motion.span
                         initial={{ scale: 0 }}
                         animate={{ scale: 1 }}
-                        className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-primary text-[10px] font-bold text-white flex items-center justify-center px-1"
+                        className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] rounded-full bg-[var(--chrome-accent)] text-[10px] font-bold text-white flex items-center justify-center px-1 ring-2 ring-[var(--chrome-bg)]"
                     >
                         {unreadCount > 9 ? '9+' : unreadCount}
                     </motion.span>
                 )}
-            </Button>
+            </button>
 
             <AnimatePresence>
                 {open && (
@@ -91,7 +92,7 @@ export function NotificationBell() {
                             animate={{ opacity: 1, y: 0, scale: 1 }}
                             exit={{ opacity: 0, y: 8, scale: 0.95 }}
                             transition={{ duration: 0.2 }}
-                            className="absolute right-0 top-12 z-50 w-[360px] bg-background border border-border/50 rounded-2xl shadow-2xl overflow-hidden"
+                            className="chrome-menu fixed sm:absolute inset-x-4 sm:inset-x-auto sm:right-0 top-16 sm:top-12 z-50 sm:w-[360px] rounded-lg overflow-hidden"
                         >
                             {/* Header */}
                             <div className="flex items-center justify-between px-4 py-3 border-b border-border/40">
