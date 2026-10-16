@@ -11,7 +11,7 @@ export class MaterialsService {
         const safeLimit = Math.min(limit, 50);
 
         let sql = `
-      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit, m.youtube_url,
+      SELECT m.id, m.title, m.slug, m.description, m.category, m.unit, m.youtube_url, m.created_at, m.updated_at,
              (m.file_key IS NOT NULL) AS has_file,
              s.name as subject_name, sem.number as semester_number, c.name as college_name
       FROM materials m
