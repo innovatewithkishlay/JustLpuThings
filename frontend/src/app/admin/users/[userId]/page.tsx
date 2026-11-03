@@ -1,16 +1,14 @@
 "use client"
 
 import { useParams, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { apiClient } from '@/lib/apiClient'
 import { DashboardSkeleton } from '@/components/skeletons/dashboard-skeleton'
-import { ArrowLeft, User, Mail, ShieldAlert, Activity, BookOpen, Clock, AlertTriangle, Calendar, FileText } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { MessageSquare } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
-import { MessageSquare, Send } from 'lucide-react'
+import { AdminShell } from '@/components/app/AdminShell'
+import { EmptyNote, PageHead, ProgressLine, SectionHead, Stat, Tag } from '@/components/app/Notebook'
 
 interface UserProfile {
     id: string;
@@ -58,16 +56,6 @@ interface UserDetailResponse {
     suspicious_activity: SuspiciousEvent[];
 }
 
-const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
-}
-
-const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
-}
-
 export default function AdminUserDetailPage() {
     const params = useParams()
     const router = useRouter()
@@ -107,276 +95,152 @@ export default function AdminUserDetailPage() {
     }
 
     if (isLoading) {
-        return <div className="page-container"><DashboardSkeleton /></div>
+        return <AdminShell active="USERS"><DashboardSkeleton /></AdminShell>
     }
 
     if (isError || !data) {
         return (
-            <div className="min-h-screen pt-16 flex justify-center text-center">
-                <div className="flex flex-col items-center gap-4">
-                    <AlertTriangle className="w-12 h-12 text-red-500 mb-2" />
-                    <h2 className="text-xl font-bold font-heading">User Profile Missing</h2>
-                    <p className="text-muted-foreground text-sm">Failed to retrieve behavioral vectors.</p>
-                    <Button variant="outline" className="mt-4" onClick={() => router.back()}>Return to Directory</Button>
-                </div>
-            </div>
+            <AdminShell active="USERS">
+                <EmptyNote
+                    title="Couldn’t find this student"
+                    action={<button type="button" className="app-btn-quiet" onClick={() => router.push('/admin/users')}>Back to students</button>}
+                >
+                    The account may have been deleted.
+                </EmptyNote>
+            </AdminShell>
         )
     }
 
     const { profile, engagement, history, suspicious_activity } = data
 
+    const talkTo = async () => {
+        if (profile.latest_message_id) {
+            router.push(`/admin/inbox?msgId=${profile.latest_message_id}`);
+        } else {
+            const msg = window.prompt(`Start conversation with ${profile.name || 'this user'}:`);
+            if (!msg?.trim()) return;
+            try {
+                const res = await apiClient<{ success: boolean, data: { id: string } }>(`/admin/users/${profile.id}/message`, {
+                    method: 'POST',
+                    body: JSON.stringify({ message: msg.trim() })
+                });
+                toast.success('Message sent! Opening inbox...');
+                router.push(`/admin/inbox?msgId=${res.data.id}`);
+            } catch (err: any) {
+                toast.error(err.message || 'Failed to send message');
+            }
+        }
+    }
+
     return (
-        <div className="min-h-screen pb-20 pt-8 bg-[#F8FAFC] dark:bg-[#080B11] selection:bg-primary/20">
-            <motion.div initial="hidden" animate="visible" variants={containerVariants} className="page-container max-w-[1400px]">
+        <AdminShell active="USERS">
+            <PageHead
+                back="/admin/users"
+                crumbs={[{ label: 'Admin', href: '/admin' }, { label: 'Students', href: '/admin/users' }, { label: profile.name || profile.email }]}
+                title={<>{profile.name || 'No name'}</>}
+                sub={
+                    <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                        <span className="font-mono text-[14px]">{profile.email}</span>
+                        <span className="opacity-40">·</span>
+                        <span>joined {new Date(profile.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                        <span className="opacity-40">·</span>
+                        {profile.is_blocked ? <Tag tone="red">Blocked</Tag> : profile.role === 'ADMIN' ? <Tag tone="blue">Admin</Tag> : <Tag>Student</Tag>}
+                    </span>
+                }
+                actions={profile.role !== 'ADMIN' ? (
+                    <>
+                        <button
+                            type="button"
+                            onClick={talkTo}
+                            className={`app-btn-quiet ${profile.message_status === 'open' ? '!border-ink-red !text-ink-red' : ''}`}
+                        >
+                            <MessageSquare className="w-4 h-4" />
+                            {profile.message_status === 'open' ? 'Reply to request' : profile.latest_message_id ? 'Conversation' : 'Send a message'}
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => blockMutation.mutate(!profile.is_blocked)}
+                            disabled={blockMutation.isPending}
+                            className={profile.is_blocked ? 'app-btn' : 'app-btn app-btn-danger'}
+                        >
+                            {profile.is_blocked ? 'Restore access' : 'Block account'}
+                        </button>
+                    </>
+                ) : undefined}
+            />
 
-                {/* Header Strip */}
-                <div className="flex flex-col md:flex-row md:items-start justify-between mb-8 pb-4 border-b border-border/50 gap-4">
-                    <div className="space-y-4">
-                        <Button variant="ghost" className="pl-0 hover:bg-transparent hover:text-primary transition-colors group text-sm font-bold tracking-widest uppercase text-muted-foreground" onClick={() => router.push('/admin/users')}>
-                            <ArrowLeft className="w-4 h-4 mr-2 group-hover:-translate-x-1 transition-transform" />
-                            Back to Audience
-                        </Button>
-                        <div className="flex items-center gap-4">
-                            <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center border border-primary/20 shrink-0">
-                                <User className="w-8 h-8 text-primary" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl font-heading font-bold tracking-tight">{profile.name || 'Anonymous User'}</h1>
-                                <div className="flex items-center gap-3 mt-1.5 font-mono text-sm">
-                                    <span className="text-muted-foreground flex items-center gap-1.5"><Mail className="w-4 h-4" /> {profile.email}</span>
-                                    <span className="text-muted-foreground/30">•</span>
-                                    <span className="text-muted-foreground flex items-center gap-1.5"><Calendar className="w-4 h-4" /> Joined {new Date(profile.created_at).toLocaleDateString()}</span>
-                                </div>
-                            </div>
+            <dl className="grid grid-cols-2 lg:grid-cols-4 border-b border-border -mt-4">
+                <Stat label="Reading time" value={formatTime(engagement.total_time_spent)} />
+                <Stat label="Materials opened" value={engagement.total_materials_opened} />
+                <Stat label="Average completion" value={`${engagement.completion_rate}%`} />
+                <Stat label="Time per material" value={formatTime(engagement.avg_time_per_material)} />
+            </dl>
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 mt-12">
+                <section className="lg:col-span-8">
+                    <SectionHead n="01" title="What they’ve read" aside={history?.length ? `${history.length} materials` : undefined} />
+                    {!history || history.length === 0 ? (
+                        <EmptyNote title="Nothing opened yet">This student hasn’t opened any materials.</EmptyNote>
+                    ) : (
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-[14px] text-left border-collapse min-w-[560px]">
+                                <thead>
+                                    <tr className="font-mono text-[11px] uppercase tracking-[0.06em] text-muted-foreground border-b border-foreground/80">
+                                        <th className="py-2.5 px-2 font-normal">Material</th>
+                                        <th className="py-2.5 px-2 font-normal w-[170px]">Progress</th>
+                                        <th className="py-2.5 px-2 font-normal text-right">Time</th>
+                                        <th className="py-2.5 px-2 font-normal text-right">Last opened</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {history.map((mat) => (
+                                        <tr key={mat.id} className="border-b border-border">
+                                            <td className="py-3 px-2">
+                                                <span className="block font-medium truncate max-w-[320px]">{mat.title}</span>
+                                                <span className="block font-mono text-[11px] text-muted-foreground uppercase">{mat.subject_name} · sem {mat.semester_number}</span>
+                                            </td>
+                                            <td className="py-3 px-2">
+                                                <span className="flex items-center gap-3">
+                                                    <span className="w-16"><ProgressLine value={mat.completion_percentage} /></span>
+                                                    <span className="font-mono text-[12px]">{Math.round(mat.completion_percentage)}%</span>
+                                                </span>
+                                                <span className="block font-mono text-[11px] text-muted-foreground mt-1">p. {mat.last_page}/{mat.total_pages || '?'}</span>
+                                            </td>
+                                            <td className="py-3 px-2 text-right font-mono">{formatTime(mat.total_time_spent)}</td>
+                                            <td className="py-3 px-2 text-right text-[12px] text-muted-foreground whitespace-nowrap">
+                                                {formatDistanceToNow(new Date(mat.last_opened), { addSuffix: true })}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
-                    </div>
+                    )}
+                </section>
 
-                    <div className="flex flex-col gap-3 min-w-[200px]">
-                        <div className={`px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider text-center border ${profile.role === 'ADMIN' ? 'bg-indigo-500/10 text-indigo-500 border-indigo-500/20' :
-                            profile.is_blocked ? 'bg-red-500/10 text-red-500 border-red-500/20 text-red-500 animate-pulse' :
-                                'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-                            }`}>
-                            {profile.is_blocked ? 'ACCOUNT SUSPENDED' : `${profile.role} CLEARANCE`}
+                <section className="lg:col-span-4">
+                    <SectionHead n="02" title="Flags" />
+                    {!suspicious_activity || suspicious_activity.length === 0 ? (
+                        <div className="app-card p-5">
+                            <p className="font-semibold">Nothing unusual</p>
+                            <p className="mt-1 text-[14px] text-muted-foreground">No rapid-fire downloads or other odd patterns in the last 24 hours.</p>
                         </div>
-                        {profile.role !== 'ADMIN' && (
-                            <div className="flex flex-col gap-2">
-                                <Button
-                                    variant={profile.is_blocked ? 'default' : 'destructive'}
-                                    onClick={() => blockMutation.mutate(!profile.is_blocked)}
-                                    disabled={blockMutation.isPending}
-                                    className="w-full font-bold shadow-sm h-11"
-                                >
-                                    {profile.is_blocked ? 'Restore Access' : 'Suspend Account'}
-                                </Button>
-
-                                <Button
-                                    variant="outline"
-                                    onClick={async () => {
-                                        if (profile.latest_message_id) {
-                                            router.push(`/admin/inbox?msgId=${profile.latest_message_id}`);
-                                        } else {
-                                            const msg = window.prompt(`Start conversation with ${profile.name || 'this user'}:`);
-                                            if (!msg?.trim()) return;
-                                            try {
-                                                const res = await apiClient<{ success: boolean, data: { id: string } }>(`/admin/users/${profile.id}/message`, {
-                                                    method: 'POST',
-                                                    body: JSON.stringify({ message: msg.trim() })
-                                                });
-                                                toast.success('Message sent! Opening inbox...');
-                                                router.push(`/admin/inbox?msgId=${res.data.id}`);
-                                            } catch (err: any) {
-                                                toast.error(err.message || 'Failed to send message');
-                                            }
-                                        }
-                                    }}
-                                    className={`w-full font-bold shadow-sm h-11 gap-2 border-primary/20 ${profile.message_status === 'open' ? 'bg-primary/5 text-primary border-primary/30 animate-pulse' : ''}`}
-                                >
-                                    <MessageSquare className="w-4 h-4" />
-                                    {profile.message_status === 'open' ? 'Reply to Request' : profile.latest_message_id ? 'Conversation' : 'Start Conversation'}
-                                </Button>
-                                {!profile.latest_message_id && (
-                                    <p className="text-[9px] text-muted-foreground italic text-center px-2">Click "Start Conversation" to send the first message to this user.</p>
-                                )}
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Engagement Summary Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <motion.div variants={itemVariants}>
-                        <Card className="h-full bg-surface border-border/50 soft-shadow transition-all hover:border-border hover:shadow-md rounded-[20px]">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Total Time Spent</CardTitle>
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border bg-blue-500/10 border-blue-500/20 text-blue-500">
-                                    <Clock className="w-4 h-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-heading font-black">{formatTime(engagement.total_time_spent)}</div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-
-                    <motion.div variants={itemVariants}>
-                        <Card className="h-full bg-surface border-border/50 soft-shadow transition-all hover:border-border hover:shadow-md rounded-[20px]">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Materials Opened</CardTitle>
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border bg-indigo-500/10 border-indigo-500/20 text-indigo-500">
-                                    <BookOpen className="w-4 h-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-heading font-black">{engagement.total_materials_opened}</div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-
-                    <motion.div variants={itemVariants}>
-                        <Card className="h-full bg-surface border-border/50 soft-shadow transition-all hover:border-border hover:shadow-md rounded-[20px]">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Global Completion</CardTitle>
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border bg-emerald-500/10 border-emerald-500/20 text-emerald-500">
-                                    <Activity className="w-4 h-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-heading font-black">{engagement.completion_rate}%</div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-
-                    <motion.div variants={itemVariants}>
-                        <Card className="h-full bg-surface border-border/50 soft-shadow transition-all hover:border-border hover:shadow-md rounded-[20px]">
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Average Time/Doc</CardTitle>
-                                <div className="w-8 h-8 rounded-xl flex items-center justify-center border bg-amber-500/10 border-amber-500/20 text-amber-500">
-                                    <Clock className="w-4 h-4" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-3xl font-heading font-black">{formatTime(engagement.avg_time_per_material)}</div>
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-                    {/* Per Material Breakdown Table */}
-                    <motion.div variants={itemVariants} className="lg:col-span-2">
-                        <Card className="bg-surface border-border/50 overflow-hidden rounded-[24px] soft-shadow min-h-[400px]">
-                            <CardHeader className="border-b border-border/40 bg-muted/10 p-5 px-6">
-                                <CardTitle className="flex items-center gap-2 text-[17px] font-heading font-bold text-foreground">
-                                    <FileText className="w-5 h-5 text-primary" /> Consumption History Log
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="p-0">
-                                {!history || history.length === 0 ? (
-                                    <div className="p-16 text-center text-muted-foreground flex flex-col items-center justify-center gap-3">
-                                        <div className="w-16 h-16 bg-muted/50 rounded-2xl flex items-center justify-center mb-2">
-                                            <BookOpen className="w-8 h-8 text-muted-foreground/50" />
-                                        </div>
-                                        <h3 className="text-lg font-bold font-heading text-foreground">No Document History</h3>
-                                        <p>This user has not accessed any secure materials yet.</p>
-                                    </div>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm text-left">
-                                            <thead className="text-xs text-muted-foreground uppercase bg-muted/30 font-bold tracking-wider">
-                                                <tr>
-                                                    <th className="px-6 py-4 whitespace-nowrap">Document Title</th>
-                                                    <th className="px-6 py-4 whitespace-nowrap">Progress</th>
-                                                    <th className="px-6 py-4 whitespace-nowrap">Time</th>
-                                                    <th className="px-6 py-4 whitespace-nowrap">Last Active</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-border/40">
-                                                {history.map((mat) => (
-                                                    <tr key={mat.id} className="hover:bg-muted/30 transition-colors group">
-                                                        <td className="px-6 py-5">
-                                                            <div className="flex flex-col gap-1 max-w-[200px] md:max-w-[300px]">
-                                                                <span className="font-medium text-foreground truncate">{mat.title}</span>
-                                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{mat.subject_name} • SEM {mat.semester_number}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-5 whitespace-nowrap">
-                                                            <div className="flex flex-col gap-1.5">
-                                                                <div className="flex items-center gap-2">
-                                                                    <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
-                                                                        <div
-                                                                            className={`h-full ${mat.completion_percentage > 80 ? 'bg-emerald-500' : mat.completion_percentage > 30 ? 'bg-amber-500' : 'bg-primary'}`}
-                                                                            style={{ width: `${Math.min(100, Math.round(mat.completion_percentage))}%` }}
-                                                                        />
-                                                                    </div>
-                                                                    <span className="text-[10px] font-mono font-bold">{Math.round(mat.completion_percentage)}%</span>
-                                                                </div>
-                                                                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-tighter">Pg {mat.last_page}/{mat.total_pages || '?'}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-6 py-5 font-mono text-xs text-muted-foreground">
-                                                            {formatTime(mat.total_time_spent)}
-                                                        </td>
-                                                        <td className="px-6 py-5 font-mono text-[10px] text-muted-foreground uppercase">
-                                                            {formatDistanceToNow(new Date(mat.last_opened), { addSuffix: true })}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-
-                    {/* Suspicious Activity Sidebar */}
-                    <motion.div variants={itemVariants}>
-                        <Card className="bg-surface border-border/50 rounded-[24px] soft-shadow h-full">
-                            <CardHeader className="p-5 px-6 border-b border-border/40 bg-red-500/5">
-                                <CardTitle className="flex items-center gap-2 text-[15px] font-heading font-bold text-red-500">
-                                    <ShieldAlert className="w-5 h-5" /> Behavioral Flags
-                                </CardTitle>
-                                <CardDescription className="text-xs">Automatic threat vectors detected via R2 Guard</CardDescription>
-                            </CardHeader>
-                            <CardContent className="p-6">
-                                {!suspicious_activity || suspicious_activity.length === 0 ? (
-                                    <div className="flex flex-col items-center justify-center py-12 text-center">
-                                        <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center mb-3">
-                                            <ShieldAlert className="w-6 h-6 text-emerald-500 opacity-50" />
-                                        </div>
-                                        <p className="text-sm font-bold text-emerald-500 tracking-tight">Clean Behavioral Profile</p>
-                                        <p className="text-[10px] text-muted-foreground mt-1 px-4 leading-relaxed">No high-frequency traffic patterns or proxy usage detected in the last 24 hours.</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        {suspicious_activity.map((event) => (
-                                            <div key={event.id} className="p-4 rounded-2xl bg-red-500/5 border border-red-500/10 flex flex-col gap-2">
-                                                <div className="flex items-center justify-between">
-                                                    <span className="text-[10px] font-bold uppercase tracking-widest text-red-500 leading-none">
-                                                        {event.event_type.replace(/_/g, ' ')}
-                                                    </span>
-                                                    <span className="text-[10px] font-mono text-muted-foreground">
-                                                        {formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}
-                                                    </span>
-                                                </div>
-                                                <div className="flex items-center justify-between text-xs">
-                                                    <span className="font-semibold text-foreground/80">Occurrences</span>
-                                                    <span className="font-mono bg-red-500/10 text-red-600 px-2 py-0.5 rounded-md font-bold">{event.count}</span>
-                                                </div>
-                                            </div>
-                                        ))}
-                                        <div className="pt-4 mt-4 border-t border-border/40">
-                                            <p className="text-[10px] text-muted-foreground italic leading-relaxed text-center px-4">
-                                                Threat vectors are automatically cleared every 24 hours if no further violations occur.
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                            </CardContent>
-                        </Card>
-                    </motion.div>
-                </div>
-            </motion.div>
-        </div>
+                    ) : (
+                        <ul className="border-t border-foreground/80">
+                            {suspicious_activity.map((event) => (
+                                <li key={event.id} className="py-3 px-2 border-b border-border">
+                                    <span className="flex items-center justify-between gap-3">
+                                        <span className="font-medium text-ink-red capitalize">{event.event_type.replace(/_/g, ' ').toLowerCase()}</span>
+                                        <span className="font-mono text-[13px]">×{event.count}</span>
+                                    </span>
+                                    <span className="block text-[12px] text-muted-foreground mt-0.5">{formatDistanceToNow(new Date(event.created_at), { addSuffix: true })}</span>
+                                </li>
+                            ))}
+                            <li className="pt-3 px-2 text-[12px] text-muted-foreground">Flags clear after 24 hours without another event.</li>
+                        </ul>
+                    )}
+                </section>
+            </div>
+        </AdminShell>
     )
 }

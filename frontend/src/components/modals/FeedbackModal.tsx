@@ -44,14 +44,14 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
     return (
         <AnimatePresence>
-            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/45">
                 <motion.div
                     initial={{ opacity: 0, scale: 0.95, y: 20 }}
                     animate={{ opacity: 1, scale: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                    className="bg-surface border border-border/60 w-full max-w-lg rounded-[2.5rem] shadow-2xl p-8 relative overflow-hidden"
+                    className="app-card w-full max-w-lg shadow-[0_30px_60px_-24px_rgba(0,0,0,0.45)] p-7 relative overflow-hidden"
                 >
-                    <div className="absolute top-0 right-0 p-6">
+                    <div className="absolute top-0 right-0 p-4">
                         <Button
                             variant="ghost"
                             size="icon"
@@ -63,15 +63,15 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                     </div>
 
                     <div className="space-y-6">
-                        <div className="space-y-2 text-center">
-                            <h2 className="text-2xl font-heading font-bold">Share Your Experience</h2>
-                            <p className="text-muted-foreground text-sm font-medium">
-                                Your feedback helps us grow and inspires other students!
+                        <div className="space-y-2 pr-10">
+                            <h2 className="font-heading font-normal text-[30px] leading-tight tracking-[-0.02em]">Leave a <em>review</em></h2>
+                            <p className="text-muted-foreground text-[15px]">
+                                If we approve it, it goes on the home page for the next batch to read.
                             </p>
                         </div>
 
                         {/* Rating Stars */}
-                        <div className="flex justify-center gap-2 py-4">
+                        <div className="flex gap-1 py-2" role="radiogroup" aria-label="Rating">
                             {[1, 2, 3, 4, 5].map((star) => (
                                 <button
                                     key={star}
@@ -79,7 +79,7 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                                     className="focus:outline-none group transition-transform active:scale-90"
                                 >
                                     <Star
-                                        className={`w-10 h-10 transition-colors ${star <= rating
+                                        className={`w-8 h-8 transition-colors ${star <= rating
                                                 ? 'fill-amber-400 text-amber-400'
                                                 : 'text-muted-foreground/30 group-hover:text-muted-foreground/50'
                                             }`}
@@ -92,14 +92,16 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                             <textarea
                                 value={content}
                                 onChange={(e) => setContent(e.target.value)}
-                                placeholder="Tell us what you like about Just LPU Things..."
-                                className="w-full min-h-[150px] p-5 rounded-3xl bg-muted/5 border border-border/60 focus:border-primary/50 focus:ring-1 focus:ring-primary/50 outline-none transition-all resize-none font-medium placeholder:text-muted-foreground/40"
+                                placeholder="What helped? Which subject? Be honest."
+                                aria-label="Your review"
+                                rows={5}
+                                className="app-field"
                             />
 
                             <Button
                                 onClick={handleSubmit}
                                 disabled={isSubmitting}
-                                className="w-full h-14 rounded-2xl text-sm font-bold shadow-xl shadow-primary/10 transition-all active:scale-[0.98]"
+                                className="app-btn w-full h-12"
                             >
                                 {isSubmitting ? (
                                     <Loader2 className="w-5 h-5 animate-spin" />
@@ -112,8 +114,8 @@ export function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                             </Button>
                         </div>
 
-                        <p className="text-[10px] text-center text-muted-foreground/50 font-bold uppercase tracking-widest">
-                            Submissions are moderated for community safety
+                        <p className="text-[12px] text-muted-foreground">
+                            Every review is read by a person before it goes live.
                         </p>
                     </div>
                 </motion.div>
